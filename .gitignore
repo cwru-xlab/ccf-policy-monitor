@@ -1,3 +1,6 @@
+/scraper-example/medical_policy_export.xlsx
+scraper-example/policy_monitor.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
