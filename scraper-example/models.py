@@ -1,8 +1,7 @@
 """SQLAlchemy 2.0 relational model for the medical policy monitoring prototype.
 
-Criterion text and concept_words live on Criterion, independent of Policy,
-so they can be vectorized and matched for the RAG pipeline without coupling
-embeddings to a single policy document.
+Policy and guideline criteria retain their text and concept words for the RAG
+pipeline, with each criterion linked directly to its parent document model.
 """
 
 from __future__ import annotations
@@ -86,23 +85,6 @@ class Base(DeclarativeBase):
     pass
 
 
-policy_criteria = Table(
-    "policy_criteria",
-    Base.metadata,
-    Column(
-        "policy_number",
-        String,
-        ForeignKey("policy.policy_number", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-    Column(
-        "criterion_id",
-        Uuid,
-        ForeignKey("criterion.criterion_id", ondelete="CASCADE"),
-        primary_key=True,
-    ),
-)
-
 policy_codes = Table(
     "policy_codes",
     Base.metadata,
@@ -141,7 +123,10 @@ class SourceDocument(Base):
     guidelines: Mapped[list[Guideline]] = relationship(
         back_populates="document"
     )
-    criterion_updates: Mapped[list[CriterionUpdate]] = relationship(
+    policy_criterion_updates: Mapped[list[PolicyCriterionUpdate]] = relationship(
+        back_populates="document"
+    )
+    guideline_criterion_updates: Mapped[list[GuidelineCriterionUpdate]] = relationship(
         back_populates="document"
     )
 
@@ -161,9 +146,10 @@ class Policy(Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
-    criteria: Mapped[list[Criterion]] = relationship(
-        secondary=policy_criteria,
-        back_populates="policies",
+    criteria: Mapped[list[PolicyCriterion]] = relationship(
+        back_populates="policy",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     codes: Mapped[list[Code]] = relationship(
         secondary=policy_codes,
@@ -193,13 +179,18 @@ class Guideline(Base):
     strength_system: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     document: Mapped[SourceDocument] = relationship(back_populates="guidelines")
+    criteria: Mapped[list[GuidelineCriterion]] = relationship(
+        back_populates="guideline",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     matches: Mapped[list[CriterionMatch]] = relationship(
         back_populates="guideline"
     )
 
 
-class Criterion(Base):
-    __tablename__ = "criterion"
+class PolicyCriterion(Base):
+    __tablename__ = "policy_criterion"
 
     criterion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, default=uuid.uuid4
@@ -215,21 +206,56 @@ class Criterion(Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
-    policies: Mapped[list[Policy]] = relationship(
-        secondary=policy_criteria,
-        back_populates="criteria",
+    policy_number: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("policy.policy_number", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    updates: Mapped[list[CriterionUpdate]] = relationship(
+
+    policy: Mapped[Policy] = relationship(back_populates="criteria")
+    updates: Mapped[list[PolicyCriterionUpdate]] = relationship(
         back_populates="criterion",
-        foreign_keys="CriterionUpdate.criterion_id",
-    )
-    guideline_matches: Mapped[list[CriterionMatch]] = relationship(
-        back_populates="guideline_criterion",
-        foreign_keys="CriterionMatch.guideline_criterion_id",
+        foreign_keys="PolicyCriterionUpdate.criterion_id",
     )
     policy_matches: Mapped[list[CriterionMatch]] = relationship(
         back_populates="policy_criterion",
         foreign_keys="CriterionMatch.policy_criterion_id",
+    )
+
+
+class GuidelineCriterion(Base):
+    __tablename__ = "guideline_criterion"
+
+    criterion_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4
+    )
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    concept_words: Mapped[list[str]] = mapped_column(
+        # postgresql.ARRAY(String); JSON fallback on SQLite via StringArray
+        StringArray(),
+        nullable=False,
+        default=list,
+    )
+    needs_update: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
+    guideline_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("guideline.guideline_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    guideline: Mapped[Guideline] = relationship(back_populates="criteria")
+    updates: Mapped[list[GuidelineCriterionUpdate]] = relationship(
+        back_populates="criterion",
+        foreign_keys="GuidelineCriterionUpdate.criterion_id",
+    )
+    guideline_matches: Mapped[list[CriterionMatch]] = relationship(
+        back_populates="guideline_criterion",
+        foreign_keys="CriterionMatch.guideline_criterion_id",
     )
 
 
@@ -261,7 +287,7 @@ class CriterionMatch(Base):
     )
     guideline_criterion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
-        ForeignKey("criterion.criterion_id", ondelete="CASCADE"),
+        ForeignKey("guideline_criterion.criterion_id", ondelete="CASCADE"),
         nullable=False,
     )
     policy_number: Mapped[str] = mapped_column(
@@ -271,7 +297,7 @@ class CriterionMatch(Base):
     )
     policy_criterion_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         Uuid,
-        ForeignKey("criterion.criterion_id", ondelete="SET NULL"),
+        ForeignKey("policy_criterion.criterion_id", ondelete="SET NULL"),
         nullable=True,
     )
     similarity: Mapped[float] = mapped_column(Float, nullable=False)
@@ -279,25 +305,25 @@ class CriterionMatch(Base):
 
     guideline: Mapped[Guideline] = relationship(back_populates="matches")
     policy: Mapped[Policy] = relationship(back_populates="matches")
-    guideline_criterion: Mapped[Criterion] = relationship(
+    guideline_criterion: Mapped[GuidelineCriterion] = relationship(
         back_populates="guideline_matches",
         foreign_keys=[guideline_criterion_id],
     )
-    policy_criterion: Mapped[Optional[Criterion]] = relationship(
+    policy_criterion: Mapped[Optional[PolicyCriterion]] = relationship(
         back_populates="policy_matches",
         foreign_keys=[policy_criterion_id],
     )
 
 
-class CriterionUpdate(Base):
-    __tablename__ = "criterion_update"
+class PolicyCriterionUpdate(Base):
+    __tablename__ = "policy_criterion_update"
 
     update_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, default=uuid.uuid4
     )
     criterion_id: Mapped[uuid.UUID] = mapped_column(
         Uuid,
-        ForeignKey("criterion.criterion_id", ondelete="CASCADE"),
+        ForeignKey("policy_criterion.criterion_id", ondelete="CASCADE"),
         nullable=False,
     )
     kind: Mapped[UpdateKind] = mapped_column(
@@ -306,7 +332,7 @@ class CriterionUpdate(Base):
     origin: Mapped[str] = mapped_column(String, nullable=False)
     revised_criterion_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         Uuid,
-        ForeignKey("criterion.criterion_id", ondelete="SET NULL"),
+        ForeignKey("policy_criterion.criterion_id", ondelete="SET NULL"),
         nullable=True,
     )
     document_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -326,15 +352,64 @@ class CriterionUpdate(Base):
         _pg_enum(UpdateStatus, "update_status"), nullable=False
     )
 
-    criterion: Mapped[Criterion] = relationship(
+    criterion: Mapped[PolicyCriterion] = relationship(
         back_populates="updates",
         foreign_keys=[criterion_id],
     )
-    revised_criterion: Mapped[Optional[Criterion]] = relationship(
+    revised_criterion: Mapped[Optional[PolicyCriterion]] = relationship(
         foreign_keys=[revised_criterion_id],
     )
     document: Mapped[Optional[SourceDocument]] = relationship(
-        back_populates="criterion_updates"
+        back_populates="policy_criterion_updates"
+    )
+
+
+class GuidelineCriterionUpdate(Base):
+    __tablename__ = "guideline_criterion_update"
+
+    update_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4
+    )
+    criterion_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("guideline_criterion.criterion_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    kind: Mapped[UpdateKind] = mapped_column(
+        _pg_enum(UpdateKind, "update_kind"), nullable=False
+    )
+    origin: Mapped[str] = mapped_column(String, nullable=False)
+    revised_criterion_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid,
+        ForeignKey("guideline_criterion.criterion_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    document_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid,
+        ForeignKey("source_document.document_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    editor: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utc_now,
+        server_default=func.now(),
+    )
+    status: Mapped[UpdateStatus] = mapped_column(
+        _pg_enum(UpdateStatus, "update_status"), nullable=False
+    )
+
+    criterion: Mapped[GuidelineCriterion] = relationship(
+        back_populates="updates",
+        foreign_keys=[criterion_id],
+    )
+    revised_criterion: Mapped[Optional[GuidelineCriterion]] = relationship(
+        foreign_keys=[revised_criterion_id],
+    )
+    document: Mapped[Optional[SourceDocument]] = relationship(
+        back_populates="guideline_criterion_updates"
     )
 
 

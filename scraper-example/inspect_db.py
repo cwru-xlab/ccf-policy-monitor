@@ -8,7 +8,7 @@ def export_database_to_excel(output_filename="medical_policy_export.xlsx"):
     # 1. Query Raw Policies
     policies_df = pd.read_sql("SELECT * FROM policy", engine)
     
-    # 2. Query Mapped Criteria (Joins Policy -> policy_criteria -> Criterion)
+    # 2. Query Mapped Criteria (Joins Policy -> PolicyCriterion)
     criteria_query = """
     SELECT 
         p.policy_number, 
@@ -17,8 +17,7 @@ def export_database_to_excel(output_filename="medical_policy_export.xlsx"):
         c.concept_words, 
         c.needs_update
     FROM policy p
-    JOIN policy_criteria pc ON p.policy_number = pc.policy_number
-    JOIN criterion c ON pc.criterion_id = c.criterion_id
+    JOIN policy_criterion c ON p.policy_number = c.policy_number
     """
     criteria_df = pd.read_sql(criteria_query, engine)
     

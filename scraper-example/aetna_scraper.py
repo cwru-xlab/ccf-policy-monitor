@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from models import (
     Base,
     Code,
-    Criterion,
+    PolicyCriterion,
     Policy,
     PolicyDocType,
     SourceDocument,
@@ -31,9 +31,8 @@ def scrape_aetna_policy_to_sql(
     doc_type: PolicyDocType = PolicyDocType.MEDICAL,
 ) -> Policy | None:
     """
-    Scrape an Aetna CPB page and persist Policy, Code, and Criterion rows
-    using the normalized SQLAlchemy model (criteria stay independent of policy
-    so they can be vectorized for RAG).
+    Scrape an Aetna CPB page and persist Policy, Code, and PolicyCriterion rows
+    with criteria linked directly to their parent policy.
     """
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     response = requests.get(url, headers=headers)
@@ -117,7 +116,7 @@ def scrape_aetna_policy_to_sql(
             codes_added += 1
 
         if clean_desc and clean_desc not in existing_criterion_texts:
-            criterion = Criterion(
+            criterion = PolicyCriterion(
                 text=clean_desc,
                 concept_words=_concept_words(clean_desc),
                 needs_update=False,
