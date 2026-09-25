@@ -2,3 +2,4 @@ sqlalchemy>=2.0
 requests
 beautifulsoup4
 psycopg[binary]
+openpyxl>=3.1
