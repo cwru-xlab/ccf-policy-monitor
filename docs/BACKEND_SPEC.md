@@ -241,7 +241,8 @@ Open points:
 
 - **CMS LCDs are not ingested.** Their detail endpoint needs a token, and requesting the
   token accepts the AMA/ADA/AHA license terms. That is your call to make.
-- **USPSTF is unverified against real content** (no key yet). The key parameter is
+- **USPSTF is unverified against real content** (no key yet), so its response model
+  requires only the field the connector reads. The key parameter is
   undocumented; the code sends `key=` and fails loudly on the API's HTTP 202 "no key"
   placeholder. See [INGESTION_SPEC.md](INGESTION_SPEC.md#uspstf--uspstfpy).
 - **openFDA volume**: about 5,000 label versions a month, each an LLM call when atomized.

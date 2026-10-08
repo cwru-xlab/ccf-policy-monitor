@@ -132,11 +132,11 @@ The abstract, not the full guideline, is what PubMed provides.
 | Model | Typed fields |
 |---|---|
 | `Response` | `apiKeyWarning`, `specificRecommendations`, `generalRecommendations` (dict keyed by id) |
-| `SpecificRecommendation` | `id`, `general` (string key into `generalRecommendations`), `title`, `grade`, `text`, `rationale` |
-| `GeneralRecommendation` | `uspstfAlias` (page slug), `title`, `topicYear` |
+| `SpecificRecommendation` | `general` (required; int or string on the wire, normalised to a string key into `generalRecommendations`); optional: `id`, `title`, `grade`, `text`, `rationale` |
+| `GeneralRecommendation` | all optional: `uspstfAlias` (page slug), `title`, `topicYear` |
 
-**Unverified against real content.** No key was available. The model is built from the API's
-reply to a bad key: HTTP **202** with every text field replaced by `apiKeyWarning`, captured as
+**Unverified against real content.** No key was available. Types are loose on purpose (only
+`general` is required). The model is built from the API's reply to a bad key: HTTP **202** with every text field replaced by `apiKeyWarning`, captured as
 `tests/fixtures/uspstf_nokey_placeholder.json`. The connector treats a 202 or a non-empty
 `apiKeyWarning` as a rejected key. Once a key exists: run `scripts/capture_fixtures.py` with it,
 check `grade` against `StrengthSystem.uspstf` (A, B, C, D, I) and tighten types.

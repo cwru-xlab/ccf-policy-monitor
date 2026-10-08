@@ -159,3 +159,11 @@ def test_uspstf_placeholder_is_recognised_as_a_missing_key():
     assert data.specific_recommendations[0].grade == "A"
     assert data.specific_recommendations[0].general == "1"
     assert "1" in data.general_recommendations
+
+
+def test_uspstf_accepts_a_numeric_general_key_and_missing_optional_fields():
+    body = {"specificRecommendations": [{"general": 7}], "generalRecommendations": {"7": {}}}
+    data = uspstf.Response.model_validate(body)
+    assert data.specific_recommendations[0].general == "7"
+    assert data.general_recommendations["7"].uspstf_alias is None
+    assert data.api_key_warning is None
