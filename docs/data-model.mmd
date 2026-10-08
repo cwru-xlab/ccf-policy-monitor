@@ -1,0 +1,104 @@
+erDiagram
+    source ||--o{ source_document : "fetched from"
+    source ||--o{ guideline : "authority of"
+    source_document ||--o| guideline : "atomized into"
+    source_document ||--o{ policy : "parsed into"
+    guideline ||--o{ guideline_criterion : "criteria"
+    policy ||--o{ policy_criterion : "criteria"
+    policy ||--o{ code : "lists"
+    guideline_criterion ||--o{ guideline_criterion_update : "history"
+    policy_criterion ||--o{ policy_criterion_update : "history"
+    source_document |o--o{ guideline_criterion_update : "prompted by"
+    source_document |o--o{ policy_criterion_update : "prompted by"
+    guideline_criterion ||--o{ criterion_match : "guideline side"
+    policy_criterion |o--o{ criterion_match : "policy side"
+
+    source {
+        text source_key PK
+        text name
+        text authority
+        text authority_kind "medical_society, federal_recommendation, federal_requirement, payer_policy"
+        text trigger_type "nullable, TriggerType"
+        text endpoint_url "nullable"
+    }
+    source_document {
+        text document_id PK
+        text source_key FK
+        timestamptz retrieved_at
+        text storage_uri
+        char64 content_sha256
+        text media_type
+        text origin_url
+    }
+    guideline {
+        text guideline_id PK
+        text source_key FK
+        text document_id FK "unique"
+        text title
+        date published
+        text version
+        text strength "grade of strength_system"
+        text strength_system "uspstf, acc_aha, grade"
+    }
+    policy {
+        text policy_number PK
+        text doc_type
+        text title
+        text coverage_effect
+        date effective_date
+        date last_reviewed
+        text document_id FK
+    }
+    guideline_criterion {
+        text criterion_id PK
+        text parent_id FK "guideline_id"
+        int position
+        text text
+        text_array concept_words
+        vector1536 embedding
+    }
+    policy_criterion {
+        text criterion_id PK
+        text parent_id FK "policy_number"
+        int position
+        text text
+        text_array concept_words
+        vector1536 embedding
+    }
+    code {
+        text policy_number PK,FK
+        text system PK
+        text value PK
+    }
+    guideline_criterion_update {
+        text update_id PK
+        text criterion_id FK
+        text kind
+        text origin
+        jsonb revised
+        text document_id FK
+        text editor
+        text rationale
+        timestamptz recorded_at
+        text status
+    }
+    policy_criterion_update {
+        text update_id PK
+        text criterion_id FK
+        text kind
+        text origin
+        jsonb revised
+        text document_id FK
+        text editor
+        text rationale
+        timestamptz recorded_at
+        text status
+    }
+    criterion_match {
+        bigint match_id PK
+        text guideline_criterion_id FK
+        text policy_number FK
+        text policy_criterion_id FK
+        real similarity
+        text divergence
+    }
