@@ -24,12 +24,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["policy_radar"]
+packages = ["policy_radar", "policy_radar.responses"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+addopts = "-m 'not live'"
+markers = ["live: makes real requests to provider APIs (pytest -m live)"]
 
 [tool.ruff]
 line-length = 100

@@ -217,9 +217,11 @@ The diagram's `guideline_id` was dropped: it follows from the guideline criterio
 
 ## Guideline sources
 
-All connectors are in `policy_radar/sources.py`, one function each, verified against live
-responses on 2026-09-22. Each returns one file per document, as the source served it. Keys
-are per endpoint or page, and each has a row in the [`source`](#source) table.
+All connectors are in `policy_radar/sources.py`, one function each. Each validates the
+response with a per-provider pydantic model (`policy_radar/responses/`), then returns one
+file per document, as the source served it. Response shapes, quirks and test status per
+provider are in [INGESTION_SPEC.md](INGESTION_SPEC.md). Keys are per endpoint or page, and
+each has a row in the [`source`](#source) table.
 Runs are capped at 1,000 records per endpoint (`MAX_RECORDS_PER_ENDPOINT`); a capped
 run logs a warning.
 
@@ -228,7 +230,7 @@ run logs a warning.
 | `openfda_drug_label` | openFDA `drug/label` | one label version, JSON | `effective_time` ≥ since | `OPENFDA_API_KEY` optional |
 | `openfda_device_510k` | openFDA `device/510k` | one 510(k), JSON | `decision_date` ≥ since | `OPENFDA_API_KEY` optional |
 | `federal_register` | Federal Register v1 | one HHS/CMS/FDA rule or proposed rule, raw text | `publication_date` ≥ since | none |
-| `ecfr` | eCFR versioner, titles 42 and 45 | one amended CFR section, XML | substantive versions with `amendment_date` ≥ since | none |
+| `ecfr` | eCFR versioner, titles 42 and 45 (all result pages) | one amended CFR section, XML | substantive versions with `amendment_date` ≥ since | none |
 | `cms_coverage` | CMS Coverage API | one NCD, JSON | `last_updated_sort` ≥ since | none |
 | `uspstf` | Prevention TaskForce API | one specific recommendation plus its topic, JSON | none in the API; content hash | `USPSTF_API_KEY` required |
 | `pubmed` | NCBI E-utilities | one "practice guideline" article, XML | `mdat` ≥ since | `NCBI_API_KEY` optional |
@@ -239,8 +241,9 @@ Open points:
 
 - **CMS LCDs are not ingested.** Their detail endpoint needs a token, and requesting the
   token accepts the AMA/ADA/AHA license terms. That is your call to make.
-- **USPSTF key parameter** is undocumented; the code sends `key=`. It fails loudly if the
-  API answers with its "no key" placeholder.
+- **USPSTF is unverified against real content** (no key yet). The key parameter is
+  undocumented; the code sends `key=` and fails loudly on the API's HTTP 202 "no key"
+  placeholder. See [INGESTION_SPEC.md](INGESTION_SPEC.md#uspstf--uspstfpy).
 - **openFDA volume**: about 5,000 label versions a month, each an LLM call when atomized.
   The cap bounds this; filtering to relevant drugs needs a decision.
 - Pages with no API get one function and one `source` row each (the two CDC ACIP

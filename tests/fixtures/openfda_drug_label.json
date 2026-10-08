@@ -1,0 +1,203 @@
+{
+  "meta": {
+    "disclaimer": "Do not rely on openFDA to make decisions regarding medical care. While we make every effort to ensure that data is accurate, you should assume all results are unvalidated. We may limit or otherwise restrict your access to the API in line with our Terms of Service.",
+    "terms": "https://open.fda.gov/terms/",
+    "license": "https://open.fda.gov/license/",
+    "last_updated": "2026-10-07",
+    "results": {
+      "skip": 0,
+      "limit": 3,
+      "total": 1154
+    }
+  },
+  "results": [
+    {
+      "spl_product_data_elements": [
+        "FGPER ANTIFUNGAL MICONAZOLE NITRATE MICONAZOLE NITRATE MICONAZOLE WATER ALLANTOIN CETEARYL ALCOHOL SQUALANE CETEARETH-6 CETEARETH-25 C12-15 ALKYL BENZOATE GLYCERYL STEARATE PEG-100 STEARATE DIMETHICONE ETHYLHEXYL PALMITATE BISABOLOL CARBOMER MENTHOL PANTHENOL PROPYLENE GLYCOL TRIETHANOLAMINE ALOE VERA LEAF CERAMIDE NP MELALEUCA ALTERNIFOLIA (TEA TREE) LEAF OIL IMIDAZOLIDINYL UREA"
+      ],
+      "active_ingredient": [
+        "Active ingredient Miconazole Nitrate 2% PurposeAntifungal"
+      ],
+      "purpose": [
+        "treats most athlete's foot (tinea pedis), jockitch (tinea cruris), and ringworm(tinea corporis)relieves itching, scaling, cracking, burning,redness, soreness, irritation, and discomfortassociated with these conditions"
+      ],
+      "keep_out_of_reach_of_children": [
+        "Keep outofreach of children.If swallowed, get medical help or contact aPoison Control Center right away."
+      ],
+      "indications_and_usage": [
+        "Stop use and askadoctor if irritation occurs or if there is no improvement within 4 weeks for athlete's foot and ringworm-irritation occurs or if there is no improvementwithin 2 weeks for jock itch"
+      ],
+      "dosage_and_administration": [
+        "clean the affected area and drythoroughlyapplya thin layer of the product over affected area twicedaily (moming and night) or asdirected byadoctorsupervise children in the use of this productforathlete'sfoot: pay specialattention to spacesbetween the toes; wear well-fitting,ventilatedshoes, and change shoes and socks at leastoncedaily for athlete's foot and ringworm, use dailyfor4weeks; forjock itch, use daily for 2 weeks if condition persists longer, consult a doctor thisproductis noteffective on the scalp ornails"
+      ],
+      "inactive_ingredient": [
+        "Water, Allantoin, CetearylAlcohol, Squalane,Ceteareth-6, Ceteareth-25, C12-15 AlkylBenzoate, Glyceryl Stearate, PEG-100 Stearate,Dimethicone, Ethylhexyl Palmitate, Bisabolol,Carbomer, Menthol, Panthenol, Propylene Glycol,Triethanolamine, Aloe Barbadensis Leaf Extract,Ceramide, Melaleuca Alternifolia (Tea Tree) LeafOil, Imidazolidinyl Urea."
+      ],
+      "warnings": [
+        "Warnings: For external use only. Donotusebyadoctor · on children under 2 years of age unless directed"
+      ],
+      "package_label_principal_display_panel": [
+        "information labeling"
+      ],
+      "set_id": "5ced6af9-f9c4-6e62-e063-6294a90a0e11",
+      "id": "5ced6af9-f9c5-6e62-e063-6294a90a0e11",
+      "effective_time": "20261003",
+      "version": "1",
+      "openfda": {
+        "application_number": [
+          "M005"
+        ],
+        "brand_name": [
+          "FGPER ANTIFUNGAL"
+        ],
+        "generic_name": [
+          "MICONAZOLE NITRATE"
+        ],
+        "manufacturer_name": [
+          "Guangzhou ChuanMa International Trading Co.,Ltd."
+        ],
+        "product_ndc": [
+          "85593-140"
+        ],
+        "product_type": [
+          "HUMAN OTC DRUG"
+        ],
+        "route": [
+          "TOPICAL"
+        ],
+        "substance_name": [
+          "MICONAZOLE NITRATE"
+        ],
+        "spl_id": [
+          "5ced6af9-f9c5-6e62-e063-6294a90a0e11"
+        ],
+        "spl_set_id": [
+          "5ced6af9-f9c4-6e62-e063-6294a90a0e11"
+        ],
+        "package_ndc": [
+          "85593-140-01"
+        ],
+        "is_original_packager": [
+          true
+        ],
+        "upc": [
+          "0699838984448"
+        ],
+        "unii": [
+          "VW4H1CYW1K"
+        ]
+      }
+    },
+    {
+      "spl_product_data_elements": [
+        "Ammonium lactate Ammonium lactate AMMONIUM LACTATE LACTIC ACID CETYL ALCOHOL GLYCERIN GLYCERYL MONO- AND DIPALMITOSTEARATE LAURETH-4 LIGHT MINERAL OIL MAGNESIUM ALUMINUM SILICATE METHYLCELLULOSE, UNSPECIFIED METHYLPARABEN PEG-100 MONOSTEARATE POLYOXYL 40 STEARATE TYPE I PROPYLENE GLYCOL PROPYLPARABEN WATER"
+      ],
+      "spl_unclassified_section": [
+        ""
+      ],
+      "package_label_principal_display_panel": [
+        "PACKAGE LABEL.PRINCIPAL DISPLAY PANEL NDC 70771-1988-5 Ammonium lactate cream, 12% 140 grams Rx tube label"
+      ],
+      "set_id": "10a894e6-d23a-4142-8c9f-7bf96be9b991",
+      "id": "2fba2d8c-f152-49fd-88bf-2cec6a189264",
+      "effective_time": "20261002",
+      "version": "1",
+      "openfda": {
+        "application_number": [
+          "ANDA217815"
+        ],
+        "brand_name": [
+          "Ammonium lactate"
+        ],
+        "generic_name": [
+          "AMMONIUM LACTATE"
+        ],
+        "manufacturer_name": [
+          "Zydus Lifesciences Limited"
+        ],
+        "product_ndc": [
+          "70771-1988"
+        ],
+        "product_type": [
+          "HUMAN PRESCRIPTION DRUG"
+        ],
+        "route": [
+          "TOPICAL"
+        ],
+        "substance_name": [
+          "AMMONIUM LACTATE"
+        ],
+        "spl_id": [
+          "2fba2d8c-f152-49fd-88bf-2cec6a189264"
+        ],
+        "spl_set_id": [
+          "10a894e6-d23a-4142-8c9f-7bf96be9b991"
+        ],
+        "package_ndc": [
+          "70771-1988-5",
+          "70771-1988-6",
+          "70771-1988-7"
+        ],
+        "is_original_packager": [
+          true
+        ],
+        "nui": [
+          "N0000175842",
+          "M0010745"
+        ],
+        "pharm_class_epc": [
+          "alpha-Hydroxy Acid [EPC]"
+        ],
+        "pharm_class_cs": [
+          "Hydroxy Acids [CS]"
+        ],
+        "unii": [
+          "67M901L9NQ"
+        ]
+      }
+    },
+    {
+      "spl_product_data_elements": [
+        "Allergies Plains U.S. Absinthium, Adenosinum cyclophosphoricum, Adrenalinum, Adrenocorticotrophin, Allium cepa, Ambrosia artemisiifolia, Caulophyllum thalictroides, Conium maculatum, Cortisone aceticum, Euphrasia officinalis, Fagopyrum esculentum, Galphimia glauca, Histaminum hydrochloricum, Kali muriaticum, Melilotus officinalis, Mucosa nasalis suis, Natrum muriaticum, RNA, Rumex crispus, Sabadilla, Secale cornutum MELILOTUS OFFICINALIS TOP MELILOTUS OFFICINALIS TOP WATER CARYA OVATA BARK CITRUS BIOFLAVONOIDS LONICERA JAPONICA FLOWER POLYEPSILON-LYSINE (4000 MW) REBAUDIOSIDE A WORMWOOD WORMWOOD ADENOSINE CYCLIC PHOSPHATE ADENOSINE CYCLIC PHOSPHATE EPINEPHRINE EPINEPHRINE CORTICOTROPIN CORTICOTROPIN ONION ONION AMBROSIA ARTEMISIIFOLIA AMBROSIA ARTEMISIIFOLIA CAULOPHYLLUM THALICTROIDES ROOT CAULOPHYLLUM THALICTROIDES ROOT CONIUM MACULATUM FLOWERING TOP CONIUM MACULATUM FLOWERING TOP CORTISONE ACETATE CORTISONE EUPHRASIA STRICTA EUPHRASIA STRICTA FAGOPYRUM ESCULENTUM FAGOPYRUM ESCULENTUM GALPHIMIA GLAUCA FLOWERING TOP GALPHIMIA GLAUCA FLOWERING TOP HISTAMINE DIHYDROCHLORIDE HISTAMINE POTASSIUM CHLORIDE POTASSIUM CATION SUS SCROFA NASAL MUCOSA SUS SCROFA NASAL MUCOSA SODIUM CHLORIDE CHLORIDE ION SACCHAROMYCES CEREVISIAE RNA SACCHAROMYCES CEREVISIAE RNA RUMEX CRISPUS ROOT RUMEX CRISPUS ROOT SCHOENOCAULON OFFICINALE SEED SCHOENOCAULON OFFICINALE SEED CLAVICEPS PURPUREA SCLEROTIUM CLAVICEPS PURPUREA SCLEROTIUM"
+      ],
+      "active_ingredient": [
+        "Drug Facts ​__________________________________________________________________________________________________________ HPUS active ingredients: Absinthium, Adenosinum cyclophosphoricum, Adrenalinum, Adrenocorticotrophin, Allium cepa, Ambrosia artemisiifolia, Caulophyllum thalictroides, Conium maculatum, Cortisone aceticum, Euphrasia officinalis, Fagopyrum esculentum, Galphimia glauca, Histaminum hydrochloricum, Kali muriaticum, Melilotus officinalis, Mucosa nasalis suis, Natrum muriaticum, RNA, Rumex crispus, Sabadilla and Secale cornutum​. Equal volumes of each ingredient in 12X, 30X, and 1LM potencies."
+      ],
+      "indications_and_usage": [
+        "Uses for temporary relief of allergy symptoms commonly experienced in KS, ND, NE, SD: █ itchy, watery eyes █ runny nose █ sneezing █ sore throat █ sinus congestion █ cough █ stuffy nose █ fatigue █ itchy, irritated skin █ hoarseness █ headache."
+      ],
+      "inactive_ingredient": [
+        "Inactive Ingredients: Bio-Energetically Enhanced™ pure water, citrus extract* (ascorbic acid, citric acid, citrus aurantium amara fruit extract, citrus aurantium sinensis peel extract, citrus reticulata fruit extract, demineralized water, glycerin, lactic acid), Honeysuckle (Lonicera japonica), polylysine, Shagbark Hickory (Carya ovata) Bark Extract, steviol (Steviol glycosides)."
+      ],
+      "warnings": [
+        "Warnings Stop use and consult a physician if symptoms worsen or persist for more than 7 days. If pregnant or breast-feeding, ask a healthcare professional before use. Keep out of reach of children. In case of overdose, get medical help or contact a Poison Control Center immediately."
+      ],
+      "pregnancy_or_breast_feeding": [
+        "If pregnant or breast-feeding, ask a healthcare professional before use. Keep out of reach of children. In case of overdose, get medical help or contact a Poison Control Center immediately."
+      ],
+      "keep_out_of_reach_of_children": [
+        "Keep out of reach of children. In case of overdose, get medical help or contact a Poison Control Center immediately."
+      ],
+      "dosage_and_administration": [
+        "Directions Initially, depress pump until primed. Spray one dose directly into mouth. Adults: 3 sprays 3 times per day. Children ages 6-12: 2 sprays 3 times per day. Use additionally as needed, up to 6 times per day."
+      ],
+      "storage_and_handling": [
+        "Tamper resistant for your protection. Use only if seal is intact."
+      ],
+      "purpose": [
+        "Equal volumes of each HPUS** ingredient in 12X, 30X, and 1LM potencies unless otherwise noted. Absinthium................................................itchy eyes, sore throat Adenosinum cyclophosphoricum..............headache, runny nose Adrenalinum ...........hay fever, swollen sinuses, lung congestion Adrenocorticotrophin (30X) ............................congestion, cough Allium cepa........................hay fever, sinus headache, sneezing Ambrosia artemisiaefolia......................hay fever, wheezy cough Caulophyllum thalictroides ...............hoarseness, panting breath Conium maculatum ............. sick headache, shortness of breath Cortisone aceticum.............................allergic reaction, irritability Euphrasia officinalis.....................discharge from eyes and nose Fagopyrum esculentum...................red, itching eyes, headache Galphimia glauca................................swollen eyelids, hay fever Histaminum hydrochloricum............. coughing fits, itching throat Kali muriaticum....................hoarseness, stuffy nose, nosebleed Melilotus officinalis................... congestive headache, dry cough Mucosa nasalis suis ..............sinus headache, nasal congestion Natrum muriaticum...................................watery eyes, sneezing RNA..................................................................allergic reactions Rumex crispus...............raw throat with much mucus, dry cough Sabadilla...........................sore throat, runny nose, sneezing fits Secale cornutum ........................pain in lungs, difficult breathing **“HPUS” indicates the active ingredients are in the official Homeopathic Pharmacopeia of the United States."
+      ],
+      "questions": [
+        "Questions? Call 866.298.2740 King Bio, Inc. • 3 Westside Drive Asheville, NC 28806 USA FDA Reg. #1053442 For latest product information and instructions, visit www.DrKings.com"
+      ],
+      "package_label_principal_display_panel": [
+        "9-300-1810R01_2.jpg"
+      ],
+      "set_id": "bfb98751-515d-4bbe-869f-6e29b38b3de6",
+      "id": "b92fe569-ff94-4d3a-8992-48962bf455e7",
+      "effective_time": "20261002",
+      "version": "5",
+      "openfda": {}
+    }
+  ]
+}

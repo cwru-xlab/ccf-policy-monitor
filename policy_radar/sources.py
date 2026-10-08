@@ -3,9 +3,10 @@
 Each registry key has a row in the ``source`` table (db/schema.sql) naming its authority.
 
 Each function takes an httpx client and a ``since`` date and returns the files published or
-changed since then, one ``Fetched`` per document, as the source served them. Unchanged files
-are harmless: storage skips bytes it already holds. Endpoint details were verified against
-live responses on 2026-09-22; see docs/BACKEND_SPEC.md "Guideline sources".
+changed since then, one ``Fetched`` per document, as the source served them. Every response is
+validated by its model in ``policy_radar/responses`` first, so a changed provider fails the
+run loudly; the stored bytes are the provider's, never a re-serialised model. Unchanged files
+are harmless: storage skips bytes it already holds. Endpoint details and response shapes: docs/INGESTION_SPEC.md.
 """
 
 import json
@@ -18,6 +19,12 @@ from typing import NamedTuple
 import httpx
 
 from policy_radar.config import settings
+from policy_radar.responses import cms_coverage as cms_models
+from policy_radar.responses import ecfr as ecfr_models
+from policy_radar.responses import federal_register as federal_register_models
+from policy_radar.responses import openfda
+from policy_radar.responses import pubmed as pubmed_models
+from policy_radar.responses import uspstf as uspstf_models
 
 log = logging.getLogger(__name__)
 
@@ -36,19 +43,21 @@ def _json(record: dict) -> bytes:
 
 # --- openFDA -------------------------------------------------------------------
 
-_OPENFDA = {  # endpoint -> (date field, record id field, public URL template)
-    "drug/label": ("effective_time", "set_id", "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid={}"),
-    "device/510k": ("decision_date", "k_number", "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID={}"),
+_OPENFDA = {  # endpoint -> (page model, date field, record id field, public URL template)
+    "drug/label": (openfda.DrugLabelPage, "effective_time", "set_id",
+                   "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid={}"),
+    "device/510k": (openfda.Device510kPage, "decision_date", "k_number",
+                    "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfpmn/pmn.cfm?ID={}"),
 }
 
 
 async def _openfda(client: httpx.AsyncClient, since: date, endpoint: str) -> list[Fetched]:
     """Records of one openFDA endpoint dated on or after ``since``, newest first."""
-    date_field, id_field, url = _OPENFDA[endpoint]
+    page_model, date_field, id_field, url = _OPENFDA[endpoint]
     params = {
         "search": f"{date_field}:[{since:%Y%m%d} TO {datetime.now(UTC):%Y%m%d}]",
         "sort": f"{date_field}:desc",
-        "limit": MAX_RECORDS_PER_ENDPOINT,
+        "limit": min(MAX_RECORDS_PER_ENDPOINT, 1000),
     }
     if settings.openfda_api_key:
         params["api_key"] = settings.openfda_api_key
@@ -59,12 +68,13 @@ async def _openfda(client: httpx.AsyncClient, since: date, endpoint: str) -> lis
         return []
     r.raise_for_status()
     body = r.json()
-    if body["meta"]["results"]["total"] > MAX_RECORDS_PER_ENDPOINT:
+    page = page_model.model_validate(body)
+    if page.meta.results.total > MAX_RECORDS_PER_ENDPOINT:
         log.warning("openfda %s: %d records, kept newest %d", endpoint,
-                    body["meta"]["results"]["total"], MAX_RECORDS_PER_ENDPOINT)
+                    page.meta.results.total, MAX_RECORDS_PER_ENDPOINT)
     return [
-        Fetched(_json(rec), "application/json", url.format(rec.get(id_field, "")))
-        for rec in body["results"]
+        Fetched(_json(raw), "application/json", url.format(getattr(rec, id_field)))
+        for raw, rec in zip(body["results"], page.results)
     ]
 
 
@@ -93,22 +103,22 @@ async def federal_register(client: httpx.AsyncClient, since: date) -> list[Fetch
         "conditions[publication_date][gte]": since.isoformat(),
         "fields[]": ["document_number", "html_url", "raw_text_url"],
         "order": "newest",
-        "per_page": 1000,
+        "per_page": min(MAX_RECORDS_PER_ENDPOINT, 1000),
     }
     r = await client.get("https://www.federalregister.gov/api/v1/documents.json", params=params)
-    results = []
+    docs: list[federal_register_models.Document] = []
     while True:
         r.raise_for_status()
-        page = r.json()
-        results += page.get("results", [])
-        if not page.get("next_page_url") or len(results) >= MAX_RECORDS_PER_ENDPOINT:
+        page = federal_register_models.DocumentList.model_validate(r.json())
+        docs += page.results
+        if not page.next_page_url or len(docs) >= MAX_RECORDS_PER_ENDPOINT:
             break
-        r = await client.get(page["next_page_url"])
+        r = await client.get(page.next_page_url)
     out = []
-    for doc in results[:MAX_RECORDS_PER_ENDPOINT]:
-        text = await client.get(doc["raw_text_url"])
+    for doc in docs[:MAX_RECORDS_PER_ENDPOINT]:
+        text = await client.get(doc.raw_text_url)
         text.raise_for_status()
-        out.append(Fetched(text.content, "text/plain", doc["html_url"]))
+        out.append(Fetched(text.content, "text/plain", doc.html_url))
     return out
 
 
@@ -117,28 +127,42 @@ async def federal_register(client: httpx.AsyncClient, since: date) -> list[Fetch
 ECFR_TITLES = (42, 45)  # Public Health (Medicare/Medicaid); Public Welfare (HIPAA, ACA)
 
 
+async def _ecfr_versions(client: httpx.AsyncClient, base: str, title: int, since: date):
+    """Every version of title ``title`` issued since ``since``, across all result pages."""
+    versions, page = [], 1
+    while True:
+        r = await client.get(f"{base}/versions/title-{title}.json",
+                             params={"issue_date[gte]": since.isoformat(), "page": page})
+        r.raise_for_status()
+        listing = ecfr_models.VersionList.model_validate(r.json())
+        versions += listing.content_versions
+        if listing.meta is None or page >= listing.meta.total_pages:
+            return versions
+        page += 1
+
+
 async def ecfr(client: httpx.AsyncClient, since: date) -> list[Fetched]:
     """The current text of every section substantively amended since ``since``."""
     base = "https://www.ecfr.gov/api/versioner/v1"
     out = []
     for title in ECFR_TITLES:
-        r = await client.get(f"{base}/versions/title-{title}.json",
-                             params={"issue_date[gte]": since.isoformat()})
-        r.raise_for_status()
-        latest: dict[str, dict] = {}  # section identifier -> newest version
-        for v in r.json()["content_versions"]:
+        latest: dict[str, ecfr_models.Version] = {}  # section identifier -> newest version
+        for v in await _ecfr_versions(client, base, title, since):
             # a new issue_date alone can be a re-issue of an old amendment
-            amended = v["substantive"] and not v["removed"] and v["amendment_date"] >= since.isoformat()
-            newer = v["identifier"] not in latest or v["date"] > latest[v["identifier"]]["date"]
+            amended = v.substantive and not v.removed and v.amendment_date >= since
+            newer = v.identifier not in latest or v.date > latest[v.identifier].date
             if amended and newer:
-                latest[v["identifier"]] = v
-        for v in latest.values():
-            x = await client.get(f"{base}/full/{v['date']}/title-{title}.xml",
-                                 params={"part": v["part"], "section": v["identifier"]})
+                latest[v.identifier] = v
+        if len(latest) > MAX_RECORDS_PER_ENDPOINT:
+            log.warning("ecfr title %d: %d sections, kept %d", title, len(latest),
+                        MAX_RECORDS_PER_ENDPOINT)
+        for v in list(latest.values())[:MAX_RECORDS_PER_ENDPOINT]:
+            x = await client.get(f"{base}/full/{v.date.isoformat()}/title-{title}.xml",
+                                 params={"part": v.part, "section": v.identifier})
             if x.status_code == 404:  # date not yet published in full text
                 continue
             x.raise_for_status()
-            url = f"https://www.ecfr.gov/current/title-{title}/section-{v['identifier']}"
+            url = f"https://www.ecfr.gov/current/title-{title}/section-{v.identifier}"
             out.append(Fetched(x.content, "application/xml", url))
     return out
 
@@ -155,14 +179,16 @@ async def cms_coverage(client: httpx.AsyncClient, since: date) -> list[Fetched]:
     base = "https://api.coverage.cms.gov/v1"
     r = await client.get(f"{base}/reports/national-coverage-ncd/")
     r.raise_for_status()
-    changed = [n for n in r.json()["data"] if n["last_updated_sort"][:8] >= f"{since:%Y%m%d}"]
+    report = cms_models.NcdReport.model_validate(r.json())
+    changed = [n for n in report.data if n.last_updated_sort >= since]
     out = []
-    for n in changed:
+    for n in changed[:MAX_RECORDS_PER_ENDPOINT]:
         d = await client.get(f"{base}/data/ncd/",
-                             params={"ncdid": n["document_id"], "ncdver": n["document_version"]})
+                             params={"ncdid": n.document_id, "ncdver": n.document_version})
         d.raise_for_status()
+        cms_models.NcdDetail.model_validate(d.json())
         url = ("https://www.cms.gov/medicare-coverage-database/view/ncd.aspx"
-               f"?ncdid={n['document_id']}&ncdver={n['document_version']}")
+               f"?ncdid={n.document_id}&ncdver={n.document_version}")
         out.append(Fetched(d.content, "application/json", url))
     return out
 
@@ -181,15 +207,18 @@ async def uspstf(client: httpx.AsyncClient, since: date) -> list[Fetched]:
     r = await client.get("https://data.uspreventiveservicestaskforce.org/api/json",
                          params={"key": settings.uspstf_api_key})
     r.raise_for_status()
-    data = r.json()
-    if r.status_code == 202 or data.get("apiKeyWarning"):
-        raise RuntimeError(f"USPSTF rejected the API key: {data.get('apiKeyWarning')}")
-    general = data["generalRecommendations"]
+    raw = r.json()
+    data = uspstf_models.Response.model_validate(raw)
+    if r.status_code == 202 or data.api_key_warning:  # the placeholder reply to a bad key
+        raise RuntimeError(f"USPSTF rejected the API key: {data.api_key_warning}")
     out = []
-    for rec in data["specificRecommendations"]:
-        topic = general.get(str(rec.get("general")), {})
-        url = f"https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/{topic.get('uspstfAlias', '')}"
-        out.append(Fetched(_json({"recommendation": rec, "topic": topic}), "application/json", url))
+    for raw_rec, rec in zip(raw["specificRecommendations"], data.specific_recommendations):
+        topic = data.general_recommendations.get(rec.general)
+        url = ("https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/"
+               f"{topic.uspstf_alias if topic else ''}")
+        out.append(Fetched(
+            _json({"recommendation": raw_rec, "topic": raw["generalRecommendations"].get(rec.general, {})}),
+            "application/json", url))
     return out
 
 
@@ -207,21 +236,23 @@ async def pubmed(client: httpx.AsyncClient, since: date) -> list[Fetched]:
         "retmax": MAX_RECORDS_PER_ENDPOINT, "retmode": "json", **key,
     })
     r.raise_for_status()
-    result = json.loads(r.text, strict=False)["esearchresult"]  # errors can hold control chars
-    if "ERROR" in result:
-        raise RuntimeError(f"PubMed esearch: {result['ERROR']}")
-    ids = result["idlist"]
+    # errors can hold control chars
+    result = pubmed_models.ESearchResponse.model_validate(json.loads(r.text, strict=False)).esearchresult
+    if result.error:
+        raise RuntimeError(f"PubMed esearch: {result.error}")
+    if result.count > MAX_RECORDS_PER_ENDPOINT:
+        log.warning("pubmed: %d records, kept %d", result.count, MAX_RECORDS_PER_ENDPOINT)
     out = []
-    for i in range(0, len(ids), 200):
+    for i in range(0, len(result.idlist), 200):
         x = await client.get(f"{_EUTILS}/efetch.fcgi", params={
-            "db": "pubmed", "id": ",".join(ids[i:i + 200]), "retmode": "xml",
+            "db": "pubmed", "id": ",".join(result.idlist[i:i + 200]), "retmode": "xml",
             "rettype": "abstract", **key,
         })
         x.raise_for_status()
-        for article in ET.fromstring(x.content).iter("PubmedArticle"):
-            pmid = article.findtext("MedlineCitation/PMID")
-            out.append(Fetched(ET.tostring(article, encoding="utf-8"), "application/xml",
-                               f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"))
+        for node in ET.fromstring(x.content).iter("PubmedArticle"):
+            article = pubmed_models.article_from_xml(node)  # validates; the stored bytes stay raw
+            out.append(Fetched(ET.tostring(node, encoding="utf-8"), "application/xml",
+                               f"https://pubmed.ncbi.nlm.nih.gov/{article.pmid}/"))
     return out
 
 

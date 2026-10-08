@@ -7,6 +7,7 @@ yet.
 
 - **Backend spec:** [docs/BACKEND_SPEC.md](docs/BACKEND_SPEC.md) (PDF:
   [docs/BACKEND_SPEC.pdf](docs/BACKEND_SPEC.pdf)) — tables, keys, object storage, pipelines, API.
+- **Ingestion spec:** [docs/INGESTION_SPEC.md](docs/INGESTION_SPEC.md) — what each provider returns and the pydantic model that validates it.
 - **Frontend spec:** [docs/FRONTEND_SPEC.md](docs/FRONTEND_SPEC.md) — proposed review UI.
 
 ## Setup
@@ -31,7 +32,9 @@ curl localhost:8000/jobs/<job_id>
 ## Development
 
 ```bash
-uv run pytest
+uv run pytest                  # offline: models, connectors against captured fixtures
+uv run pytest -m live          # real requests to the keyless endpoints, 3 records each
+uv run python scripts/capture_fixtures.py   # re-capture tests/fixtures from the live APIs
 uv run ruff check .
 ```
 
