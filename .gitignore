@@ -1,6 +1,3 @@
-/scraper-example/medical_policy_export.xlsx
-scraper-example/policy_monitor.db
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -219,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local environment configuration
+.env.*
+!.env.example
+!.env.*.example
+
+# OS-generated files
+.DS_Store
+Thumbs.db
