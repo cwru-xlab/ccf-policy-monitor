@@ -225,3 +225,6 @@ __marimo__/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Local Vercel project settings
+.vercel/
