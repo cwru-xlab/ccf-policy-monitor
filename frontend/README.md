@@ -57,7 +57,7 @@ This project uses:
 - CSS
 - Browser localStorage
 - Git and GitHub
-- GitHub Pages
+- Vercel
 
 ## Running the Project Locally
 
@@ -66,4 +66,17 @@ Clone the repository and open the project directory.
 Install the project dependencies:
 
 ```bash
-npm install
+npm ci
+```
+
+Run these commands from the `frontend` directory:
+
+```bash
+npm run dev
+# Or build and preview the production app:
+npm run build
+npm run preview
+```
+
+For Vercel, import the repository with its root directory set to the repository
+root, not `frontend`. See the [deployment instructions](../README.md#deploying-the-frontend-to-vercel).

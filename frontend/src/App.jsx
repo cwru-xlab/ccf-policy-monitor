@@ -1,7 +1,7 @@
 
 import './App.css'
 import {
-  HashRouter,
+  BrowserRouter,
   Routes,
   Route,
   Navigate,
@@ -24,7 +24,7 @@ import AuditLogPage from './pages/AuditLogPage'
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route
           path="/login"
@@ -106,7 +106,7 @@ function App() {
           }
         />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   )
 }
 
