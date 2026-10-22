@@ -15,3 +15,5 @@ data/
 .env
 data/
 .DS_Store
+
+notebooks/.cache/

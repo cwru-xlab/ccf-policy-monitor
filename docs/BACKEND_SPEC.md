@@ -294,6 +294,8 @@ Prompts and extraction schemas are in `policy_radar/llm.py`.
 
 No authentication yet.
 
+A placeholder route (`POST ""`, "ingest all guidelines") exists in `api.py` with no body; it is not part of the API yet.
+
 ## Configuration
 
 Every setting comes from `.env`; `example.env` lists them. `DATABASE_URL` and
@@ -314,6 +316,8 @@ policy_radar/
   llm.py                   OpenAI extraction and embeddings
   pipelines.py             ingest, atomize, parse
   api.py                   FastAPI routes
+notebooks/                 exploratory work, not imported by the app: intervention normalizer
+                           (see [INTERVENTION_NORMALIZATION.md](INTERVENTION_NORMALIZATION.md)) and RAG comparison
 tests/
 ```
 

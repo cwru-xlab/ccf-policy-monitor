@@ -69,6 +69,11 @@ async def ingest(source_key: str, tasks: BackgroundTasks, since: date | None = N
     return await _start(tasks, JobKind.INGEST, detail, pipelines.ingest(source_key, since))
 
 
+@app.post("")
+async def ingest_all_guidelines(tasks: BackgroundTasks):
+    """Fetch all"""
+
+
 @app.post("/guidelines/atomize", status_code=202)
 async def atomize(tasks: BackgroundTasks) -> dict:
     """Atomize every ingested guideline document not yet atomized."""
