@@ -1,0 +1,78 @@
+{
+ "content_versions": [
+  {
+   "amendment_date": "2026-10-01",
+   "date": "2026-10-01",
+   "identifier": "405.1801",
+   "issue_date": "2026-10-01",
+   "name": "\u00a7 405.1801   Introduction.",
+   "part": "405",
+   "removed": false,
+   "subpart": "R",
+   "substantive": true,
+   "title": "42",
+   "type": "section"
+  },
+  {
+   "amendment_date": "2026-10-01",
+   "date": "2026-10-01",
+   "identifier": "405.1803",
+   "issue_date": "2026-10-01",
+   "name": "\u00a7 405.1803   Contractor determination and notice of amount of program reimbursement.",
+   "part": "405",
+   "removed": false,
+   "subpart": "R",
+   "substantive": true,
+   "title": "42",
+   "type": "section"
+  },
+  {
+   "amendment_date": "2026-10-01",
+   "date": "2026-10-01",
+   "identifier": "405.1811",
+   "issue_date": "2026-10-01",
+   "name": "\u00a7 405.1811   Right to contractor hearing; contents of, and adding issues to, hearing request.",
+   "part": "405",
+   "removed": false,
+   "subpart": "R",
+   "substantive": true,
+   "title": "42",
+   "type": "section"
+  },
+  {
+   "amendment_date": "2026-10-01",
+   "date": "2026-10-01",
+   "identifier": "405.1813",
+   "issue_date": "2026-10-01",
+   "name": "\u00a7 405.1813   Good cause extension of time limit for requesting a contractor hearing.",
+   "part": "405",
+   "removed": false,
+   "subpart": "R",
+   "substantive": true,
+   "title": "42",
+   "type": "section"
+  },
+  {
+   "amendment_date": "2026-10-01",
+   "date": "2026-10-01",
+   "identifier": "405.1814",
+   "issue_date": "2026-10-01",
+   "name": "\u00a7 405.1814   Contractor hearing officer jurisdiction.",
+   "part": "405",
+   "removed": false,
+   "subpart": "R",
+   "substantive": true,
+   "title": "42",
+   "type": "section"
+  }
+ ],
+ "meta": {
+  "issue_date": {
+   "gte": "2026-09-01"
+  },
+  "latest_amendment_date": "2026-10-01",
+  "latest_issue_date": "2026-10-05",
+  "result_count": "75",
+  "title": "42"
+ }
+}

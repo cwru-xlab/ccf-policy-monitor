@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1356" height="1184" viewBox="0 0 1356 1184" font-family="Helvetica, Arial, sans-serif">
+<defs><marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#222" stroke-width="1.4"/></marker></defs>
+<rect width="1356" height="1184" fill="#fff"/>
+<rect x="390" y="55" width="300" height="172" rx="3" fill="#c9dcee" stroke="#9db4cc" stroke-width="1.5"/>
+<rect x="390" y="55" width="300" height="34" rx="3" fill="#b9d0e8" stroke="#9db4cc" stroke-width="1.5"/>
+<text x="540.0" y="78" text-anchor="middle" font-size="17" font-weight="600" fill="#111">SourceDocument</text>
+<text x="406" y="111" font-size="14" fill="#111">+document_id: str</text>
+<text x="406" y="131" font-size="14" fill="#111">+source_key: str</text>
+<text x="406" y="151" font-size="14" fill="#111">+retrieved_at: datetime</text>
+<text x="406" y="171" font-size="14" fill="#111">+storage_uri: str</text>
+<text x="406" y="191" font-size="14" fill="#111">+content_sha256: str</text>
+<text x="406" y="211" font-size="14" fill="#111">+origin_url: Optional&lt;HttpUrl&gt;</text>
+<rect x="48" y="292" width="300" height="234" rx="3" fill="#1565b5" stroke="#0d4f94" stroke-width="1.5"/>
+<rect x="48" y="292" width="300" height="34" rx="3" fill="#1a70c4" stroke="#0d4f94" stroke-width="1.5"/>
+<text x="198.0" y="315" text-anchor="middle" font-size="17" font-weight="600" fill="#fff">Guideline</text>
+<text x="64" y="348" font-size="14" fill="#fff">+guideline_id: str</text>
+<text x="64" y="368" font-size="14" fill="#fff">+source_key: str</text>
+<text x="64" y="388" font-size="14" fill="#fff">+document_id: str</text>
+<text x="64" y="408" font-size="14" fill="#fff">+title: str</text>
+<text x="64" y="428" font-size="14" fill="#fff">+criteria: tuple&lt;GuidelineCriterionUpdate&gt;</text>
+<text x="64" y="448" font-size="14" fill="#fff">+published: date</text>
+<text x="64" y="468" font-size="14" fill="#fff">+version: Optional&lt;str&gt;</text>
+<text x="64" y="488" font-size="14" fill="#fff">+strength: Optional&lt;str&gt;</text>
+<text x="64" y="508" font-size="14" fill="#fff">+strength_system: Optional&lt;str&gt;</text>
+<rect x="733" y="292" width="300" height="234" rx="3" fill="#0f7a35" stroke="#0a5f28" stroke-width="1.5"/>
+<rect x="733" y="292" width="300" height="34" rx="3" fill="#178a42" stroke="#0a5f28" stroke-width="1.5"/>
+<text x="883.0" y="315" text-anchor="middle" font-size="17" font-weight="600" fill="#fff">Policy</text>
+<text x="749" y="348" font-size="14" fill="#fff">+policy_number: str</text>
+<text x="749" y="368" font-size="14" fill="#fff">+doc_type: PolicyDocumentType</text>
+<text x="749" y="388" font-size="14" fill="#fff">+title: str</text>
+<text x="749" y="408" font-size="14" fill="#fff">+criteria: tuple&lt;PolicyCriterionUpdate&gt;</text>
+<text x="749" y="428" font-size="14" fill="#fff">+codes: tuple&lt;Code&gt;</text>
+<text x="749" y="448" font-size="14" fill="#fff">+coverage_effect: CoverageEffect</text>
+<text x="749" y="468" font-size="14" fill="#fff">+effective_date: date</text>
+<text x="749" y="488" font-size="14" fill="#fff">+last_reviewed: Optional&lt;date&gt;</text>
+<text x="749" y="508" font-size="14" fill="#fff">+watched_triggers: derived</text>
+<rect x="1136" y="360" width="195" height="92" rx="3" fill="#b4b7ba" stroke="#8c8f92" stroke-width="1.5"/>
+<rect x="1136" y="360" width="195" height="34" rx="3" fill="#a5a8ab" stroke="#8c8f92" stroke-width="1.5"/>
+<text x="1233.5" y="383" text-anchor="middle" font-size="17" font-weight="600" fill="#111">Code</text>
+<text x="1152" y="416" font-size="14" fill="#111">+system: CodeSystem</text>
+<text x="1152" y="436" font-size="14" fill="#111">+value: str</text>
+<rect x="48" y="606" width="300" height="152" rx="3" fill="#dccfd6" stroke="#b9a8b2" stroke-width="1.5"/>
+<rect x="48" y="606" width="300" height="34" rx="3" fill="#d2c2cb" stroke="#b9a8b2" stroke-width="1.5"/>
+<text x="198.0" y="629" text-anchor="middle" font-size="17" font-weight="600" fill="#111">GuidelineCriterion</text>
+<text x="64" y="662" font-size="14" fill="#111">+criterion_id: str</text>
+<text x="64" y="682" font-size="14" fill="#111">+parent_id: str</text>
+<text x="64" y="702" font-size="14" fill="#111">+text: str</text>
+<text x="64" y="722" font-size="14" fill="#111">+concept_words: tuple&lt;str&gt;</text>
+<text x="64" y="742" font-size="14" fill="#111">+needs_update: derived</text>
+<text x="334" y="682" text-anchor="end" font-size="10.5" fill="#111">guideline_id - e.g. OI0-0202213</text>
+<rect x="733" y="606" width="300" height="152" rx="3" fill="#cfe6cc" stroke="#9dbd9a" stroke-width="1.5"/>
+<rect x="733" y="606" width="300" height="34" rx="3" fill="#bdd9ba" stroke="#9dbd9a" stroke-width="1.5"/>
+<text x="883.0" y="629" text-anchor="middle" font-size="17" font-weight="600" fill="#111">PolicyCriterion</text>
+<text x="749" y="662" font-size="14" fill="#111">+criterion_id: str</text>
+<text x="749" y="682" font-size="14" fill="#111">+parent_id: str</text>
+<text x="749" y="702" font-size="14" fill="#111">+text: str</text>
+<text x="749" y="722" font-size="14" fill="#111">+concept_words: tuple&lt;str&gt;</text>
+<text x="749" y="742" font-size="14" fill="#111">+needs_update: derived</text>
+<text x="1019" y="682" text-anchor="end" font-size="10.5" fill="#111">policy_number - e.g. PID-6450C</text>
+<rect x="48" y="846" width="300" height="254" rx="3" fill="#f4a3a8" stroke="#cf6f77" stroke-width="1.5"/>
+<rect x="48" y="846" width="300" height="34" rx="3" fill="#ee8d94" stroke="#cf6f77" stroke-width="1.5"/>
+<text x="198.0" y="869" text-anchor="middle" font-size="17" font-weight="600" fill="#111">GuidelineCriterionUpdate</text>
+<text x="64" y="902" font-size="14" fill="#111">+update_id: str</text>
+<text x="64" y="922" font-size="14" fill="#111">+criterion_id: str</text>
+<text x="64" y="942" font-size="14" fill="#111">+kind: UpdateKind</text>
+<text x="64" y="962" font-size="14" fill="#111">+origin: UpdateOrigin</text>
+<text x="64" y="982" font-size="14" fill="#111">+revised: Optional&lt;GuidelineCriterion&gt;</text>
+<text x="64" y="1002" font-size="14" fill="#111">+document_id: Optional&lt;str&gt;</text>
+<text x="64" y="1022" font-size="14" fill="#111">+editor: Optional&lt;str&gt;</text>
+<text x="64" y="1042" font-size="14" fill="#111">+rationale: str</text>
+<text x="64" y="1062" font-size="14" fill="#111">+recorded_at: datetime</text>
+<text x="64" y="1082" font-size="14" fill="#111">+status: UpdateStatus</text>
+<rect x="733" y="846" width="300" height="254" rx="3" fill="#f6e68a" stroke="#d2bf45" stroke-width="1.5"/>
+<rect x="733" y="846" width="300" height="34" rx="3" fill="#f1da5f" stroke="#d2bf45" stroke-width="1.5"/>
+<text x="883.0" y="869" text-anchor="middle" font-size="17" font-weight="600" fill="#111">PolicyCriterionUpdate</text>
+<text x="749" y="902" font-size="14" fill="#111">+update_id: str</text>
+<text x="749" y="922" font-size="14" fill="#111">+criterion_id: str</text>
+<text x="749" y="942" font-size="14" fill="#111">+kind: UpdateKind</text>
+<text x="749" y="962" font-size="14" fill="#111">+origin: UpdateOrigin</text>
+<text x="749" y="982" font-size="14" fill="#111">+revised: Optional&lt;PolicyCriterion&gt;</text>
+<text x="749" y="1002" font-size="14" fill="#111">+document_id: Optional&lt;str&gt;</text>
+<text x="749" y="1022" font-size="14" fill="#111">+editor: Optional&lt;str&gt;</text>
+<text x="749" y="1042" font-size="14" fill="#111">+rationale: str</text>
+<text x="749" y="1062" font-size="14" fill="#111">+recorded_at: datetime</text>
+<text x="749" y="1082" font-size="14" fill="#111">+status: UpdateStatus</text>
+<rect x="390" y="868" width="300" height="133" rx="3" fill="#efe3c3" stroke="#c9b887" stroke-width="1.5"/>
+<rect x="390" y="868" width="300" height="34" rx="3" fill="#e6d6aa" stroke="#c9b887" stroke-width="1.5"/>
+<text x="540.0" y="891" text-anchor="middle" font-size="17" font-weight="600" fill="#111">CriterionMatch</text>
+<text x="406" y="924" font-size="14" fill="#111">+guideline_criterion_id: str</text>
+<text x="406" y="944" font-size="14" fill="#111">+policy_criterion_id: Optional&lt;str&gt;</text>
+<text x="406" y="964" font-size="14" fill="#111">+similarity: float</text>
+<text x="406" y="984" font-size="14" fill="#111">+divergence: Optional&lt;str&gt;</text>
+<path d="M470,227 L222,290" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="298" y="248" text-anchor="middle" font-size="14" fill="#111">extract</text>
+<path d="M611,227 L861,290" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="784" y="248" text-anchor="middle" font-size="14" fill="#111">extract</text>
+<path d="M1033,408 L1134,408" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="1085" y="397" text-anchor="middle" font-size="14" fill="#111">codes</text>
+<text x="1042" y="424" text-anchor="middle" font-size="13" fill="#111">1</text>
+<text x="1115" y="424" text-anchor="middle" font-size="13" fill="#111">0..*</text>
+<path d="M198,526 L198,604" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="210" y="543" text-anchor="start" font-size="13" fill="#111">1</text>
+<text x="208" y="571" text-anchor="start" font-size="14" fill="#111">criteria</text>
+<text x="208" y="599" text-anchor="start" font-size="13" fill="#111">0..*</text>
+<path d="M198,758 L198,844" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="210" y="775" text-anchor="start" font-size="13" fill="#111">1</text>
+<text x="208" y="807" text-anchor="start" font-size="14" fill="#111">history (criterion_id)</text>
+<text x="208" y="839" text-anchor="start" font-size="13" fill="#111">0..*</text>
+<path d="M883,526 L883,604" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="895" y="543" text-anchor="start" font-size="13" fill="#111">1</text>
+<text x="893" y="571" text-anchor="start" font-size="14" fill="#111">criteria</text>
+<text x="893" y="599" text-anchor="start" font-size="13" fill="#111">0..*</text>
+<path d="M883,758 L883,844" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="895" y="775" text-anchor="start" font-size="13" fill="#111">1</text>
+<text x="893" y="807" text-anchor="start" font-size="14" fill="#111">history (criterion_id)</text>
+<text x="893" y="839" text-anchor="start" font-size="13" fill="#111">0..*</text>
+<path d="M318,758 L458,865" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M765,758 L622,865" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="540" y="774" text-anchor="middle" font-size="14" fill="#111">aligns one guideline criterion</text>
+<text x="540" y="793" text-anchor="middle" font-size="14" fill="#111">to one policy criterion</text>
+<path d="M540,1001 L540,1143" fill="none" stroke="#222" stroke-width="1.4"/>
+<path d="M540,1143 L198,1143 L198,1102" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<path d="M540,1143 L883,1143 L883,1102" fill="none" stroke="#222" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="540" y="1171" text-anchor="middle" font-size="14" fill="#111">carries flag to matched families</text>
+</svg>

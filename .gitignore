@@ -228,3 +228,9 @@ Thumbs.db
 
 # Local Vercel project settings
 .vercel/
+
+# Backend / local
+node_modules/
+tmp/
+data/
+notebooks/.cache/

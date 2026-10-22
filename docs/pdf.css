@@ -1,0 +1,14 @@
+@page { size: A4; margin: 18mm 16mm; }
+body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 9.5pt; line-height: 1.45; color: #1a1a1a; }
+h1 { font-size: 20pt; margin: 0 0 8pt; }
+h2 { font-size: 14pt; margin: 18pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
+h3 { font-size: 11pt; margin: 14pt 0 4pt; font-family: Menlo, monospace; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0 10pt; font-size: 8.5pt; page-break-inside: avoid; }
+th, td { border: 1px solid #d0d0d0; padding: 3pt 5pt; text-align: left; vertical-align: top; }
+th { background: #f2f2f2; }
+code { font-family: Menlo, monospace; font-size: 8.5pt; }
+pre { background: #f6f6f6; padding: 6pt 8pt; font-size: 8pt; white-space: pre-wrap; }
+img { max-width: 70%; display: block; margin: 6pt auto; }
+header#title-block-header { display: none; }
+.diagram { page-break-after: always; }
+.diagram img { height: 195mm; width: auto; max-width: none; }

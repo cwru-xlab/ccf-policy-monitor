@@ -1,0 +1,61 @@
+{
+ "data": [
+  {
+   "chapter": "100",
+   "document_display_id": "100.3",
+   "document_id": 108,
+   "document_type": "NCD",
+   "document_version": 1,
+   "is_lab": 0,
+   "last_updated": "08/12/2026",
+   "last_updated_sort": "20260812133308",
+   "title": "24-Hour Ambulatory Esophageal pH Monitoring",
+   "url": "/data/ncd?ncdid=108&ncdver=1"
+  },
+  {
+   "chapter": "140",
+   "document_display_id": "140.1",
+   "document_id": 127,
+   "document_type": "NCD",
+   "document_version": 2,
+   "is_lab": 0,
+   "last_updated": "12/11/2024",
+   "last_updated_sort": "20241211134052",
+   "title": "Abortion",
+   "url": "/data/ncd?ncdid=127&ncdver=2"
+  },
+  {
+   "chapter": "30",
+   "document_display_id": "30.3",
+   "document_id": 11,
+   "document_type": "NCD",
+   "document_version": 2,
+   "is_lab": 0,
+   "last_updated": "05/25/2022",
+   "last_updated_sort": "20220525110005",
+   "title": "Acupuncture",
+   "url": "/data/ncd?ncdid=11&ncdver=2"
+  }
+ ],
+ "meta": {
+  "children": [],
+  "fields": [
+   "document_id",
+   "document_version",
+   "document_display_id",
+   "last_updated",
+   "last_updated_sort",
+   "document_type",
+   "title",
+   "chapter",
+   "is_lab",
+   "url"
+  ],
+  "next_token": "",
+  "notes": "",
+  "status": {
+   "id": 200,
+   "message": "OK"
+  }
+ }
+}
