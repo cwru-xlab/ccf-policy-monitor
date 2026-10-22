@@ -304,6 +304,7 @@ Every setting comes from `.env`; `example.env` lists them. `DATABASE_URL` and
 ## Code layout
 
 ```
+frontend/                  Vite + React review UI (separate from the backend; see FRONTEND_SPEC.md)
 db/schema.sql              tables, keys, indexes
 scripts/create_schema.py   applies schema.sql to DATABASE_URL
 policy_radar/

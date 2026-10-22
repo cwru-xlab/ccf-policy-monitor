@@ -1,4 +1,10 @@
-# Policy Radar
+# ccf-policy-monitor
+
+Monitors external clinical guidelines to detect relevant changes and recommend medical policy revisions for human-in-the-loop review.
+
+- `policy_radar/` — Python backend (below). `frontend/` — Vite + React review UI.
+
+## Policy Radar backend
 
 Backend for finding payer policies (CPBs) that may need review after a clinical guideline
 changes. This version ingests guidelines from public APIs, parses uploaded CPBs, and stores

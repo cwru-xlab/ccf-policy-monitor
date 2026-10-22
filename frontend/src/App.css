@@ -1,0 +1,4454 @@
+* {
+  box-sizing: border-box;
+}
+
+.login-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f7f8fa;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: Arial, sans-serif;
+  color: #1f2937;
+}
+
+.login-box {
+  width: 435px;
+  height: 610px;
+
+  background-color: white;
+  border: 1px solid #555555;
+  border-radius: 3px;
+
+  padding: 48px 50px;
+}
+
+.login-box h1 {
+  font-size: 20px;
+  margin: 0 0 12px 0;
+}
+
+.login-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-bottom: 42px;
+}
+
+.login-links a {
+  color: #0077cc;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 28px;
+}
+
+.form-group label {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  height: 37px;
+
+  border: 1px solid #d6dce2;
+  border-radius: 3px;
+
+  padding: 8px;
+  font-size: 14px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: -2px;
+  margin-bottom: 28px;
+
+  font-size: 11px;
+}
+
+.remember-me input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+}
+
+.login-box button {
+  width: 113px;
+  height: 41px;
+
+  background-color: #e7f3ef;
+  border: 1px solid #00856f;
+  border-radius: 22px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.login-box button:hover {
+  background-color: #d8eee7;
+}
+
+/* ============================= */
+/* DASHBOARD                     */
+/* ============================= */
+
+.app-page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  font-family: Arial, sans-serif;
+  color: #111827;
+}
+
+/* TOP BAR */
+
+.top-bar {
+  height: 72px;
+  background: #007a59;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 22px;
+}
+
+.brand-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-name {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.workspace-name {
+  font-size: 13px;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.search-box {
+  width: 220px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 0 12px;
+
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+}
+
+.search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: white;
+}
+
+.search-box input::placeholder {
+  color: #e3f1ed;
+}
+
+.top-icon {
+  font-size: 18px;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+  background: #d8e7e2;
+
+  color: #075f49;
+  font-size: 11px;
+}
+
+/* PAGE BODY */
+
+.app-body {
+  display: flex;
+  min-height: calc(100vh - 72px);
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  width: 216px;
+  flex-shrink: 0;
+
+  background: white;
+  border-right: 1px solid #e5e7eb;
+
+  padding-top: 16px;
+}
+
+.nav-item {
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 16px;
+
+  color: #4b5563;
+  text-decoration: none;
+
+  font-size: 14px;
+}
+
+.nav-item:hover {
+  background: #f3f7f6;
+}
+
+.nav-item.active {
+  background: #e6f2fb;
+  color: #006b52;
+
+  border-left: 3px solid #007a59;
+}
+
+.nav-icon {
+  font-size: 17px;
+}
+
+/* MAIN DASHBOARD */
+
+.dashboard-content {
+  flex: 1;
+  padding: 28px 30px;
+}
+
+.dashboard-content h1 {
+  margin: 0 0 28px;
+  font-size: 25px;
+}
+
+/* STAT CARDS */
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.stat-card {
+  height: 86px;
+
+  background: white;
+  border: 1px solid #dfe3e8;
+  border-radius: 4px;
+
+  padding: 20px;
+}
+
+.stat-card span {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #5b6472;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.stat-card strong {
+  font-size: 28px;
+}
+
+/* LOWER DASHBOARD */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+
+  gap: 18px;
+  align-items: start;
+}
+
+/* REVIEWS */
+
+.reviews-card,
+.recommendation-card {
+  background: white;
+  border: 1px solid #dfe3e8;
+  border-radius: 4px;
+}
+
+.reviews-card h2,
+.recommendation-card h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.reviews-card h2 {
+  padding: 17px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.review-table-header,
+.review-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 1fr 1fr;
+
+  align-items: center;
+}
+
+.review-table-header {
+  padding: 11px 16px;
+
+  color: #56606f;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.review-row {
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  border-top: 1px solid #e5e7eb;
+
+  color: #4b5563;
+  font-size: 12px;
+}
+
+.review-row strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.status {
+  width: fit-content;
+
+  padding: 5px 8px;
+  border-radius: 3px;
+}
+
+.status.completed {
+  background: #d6f5e6;
+  color: #087653;
+}
+
+.status.in-review {
+  background: #fff0c9;
+  color: #9b5d00;
+}
+
+/* RECOMMENDATIONS */
+
+.recommendation-card {
+  padding: 18px;
+}
+
+.recommendation-card p {
+  margin: 4px 0 20px;
+
+  color: #5f6773;
+  font-size: 12px;
+}
+
+.recommendation-item {
+  margin-bottom: 19px;
+}
+
+.recommendation-label {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 7px;
+
+  font-size: 12px;
+}
+
+.progress-background {
+  width: 100%;
+  height: 8px;
+
+  background: #e5e7eb;
+  border-radius: 2px;
+
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+}
+
+.progress.criteria {
+  width: 44%;
+  background: #007a59;
+}
+
+.progress.mismatch {
+  width: 25%;
+  background: #087ac1;
+}
+
+.progress.evidence {
+  width: 38%;
+  background: #6b7280;
+}
+
+/* ============================= */
+/* POLICY REVIEWS PAGE           */
+/* ============================= */
+
+.policy-reviews-content {
+  position: relative;
+  flex: 1;
+  padding: 28px 30px 90px;
+}
+
+.policy-reviews-content h1 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.page-subtitle {
+  margin: 4px 0 38px;
+  color: #5f6773;
+  font-size: 13px;
+}
+
+.review-controls {
+  display: grid;
+  grid-template-columns: 410px 352px 1fr;
+  gap: 16px;
+  align-items: center;
+
+  margin-bottom: 23px;
+}
+
+.review-search {
+  height: 46px;
+  padding: 0 18px;
+
+  border: 1px solid #cbddeb;
+  border-radius: 5px;
+
+  font-size: 14px;
+  outline: none;
+}
+
+.filter-buttons {
+  display: flex;
+}
+
+.filter-buttons button {
+  width: 128px;
+  height: 46px;
+
+  background: white;
+  border: 1px solid #cbddeb;
+  border-radius: 0;
+
+  color: #45627b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filter-buttons button:first-child {
+  border-radius: 5px 0 0 5px;
+}
+
+.filter-buttons button:last-child {
+  border-radius: 0 5px 5px 0;
+}
+
+.filter-buttons button.selected {
+  background: #e1f1fd;
+  color: #0071c8;
+}
+
+.sort-area {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  color: #5d7a95;
+  font-size: 14px;
+}
+
+.sort-area select {
+  width: 163px;
+  height: 46px;
+
+  padding: 0 16px;
+
+  background: white;
+  border: 1px solid #cbddeb;
+  border-radius: 5px;
+
+  color: #45627b;
+  font-size: 14px;
+}
+
+/* TABLE */
+
+.policy-review-table {
+  background: white;
+  border: 1px solid #d7e4ed;
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+}
+
+.policy-review-header,
+.policy-review-row {
+  display: grid;
+
+  grid-template-columns:
+    1.45fr
+    1.5fr
+    1.3fr
+    0.9fr
+    0.82fr
+    0.58fr;
+}
+
+.policy-review-header {
+  min-height: 40px;
+  align-items: center;
+
+  padding: 0 15px;
+
+  background: #f4f9fc;
+
+  color: #4c6b83;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.policy-review-row {
+  min-height: 88px;
+  align-items: start;
+
+  padding: 15px;
+
+  border-top: 1px solid #dce7ef;
+
+  color: #496d8a;
+  font-size: 12px;
+}
+
+.policy-review-row > div {
+  padding-right: 10px;
+}
+
+.review-name {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #0072c6;
+  font-size: 13px;
+}
+
+.policy-review-row p {
+  margin: 0;
+
+  color: #66829a;
+  line-height: 1.4;
+}
+
+.document-cell,
+.guideline-cell {
+  display: flex;
+  gap: 7px;
+}
+
+.document-cell strong,
+.guideline-cell strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.document-cell small,
+.guideline-cell small,
+.date-cell small,
+.findings-cell small {
+  display: block;
+  margin-top: 4px;
+
+  color: #7891a5;
+  font-size: 11px;
+}
+
+.pdf-icon {
+  height: 23px;
+  padding: 5px 3px;
+
+  background: #ef3e3e;
+  color: white;
+
+  font-size: 7px;
+}
+
+.guideline-icon {
+  color: #168be0;
+  font-size: 24px;
+}
+
+.date-cell span {
+  display: block;
+}
+
+.findings-cell strong {
+  display: block;
+
+  color: #263f55;
+  font-size: 17px;
+}
+
+/* NEW REVIEW BUTTON */
+
+.new-review-button {
+  position: absolute;
+
+  right: 32px;
+  bottom: 25px;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 10px 12px;
+
+  background: #e7f3ef;
+
+  border: 1px solid #007a59;
+  border-radius: 22px;
+
+  color: #111827;
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.new-review-button span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 16px;
+  height: 16px;
+
+  border: 1px solid #111827;
+  border-radius: 50%;
+}
+
+/* ============================= */
+/* NEW POLICY REVIEW PAGE        */
+/* ============================= */
+
+.new-review-content {
+  flex: 1;
+  padding: 25px 30px 20px;
+  background: #f8fafc;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+
+  color: #0072c6;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.new-review-content h1 {
+  margin: 0;
+  font-size: 23px;
+}
+
+.new-review-subtitle {
+  margin: 5px 0 17px;
+  color: #536171;
+  font-size: 13px;
+}
+
+.new-review-card {
+  margin-bottom: 9px;
+  padding: 14px 17px 17px;
+
+  background: white;
+  border: 1px solid #dce3e8;
+  border-radius: 4px;
+}
+
+.new-review-card h2 {
+  margin: 0 0 12px;
+
+  font-size: 14px;
+}
+
+.new-review-card p {
+  margin: -5px 0 10px;
+
+  color: #536171;
+  font-size: 12px;
+}
+
+.new-review-label {
+  display: block;
+  margin-bottom: 7px;
+
+  color: #3f4b59;
+  font-size: 12px;
+}
+
+.review-name-input {
+  width: 435px;
+  height: 37px;
+
+  padding: 0 14px;
+
+  border: 1px solid #d7dfe5;
+  border-radius: 4px;
+
+  font-size: 12px;
+  outline: none;
+}
+
+/* UPLOAD AREA */
+
+.upload-area {
+  height: 102px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px dashed #bdccd7;
+
+  color: #536171;
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.upload-area strong {
+  color: #0072c6;
+}
+
+.upload-icon {
+  margin-bottom: 8px;
+
+  color: #777;
+  font-size: 38px;
+  line-height: 30px;
+}
+
+.selected-policy-file {
+  min-height: 50px;
+
+  margin-top: 10px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border: 1px solid #dce3e8;
+  border-radius: 4px;
+
+  font-size: 12px;
+}
+
+.selected-policy-file strong,
+.selected-policy-file small {
+  display: block;
+}
+
+.selected-policy-file small {
+  margin-top: 3px;
+
+  color: #687585;
+  font-size: 10px;
+}
+
+.selected-policy-file button {
+  border: none;
+  background: none;
+
+  color: #9c1c1c;
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.select-button-row {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 49px;
+}
+
+.outline-action-button {
+  min-width: 145px;
+  height: 32px;
+
+  background: white;
+  border: 1px solid #cbd5dd;
+  border-radius: 4px;
+
+  color: #17202b;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* GUIDELINES */
+
+.guidelines-settings {
+  padding-bottom: 16px;
+}
+
+.guideline-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin-top: 17px;
+
+  cursor: pointer;
+}
+
+.guideline-option input {
+  margin-top: 2px;
+
+  accent-color: #008268;
+}
+
+.guideline-option strong {
+  display: block;
+
+  font-size: 12px;
+}
+
+.guideline-option small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #536171;
+  font-size: 11px;
+}
+
+.manual-guideline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* BOTTOM ACTIONS */
+
+.new-review-actions {
+  display: flex;
+  justify-content: space-between;
+
+  margin-top: 46px;
+}
+
+.cancel-review-button {
+  width: 80px;
+  height: 33px;
+
+  background: #ffc1c5;
+  border: none;
+  border-radius: 4px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.start-review-button {
+  width: 147px;
+  height: 33px;
+
+  background: #e8f3ef;
+  border: 1px solid #008268;
+  border-radius: 4px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   POLICY SELECTION WINDOW
+   Matches PolicySelectionPage.jsx
+   ========================================================= */
+
+
+/* ---------- Entire page ---------- */
+
+.policy-selection-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #f7f9fb;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172033;
+}
+
+
+/* =========================================================
+   BACKGROUND PAGE
+   This is the fake New Policy Review page behind the modal
+   ========================================================= */
+
+.selection-background {
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* Main content behind modal */
+
+.selection-background-content {
+  flex: 1;
+  padding: 28px 40px;
+  background: #f7f9fb;
+}
+
+.selection-background-content h1 {
+  margin: 10px 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.selection-background-content p {
+  margin-top: 0;
+  font-size: 14px;
+  color: #536273;
+}
+
+
+/* Fake cards behind modal */
+
+.background-card {
+  margin-top: 20px;
+  padding: 20px;
+  min-height: 100px;
+
+  background: white;
+
+  border: 1px solid #dbe2e8;
+  border-radius: 4px;
+}
+
+.background-card h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+
+/* =========================================================
+   OVERLAY
+   Blurs and slightly fades the page behind the popup
+   ========================================================= */
+
+.selection-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 50;
+
+  background: rgba(255, 255, 255, 0.35);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+
+/* =========================================================
+   POLICY SELECTION MODAL
+   ========================================================= */
+
+.policy-selection-modal {
+  position: fixed;
+
+  z-index: 100;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(900px, calc(100vw - 80px));
+
+  padding: 22px 26px 26px;
+
+  background: #f9fafb;
+
+  border: 1px solid #222;
+  border-radius: 4px;
+
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172033;
+}
+
+
+/* ---------- Modal title ---------- */
+
+.policy-selection-modal h1 {
+  margin: 0 0 4px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  color: #172033;
+}
+
+
+/* ---------- Subtitle ---------- */
+
+.selection-subtitle {
+  margin: 0 0 18px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 13px;
+
+  color: #536273;
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.selection-table {
+  width: 100%;
+
+  border: 1px solid #d6e1ea;
+  border-radius: 5px;
+
+  overflow: hidden;
+
+  background: white;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.selection-table-header {
+  display: grid;
+
+  grid-template-columns:
+    55px
+    2fr
+    1.35fr
+    1.6fr
+    1.25fr;
+
+  align-items: center;
+
+  min-height: 42px;
+
+  background: #eef5f9;
+
+  border-bottom: 1px solid #d6e1ea;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #55708a;
+}
+
+.selection-table-header > div {
+  padding: 0 12px;
+}
+
+
+/* =========================================================
+   TABLE ROWS
+   ========================================================= */
+
+.selection-table-row {
+  display: grid;
+
+  grid-template-columns:
+    55px
+    2fr
+    1.35fr
+    1.6fr
+    1.25fr;
+
+  min-height: 88px;
+
+  align-items: stretch;
+
+  border-bottom: 1px solid #dce6ee;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.selection-table-row:last-child {
+  border-bottom: none;
+}
+
+
+/* Every cell */
+
+.selection-table-row > div {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+
+  padding: 12px;
+
+  border-right: 1px solid #dce6ee;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.selection-table-row > div:last-child {
+  border-right: none;
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.selection-checkbox-cell {
+  align-items: center;
+  justify-content: center !important;
+}
+
+.selection-checkbox-cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+
+  margin: 0;
+
+  cursor: pointer;
+
+  accent-color: #007a5a;
+}
+
+
+/* =========================================================
+   POLICY NAME + DESCRIPTION
+   ========================================================= */
+
+.selection-policy-name strong {
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  color: #0072c6;
+}
+
+.selection-policy-name p {
+  margin: 4px 0 0;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: #617b92;
+}
+
+
+/* =========================================================
+   DATE COLUMNS
+   ========================================================= */
+
+.selection-date {
+  font-family: Arial, Helvetica, sans-serif;
+
+  color: #55718b;
+}
+
+.selection-date span {
+  display: block;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 13px;
+}
+
+.selection-date small {
+  display: block;
+
+  margin-top: 3px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 11px;
+
+  color: #6d879d;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.status {
+  display: inline-block;
+
+  width: fit-content;
+  min-width: 90px;
+
+  padding: 5px 10px;
+
+  border-radius: 5px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  text-align: center;
+}
+
+
+/* Completed */
+
+.status.completed {
+  background: #d7f4e9;
+  color: #00835f;
+}
+
+
+/* In Review */
+
+.status.in-review {
+  background: #fff0c2;
+  color: #a15a00;
+}
+
+
+/* =========================================================
+   CONFIRM BUTTON AREA
+   ========================================================= */
+
+.selection-confirm-row {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: 22px;
+}
+
+
+/* =========================================================
+   CONFIRM SELECTIONS BUTTON
+   ========================================================= */
+
+.confirm-selection-button {
+  padding: 10px 18px;
+
+  background: #edf8f5;
+
+  border: 1px solid #007a5a;
+  border-radius: 4px;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  color: #111827;
+
+  cursor: pointer;
+}
+
+.confirm-selection-button:hover {
+  background: #dff3ed;
+}
+
+
+/* =========================================================
+   FONT SAFETY
+   Prevent anything inside modal from becoming Times New Roman
+   ========================================================= */
+
+.policy-selection-modal,
+.policy-selection-modal *,
+.policy-selection-modal button,
+.policy-selection-modal input {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================================
+   SELECTED GUIDELINES
+========================================= */
+
+.selected-guidelines-list {
+  margin-top: 18px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-guideline-item {
+  min-height: 58px;
+  border: 1px solid #d7dee5;
+  border-radius: 4px;
+  padding: 10px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: white;
+}
+
+.selected-guideline-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selected-guideline-item strong {
+  font-size: 14px;
+  color: #172033;
+}
+
+.selected-guideline-item small {
+  font-size: 12px;
+  color: #667085;
+}
+
+.selected-guideline-item button {
+  border: none;
+  background: transparent;
+  color: #9b1c1c;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* =========================================================
+   REVIEW FINDINGS PAGE
+========================================================= */
+
+.review-findings-content {
+  flex: 1;
+  padding: 30px 42px 40px;
+  background: #f7f9fb;
+  min-height: calc(100vh - 58px);
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
+.review-findings-content h1 {
+  margin: 12px 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.review-findings-subtitle {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: #667085;
+}
+
+
+/* =========================================================
+   SELECTED POLICIES / GUIDELINES SUMMARY
+========================================================= */
+
+.findings-selection-summary {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+
+  background: #ffffff;
+  border: 1px solid #d7dee5;
+  border-radius: 4px;
+
+  padding: 10px 18px;
+  margin-bottom: 14px;
+}
+
+.findings-summary-column {
+  padding: 4px 0;
+}
+
+.findings-summary-column:first-child {
+  padding-right: 32px;
+}
+
+.findings-summary-column:last-child {
+  padding-left: 32px;
+}
+
+.findings-summary-column h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.findings-summary-column p {
+  margin: 5px 0;
+  font-size: 12px;
+  color: #52627a;
+}
+
+.findings-summary-divider {
+  width: 1px;
+  background: #d7dee5;
+}
+
+
+/* =========================================================
+   FILTER BAR
+========================================================= */
+
+.findings-filter-bar {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ffffff;
+  border: 1px solid #d7dee5;
+  border-radius: 4px;
+
+  padding: 7px 14px;
+  margin-bottom: 14px;
+
+  box-sizing: border-box;
+}
+
+.findings-filter-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-label {
+  font-size: 12px;
+  color: #52627a;
+  margin-right: 4px;
+}
+
+.finding-filter-button {
+  height: 30px;
+  min-width: 72px;
+
+  padding: 0 13px;
+
+  border: 1px solid #cbd5df;
+  border-radius: 4px;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.finding-filter-button:hover {
+  background: #f4f7f9;
+}
+
+.finding-filter-button.active {
+  background: #007a57;
+  border-color: #007a57;
+  color: #ffffff;
+}
+
+.findings-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 11px;
+  color: #52627a;
+}
+
+.findings-sort select {
+  width: 100px;
+  height: 30px;
+
+  padding: 0 10px;
+
+  border: 1px solid #d7dee5;
+  border-radius: 3px;
+
+  background: #ffffff;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  color: #172033;
+}
+
+
+/* =========================================================
+   FINDINGS TABLE
+========================================================= */
+
+.findings-table {
+  background: #ffffff;
+
+  border: 1px solid #d7dee5;
+  border-radius: 4px;
+
+  overflow: hidden;
+}
+
+.findings-table-header {
+  display: grid;
+  grid-template-columns: 41% 44% 15%;
+
+  min-height: 34px;
+
+  align-items: center;
+
+  background: #e8eef2;
+
+  font-size: 10px;
+  font-weight: 700;
+  color: #52627a;
+}
+
+.findings-table-header > div {
+  padding: 0 22px;
+}
+
+
+/* =========================================================
+   SCROLLING FINDINGS AREA
+========================================================= */
+
+.findings-scroll-area {
+  max-height: 485px;
+  overflow-y: auto;
+}
+
+.findings-scroll-area::-webkit-scrollbar {
+  width: 7px;
+}
+
+.findings-scroll-area::-webkit-scrollbar-track {
+  background: #f2f4f7;
+}
+
+.findings-scroll-area::-webkit-scrollbar-thumb {
+  background: #98a2b3;
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   INDIVIDUAL FINDING
+========================================================= */
+
+.finding-row {
+  display: grid;
+  grid-template-columns: 41% 44% 15%;
+
+  min-height: 155px;
+
+  border-bottom: 1px solid #d7dee5;
+}
+
+.finding-row:last-child {
+  border-bottom: none;
+}
+
+.finding-policy-column,
+.finding-guideline-column {
+  padding: 18px 22px;
+
+  box-sizing: border-box;
+}
+
+.finding-policy-column {
+  border-right: 1px solid #d7dee5;
+}
+
+.finding-guideline-column {
+  border-right: 1px solid #d7dee5;
+}
+
+.finding-policy-column strong,
+.finding-guideline-column strong {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #173f7a;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.finding-criterion {
+  display: block;
+
+  margin-bottom: 12px;
+
+  color: #58729a;
+
+  font-size: 11px;
+}
+
+.finding-policy-column p,
+.finding-guideline-column p {
+  margin: 0;
+
+  max-width: 95%;
+
+  color: #58729a;
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+
+/* =========================================================
+   ACTION COLUMN
+========================================================= */
+
+.finding-action-column {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 15px 10px;
+
+  box-sizing: border-box;
+}
+
+.finding-unread {
+  position: absolute;
+
+  top: 13px;
+  right: 13px;
+
+  color: #00875a;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.view-edit-report-button {
+  min-width: 125px;
+  height: 32px;
+
+  padding: 0 12px;
+
+  border: 1px solid #1683ff;
+  border-radius: 3px;
+
+  background: #ffffff;
+
+  color: #006fd6;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.view-edit-report-button:hover {
+  background: #f1f7ff;
+}
+
+
+/* =========================================================
+   SMALLER SCREEN SUPPORT
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .review-findings-content {
+    padding: 24px;
+  }
+
+  .findings-filter-left {
+    gap: 6px;
+  }
+
+  .finding-filter-button {
+    min-width: auto;
+    padding: 0 9px;
+  }
+
+  .findings-table-header,
+  .finding-row {
+    grid-template-columns: 38% 42% 20%;
+  }
+}
+
+/* =========================================================
+   POLICY REVIEW AND EDITOR PAGE
+   ========================================================= */
+
+.policy-editor-content {
+  flex: 1;
+  padding: 30px 34px 24px 34px;
+  background: #f7f9fb;
+  min-height: calc(100vh - 58px);
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172033;
+  box-sizing: border-box;
+}
+
+/* Back link */
+
+.policy-editor-content .back-link {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #0074c8;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.policy-editor-content .back-link:hover {
+  text-decoration: underline;
+}
+
+/* Page title */
+
+.policy-editor-content h1 {
+  margin: 0 0 7px 0;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #172033;
+}
+
+.policy-editor-subtitle {
+  margin: 0 0 16px 0;
+  color: #526173;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   WHITE CARDS
+   ========================================================= */
+
+.editor-card {
+  background: white;
+  border: 1px solid #d8e0e7;
+  border-radius: 3px;
+  padding: 15px 18px 14px 18px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.editor-card h2 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.editor-card-description {
+  margin: 0 0 10px 0;
+  color: #526173;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   RECOMMENDATIONS TABLE
+   ========================================================= */
+
+.editor-recommendations-table {
+  width: 100%;
+  border: 1px solid #dbe3e8;
+  background: white;
+  box-sizing: border-box;
+}
+
+.editor-table-header {
+  display: grid;
+  grid-template-columns: 32% 34% 34%;
+  background: #e4ebef;
+  min-height: 38px;
+  align-items: center;
+}
+
+.editor-table-header > div {
+  padding: 0 15px;
+  color: #465568;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.editor-table-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* scrollbar */
+
+.editor-table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-table-scroll::-webkit-scrollbar-track {
+  background: #edf1f4;
+}
+
+.editor-table-scroll::-webkit-scrollbar-thumb {
+  background: #8f9ba5;
+  border-radius: 4px;
+}
+
+
+/* Each recommendation */
+
+.editor-recommendation-row {
+  display: grid;
+  grid-template-columns: 32% 34% 34%;
+  min-height: 175px;
+  border-bottom: 1px solid #dbe3e8;
+}
+
+.editor-recommendation-row:last-child {
+  border-bottom: none;
+}
+
+.editor-policy-column,
+.editor-guideline-column,
+.editor-recommendation-column {
+  padding: 16px 15px;
+  box-sizing: border-box;
+}
+
+.editor-policy-column,
+.editor-guideline-column {
+  border-right: 1px solid #d6dde3;
+}
+
+.editor-policy-column strong,
+.editor-guideline-column strong {
+  display: block;
+  color: #003d79;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.editor-policy-column > span,
+.editor-guideline-column > span {
+  display: block;
+  color: #557391;
+  font-size: 11px;
+  margin-bottom: 15px;
+}
+
+.editor-policy-column p,
+.editor-guideline-column p {
+  margin: 0;
+  color: #56718d;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+
+/* =========================================================
+   RECOMMENDATION COLUMN
+   ========================================================= */
+
+.recommendation-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.recommendation-type,
+.recommendation-priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Change */
+
+.recommendation-type.change {
+  background: #d9efff;
+  color: #0071c5;
+}
+
+/* Add */
+
+.recommendation-type.add {
+  background: #d9f4e6;
+  color: #14865e;
+}
+
+/* Remove, if we use it later */
+
+.recommendation-type.remove {
+  background: #ffe2e2;
+  color: #b83b3b;
+}
+
+/* Priority */
+
+.recommendation-priority.high {
+  background: #ffe3e3;
+  color: #d74343;
+}
+
+.recommendation-priority.medium {
+  background: #fff0c9;
+  color: #b87a00;
+}
+
+.recommendation-priority.low {
+  background: #e7edf2;
+  color: #536273;
+}
+
+.recommendation-text {
+  display: block;
+  color: #003d79;
+  font-size: 12px;
+  line-height: 1.3;
+  margin-bottom: 12px;
+}
+
+.proposed-change-label {
+  display: block;
+  color: #536f8c;
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.proposed-change-box {
+  border: 1px solid #bdd3e6;
+  background: #f4f9fd;
+  border-radius: 3px;
+  padding: 8px;
+  color: #56718d;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+
+/* =========================================================
+   POLICY DOCUMENT EDITOR
+   ========================================================= */
+
+.policy-document-editor {
+  margin-top: 14px;
+}
+
+.policy-editor-textarea {
+  display: block;
+  width: 100%;
+  height: 235px;
+  resize: none;
+  border: 1px solid #d5dee5;
+  border-radius: 3px;
+  background: white;
+
+  padding: 17px 20px;
+
+  box-sizing: border-box;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  line-height: 2;
+  color: #52708f;
+
+  outline: none;
+}
+
+.policy-editor-textarea:focus {
+  border-color: #7da9c8;
+}
+
+
+/* =========================================================
+   BOTTOM BUTTONS
+   ========================================================= */
+
+.policy-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding-bottom: 15px;
+}
+
+.policy-editor-actions .cancel-review-button {
+  min-width: 90px;
+  height: 38px;
+  border: 1px solid #efb8b8;
+  border-radius: 3px;
+  background: #ffcaca;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.policy-editor-actions .cancel-review-button:hover {
+  background: #ffbcbc;
+}
+
+.policy-editor-actions .start-review-button {
+  min-width: 145px;
+  height: 38px;
+  border: 1px solid #007d69;
+  border-radius: 3px;
+  background: #edf8f5;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.policy-editor-actions .start-review-button:hover {
+  background: #def2ed;
+}
+
+
+/* =========================================================
+   KEEP FONT CONSISTENT
+   ========================================================= */
+
+.policy-editor-content,
+.policy-editor-content button,
+.policy-editor-content input,
+.policy-editor-content textarea,
+.policy-editor-content select {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   SMALLER SCREEN SUPPORT
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .policy-editor-content {
+    padding: 24px;
+  }
+
+  .editor-table-header,
+  .editor-recommendation-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+}
+
+/* =========================================================
+   GUIDELINES PAGE
+   ========================================================= */
+
+.guidelines-content {
+  flex: 1;
+  position: relative;
+  padding: 30px 34px;
+  background: #f7f9fb;
+  min-height: calc(100vh - 58px);
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172033;
+}
+
+.guidelines-content h1 {
+  margin: 0 0 5px 0;
+  font-size: 25px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.guidelines-subtitle {
+  margin: 0 0 30px 0;
+  font-size: 12px;
+  color: #526173;
+}
+
+
+/* =========================================================
+   SEARCH / FILTER / SORT ROW
+   ========================================================= */
+
+.guidelines-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+.guidelines-search {
+  width: 390px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 16px;
+
+  background: white;
+  border: 1px solid #cbd9e4;
+  border-radius: 3px;
+
+  box-sizing: border-box;
+}
+
+.guidelines-search > span {
+  color: #5e7d99;
+  font-size: 16px;
+}
+
+.guidelines-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #172033;
+}
+
+.guidelines-search input::placeholder {
+  color: #6f879e;
+}
+
+
+/* Filter buttons */
+
+.guidelines-filter-buttons {
+  display: flex;
+  height: 44px;
+}
+
+.guidelines-filter-buttons button {
+  min-width: 120px;
+  height: 44px;
+
+  border: 1px solid #cbd9e4;
+  border-right: none;
+
+  background: white;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #45617a;
+
+  cursor: pointer;
+}
+
+.guidelines-filter-buttons button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.guidelines-filter-buttons button:last-child {
+  border-right: 1px solid #cbd9e4;
+  border-radius: 0 3px 3px 0;
+}
+
+.guidelines-filter-buttons button.active {
+  background: #e1f2ff;
+  color: #0073c8;
+  border-color: #9acbed;
+}
+
+.guidelines-filter-buttons button:hover {
+  background: #eef7fd;
+}
+
+
+/* Sort */
+
+.guidelines-sort {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 12px;
+  color: #60758a;
+}
+
+.guidelines-sort select {
+  width: 155px;
+  height: 44px;
+
+  padding: 0 14px;
+
+  border: 1px solid #cbd9e4;
+  border-radius: 3px;
+
+  background: white;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  color: #38536c;
+
+  outline: none;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   GUIDELINES TABLE
+   ========================================================= */
+
+.guidelines-table {
+  width: 565px;
+
+  background: white;
+
+  border: 1px solid #cbd9e4;
+  border-radius: 3px;
+
+  overflow: hidden;
+}
+
+.guidelines-table-header {
+  display: grid;
+
+  grid-template-columns:
+    2fr
+    1.15fr
+    1.35fr
+    1fr;
+
+  min-height: 38px;
+
+  align-items: center;
+
+  background: #eef5f9;
+
+  border-bottom: 1px solid #d6e1e8;
+}
+
+.guidelines-table-header > div {
+  padding: 0 13px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  color: #4f6981;
+}
+
+
+/* Individual rows */
+
+.guidelines-table-row {
+  display: grid;
+
+  grid-template-columns:
+    2fr
+    1.15fr
+    1.35fr
+    1fr;
+
+  min-height: 84px;
+
+  border-bottom: 1px solid #d6e1e8;
+}
+
+.guidelines-table-row:last-child {
+  border-bottom: none;
+}
+
+.guidelines-table-row > div {
+  padding: 13px;
+
+  box-sizing: border-box;
+
+  border-right: 1px solid #d6e1e8;
+}
+
+.guidelines-table-row > div:last-child {
+  border-right: none;
+}
+
+
+/* Guideline name */
+
+.guideline-name-cell strong {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #0072c6;
+}
+
+.guideline-name-cell p {
+  margin: 0;
+
+  font-size: 10px;
+  line-height: 1.4;
+
+  color: #607b94;
+}
+
+
+/* Dates */
+
+.guideline-date-cell span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  font-size: 10px;
+
+  color: #526f89;
+}
+
+.guideline-date-cell small {
+  display: block;
+
+  font-size: 10px;
+
+  color: #718ba2;
+}
+
+
+/* =========================================================
+   STATUS LABELS
+   ========================================================= */
+
+.guidelines-table .status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 76px;
+
+  padding: 5px 8px;
+
+  border-radius: 5px;
+
+  box-sizing: border-box;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.guidelines-table .status.completed {
+  background: #d9f5e9;
+  color: #00875e;
+}
+
+.guidelines-table .status.in-review {
+  background: #fff0bd;
+  color: #a75b00;
+}
+
+
+/* =========================================================
+   NEW GUIDELINE BUTTON
+   ========================================================= */
+
+.new-guideline-button {
+  position: absolute;
+
+  right: 18px;
+  bottom: 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  min-height: 38px;
+
+  padding: 0 10px;
+
+  border: 1px solid #007d69;
+  border-radius: 20px;
+
+  background: #edf8f5;
+
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.new-guideline-button span {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 17px;
+  height: 17px;
+
+  border: 1px solid #172033;
+  border-radius: 50%;
+
+  font-size: 12px;
+  line-height: 1;
+}
+
+.new-guideline-button:hover {
+  background: #dff2ed;
+}
+
+
+/* =========================================================
+   MAKE SURE FONT MATCHES REST OF APP
+   ========================================================= */
+
+.guidelines-content,
+.guidelines-content input,
+.guidelines-content button,
+.guidelines-content select {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .guidelines-controls {
+    flex-wrap: wrap;
+  }
+
+  .guidelines-sort {
+    margin-left: 0;
+  }
+}
+
+/* =========================================================
+   NEW GUIDELINE PAGE
+   ========================================================= */
+
+.new-guideline-content {
+  flex: 1;
+  position: relative;
+  padding: 25px 28px;
+  background: #f7f9fb;
+  min-height: calc(100vh - 58px);
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #172033;
+}
+
+
+/* =========================================================
+   BACK LINK + TITLE
+   ========================================================= */
+
+.new-guideline-content .back-link {
+  display: inline-block;
+  margin-bottom: 10px;
+
+  color: #0074c8;
+  text-decoration: none;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.new-guideline-content .back-link:hover {
+  text-decoration: underline;
+}
+
+.new-guideline-content h1 {
+  margin: 0 0 7px 0;
+
+  color: #172033;
+
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.new-guideline-subtitle {
+  margin: 0 0 18px 0;
+
+  color: #526173;
+
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.new-guideline-card {
+  width: 100%;
+
+  margin-bottom: 10px;
+  padding: 15px 16px;
+
+  background: white;
+
+  border: 1px solid #d6dee5;
+  border-radius: 3px;
+
+  box-sizing: border-box;
+}
+
+.new-guideline-card h2 {
+  margin: 0 0 14px 0;
+
+  color: #172033;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   GUIDELINE INFORMATION
+   ========================================================= */
+
+.new-guideline-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #37475a;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.guideline-name-input {
+  width: 420px;
+  height: 39px;
+
+  padding: 0 13px;
+
+  border: 1px solid #d0dae2;
+  border-radius: 3px;
+
+  background: white;
+
+  box-sizing: border-box;
+
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+
+  outline: none;
+}
+
+.guideline-name-input::placeholder {
+  color: #778594;
+}
+
+.guideline-name-input:focus {
+  border-color: #7da9c8;
+}
+
+
+/* =========================================================
+   GUIDELINE DOCUMENT CARD
+   ========================================================= */
+
+.guideline-document-card h2 {
+  margin-bottom: 5px;
+}
+
+.guideline-document-card > p {
+  margin: 0 0 10px 0;
+
+  color: #526173;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   UPLOAD AREA
+   ========================================================= */
+
+.guideline-upload-area {
+  width: 100%;
+  height: 230px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed #b9cad7;
+  border-radius: 2px;
+
+  background: #fbfdfe;
+
+  box-sizing: border-box;
+
+  cursor: pointer;
+}
+
+.guideline-upload-area:hover {
+  background: #f5fafc;
+  border-color: #7fa9c5;
+}
+
+.guideline-upload-icon {
+  margin-bottom: 15px;
+
+  color: #777;
+
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.guideline-upload-text {
+  color: #536577;
+
+  font-size: 11px;
+  text-align: center;
+}
+
+.guideline-upload-text strong {
+  color: #0073c8;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   SELECTED FILE
+   ========================================================= */
+
+.guideline-selected-file {
+  width: 100%;
+  min-height: 50px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: -2px;
+  padding: 8px 20px;
+
+  background: white;
+
+  border: 1px solid #d6dee5;
+  border-radius: 3px;
+
+  box-sizing: border-box;
+}
+
+.guideline-selected-file > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guideline-selected-file strong {
+  color: #172033;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.guideline-selected-file small {
+  color: #718092;
+
+  font-size: 10px;
+}
+
+.guideline-selected-file button {
+  border: none;
+  background: transparent;
+
+  color: #9f2424;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.guideline-selected-file button:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   BOTTOM BUTTONS
+   ========================================================= */
+
+.new-guideline-actions {
+  position: absolute;
+
+  left: 28px;
+  right: 28px;
+  bottom: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cancel-guideline-button {
+  min-width: 78px;
+  height: 35px;
+
+  padding: 0 16px;
+
+  border: 1px solid #efb6b6;
+  border-radius: 3px;
+
+  background: #ffcaca;
+
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.cancel-guideline-button:hover {
+  background: #ffbcbc;
+}
+
+.upload-documents-button {
+  min-width: 140px;
+  height: 35px;
+
+  padding: 0 16px;
+
+  border: 1px solid #007d69;
+  border-radius: 3px;
+
+  background: #edf8f5;
+
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.upload-documents-button:hover {
+  background: #dff2ed;
+}
+
+
+/* =========================================================
+   FONT CONSISTENCY
+   ========================================================= */
+
+.new-guideline-content,
+.new-guideline-content input,
+.new-guideline-content button {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   SMALLER SCREENS
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .new-guideline-content {
+    padding: 22px;
+  }
+
+  .guideline-name-input {
+    width: 100%;
+  }
+
+  .new-guideline-actions {
+    left: 22px;
+    right: 22px;
+  }
+}
+
+/* =========================================================
+   POLICIES PAGE
+   ========================================================= */
+
+.policies-content {
+  flex: 1;
+  min-height: calc(100vh - 64px);
+  padding: 28px 32px 40px;
+  background: #f7f9fa;
+  position: relative;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.policies-content h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.policies-subtitle {
+  margin: 0 0 30px;
+  font-size: 13px;
+  color: #536174;
+}
+
+
+/* =========================================================
+   SEARCH / FILTER / SORT ROW
+   ========================================================= */
+
+.policies-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+
+/* Search box */
+
+.policies-search {
+  width: 390px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: #ffffff;
+  border: 1px solid #cbd9e6;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.policies-search span {
+  color: #557a9d;
+  font-size: 18px;
+}
+
+.policies-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: #172033;
+}
+
+.policies-search input::placeholder {
+  color: #7790aa;
+}
+
+
+/* Filter buttons */
+
+.policies-filter-buttons {
+  display: flex;
+  height: 42px;
+}
+
+.policies-filter-buttons button {
+  width: 110px;
+  border: 1px solid #cbd9e6;
+  border-right: none;
+  background: #ffffff;
+  color: #4d6680;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.policies-filter-buttons button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.policies-filter-buttons button:last-child {
+  border-right: 1px solid #cbd9e6;
+  border-radius: 0 4px 4px 0;
+}
+
+.policies-filter-buttons button.active {
+  background: #e3f3ff;
+  color: #0071c8;
+  border-color: #acd7f5;
+}
+
+
+/* Sort area */
+
+.policies-sort {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #607a95;
+}
+
+.policies-sort select {
+  width: 150px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #cbd9e6;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #405b74;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+
+
+/* =========================================================
+   POLICIES TABLE
+   ========================================================= */
+
+.policies-table {
+  width: 550px;
+  background: #ffffff;
+  border: 1px solid #cbd9e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.policies-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.1fr 1.3fr 1fr;
+  min-height: 38px;
+  align-items: center;
+  background: #f2f7fa;
+  border-bottom: 1px solid #d9e3eb;
+}
+
+.policies-table-header > div {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  box-sizing: border-box;
+  font-size: 10px;
+  font-weight: 700;
+  color: #4d6982;
+}
+
+.policies-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.1fr 1.3fr 1fr;
+  min-height: 82px;
+  border-bottom: 1px solid #dce5ec;
+}
+
+.policies-table-row:last-child {
+  border-bottom: none;
+}
+
+.policies-table-row > div {
+  padding: 13px 14px;
+  box-sizing: border-box;
+  border-right: 1px solid #dce5ec;
+  font-size: 12px;
+  color: #4c6a86;
+}
+
+.policies-table-row > div:last-child {
+  border-right: none;
+}
+
+
+/* Policy name */
+
+.policy-name-cell strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #0070c9;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.policy-name-cell p {
+  margin: 0;
+  max-width: 180px;
+  color: #66839c;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+
+/* Dates */
+
+.policy-date-cell span {
+  display: block;
+  margin-bottom: 3px;
+  color: #4f708c;
+  font-size: 11px;
+}
+
+.policy-date-cell small {
+  display: block;
+  color: #7890a5;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.policies-table .status {
+  display: inline-block;
+  min-width: 70px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.policies-table .status.completed {
+  background: #d8f5e9;
+  color: #00845e;
+}
+
+.policies-table .status.in-review {
+  background: #fff0bd;
+  color: #a76100;
+}
+
+
+/* =========================================================
+   NEW POLICY BUTTON
+   ========================================================= */
+
+.new-policy-button {
+  position: absolute;
+  right: 32px;
+  bottom: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  min-width: 116px;
+  height: 42px;
+  padding: 0 13px;
+
+  border: 1px solid #007b60;
+  border-radius: 22px;
+
+  background: #edf9f6;
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.new-policy-button span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 16px;
+  height: 16px;
+
+  border: 1px solid #172033;
+  border-radius: 50%;
+
+  font-size: 12px;
+  line-height: 1;
+}
+
+.new-policy-button:hover {
+  background: #dff3ed;
+}
+
+/* =========================================================
+   NEW POLICY PAGE
+   ========================================================= */
+
+.new-policy-content {
+  flex: 1;
+  min-height: calc(100vh - 64px);
+  padding: 26px 34px 30px;
+  background: #f7f9fa;
+  box-sizing: border-box;
+  position: relative;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* Back link */
+
+.new-policy-content .back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #0070c9;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.new-policy-content .back-link:hover {
+  text-decoration: underline;
+}
+
+
+/* Page title */
+
+.new-policy-content h1 {
+  margin: 0 0 4px;
+  color: #172033;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.new-policy-subtitle {
+  margin: 0 0 22px;
+  color: #536174;
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.new-policy-card {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid #d7e0e7;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.new-policy-card h2 {
+  margin: 0 0 14px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.new-policy-card p {
+  margin: -7px 0 12px;
+  color: #536174;
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   POLICY NAME
+   ========================================================= */
+
+.new-policy-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #39485a;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.new-policy-name-input {
+  width: 420px;
+  height: 38px;
+  padding: 0 13px;
+  border: 1px solid #d5dfe7;
+  border-radius: 3px;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #172033;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  outline: none;
+}
+
+.new-policy-name-input::placeholder {
+  color: #8a96a3;
+}
+
+.new-policy-name-input:focus {
+  border-color: #7ba8c9;
+}
+
+
+/* =========================================================
+   UPLOAD AREA
+   ========================================================= */
+
+.policy-upload-card {
+  padding-bottom: 18px;
+}
+
+.new-policy-upload-area {
+  width: 100%;
+  height: 230px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px dashed #b9cbd8;
+  border-radius: 2px;
+
+  background: #fbfdfe;
+  box-sizing: border-box;
+
+  color: #536174;
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.new-policy-upload-area:hover {
+  background: #f5fafc;
+}
+
+.new-policy-upload-icon {
+  margin-bottom: 20px;
+  color: #777777;
+  font-size: 42px;
+  line-height: 1;
+}
+
+.new-policy-upload-area strong {
+  color: #0070c9;
+  font-weight: 700;
+}
+
+.new-policy-upload-area span {
+  color: #536174;
+}
+
+
+/* =========================================================
+   SELECTED FILE
+   ========================================================= */
+
+.new-policy-selected-file {
+  width: 100%;
+  min-height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: -1px;
+  padding: 10px 20px;
+
+  background: #ffffff;
+  border: 1px solid #d7e0e7;
+  border-radius: 3px;
+
+  box-sizing: border-box;
+}
+
+.new-policy-selected-file > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.new-policy-selected-file strong {
+  color: #172033;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.new-policy-selected-file small {
+  color: #6f7f8f;
+  font-size: 10px;
+}
+
+.new-policy-selected-file button {
+  padding: 5px;
+  border: none;
+  background: transparent;
+  color: #9e2020;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.new-policy-selected-file button:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   BOTTOM BUTTONS
+   ========================================================= */
+
+.new-policy-actions {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  bottom: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* Cancel */
+
+.cancel-policy-button {
+  min-width: 75px;
+  height: 36px;
+  padding: 0 16px;
+
+  border: none;
+  border-radius: 3px;
+
+  background: #ffc4c4;
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.cancel-policy-button:hover {
+  background: #ffb3b3;
+}
+
+
+/* Upload Documents */
+
+.upload-policy-button {
+  min-width: 135px;
+  height: 36px;
+  padding: 0 16px;
+
+  border: 1px solid #007b69;
+  border-radius: 3px;
+
+  background: #edf9f6;
+  color: #172033;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.upload-policy-button:hover {
+  background: #dff3ed;
+}
+
+/* =========================================
+   POLICY DELETE BUTTON
+========================================= */
+
+.policy-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-policy-button {
+  border: none;
+  background: transparent;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.delete-policy-button:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   GUIDELINE DELETE BUTTON
+========================================= */
+
+.guideline-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-guideline-button {
+  border: none;
+  background: transparent;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.delete-guideline-button:hover {
+  text-decoration: underline;
+}
+
+.policy-version-note {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #667085;
+  font-weight: 500;
+}
+
+/* =========================================
+   POLICY DETAILS / VERSION HISTORY
+========================================= */
+
+.policy-details-content {
+  flex: 1;
+  padding: 28px 34px 50px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.policy-details-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-top: 18px;
+  margin-bottom: 24px;
+}
+
+.policy-details-heading h1 {
+  margin: 0 0 7px;
+  font-size: 26px;
+  color: #172033;
+}
+
+.policy-details-heading p {
+  margin: 0;
+  font-size: 14px;
+  color: #667085;
+}
+
+.policy-details-card {
+  background: white;
+  border: 1px solid #e3e7ed;
+  border-radius: 5px;
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.policy-details-card h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #172033;
+}
+
+.policy-information-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+  margin-top: 22px;
+}
+
+.policy-information-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.policy-detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #667085;
+}
+
+.policy-information-grid strong {
+  font-size: 13px;
+  color: #172033;
+}
+
+.policy-version-description {
+  margin: 0;
+  font-size: 13px;
+  color: #667085;
+}
+
+.no-policy-versions {
+  margin-top: 20px;
+  padding: 24px;
+  border: 1px dashed #d0d5dd;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.no-policy-versions strong {
+  font-size: 14px;
+  color: #172033;
+}
+
+.no-policy-versions p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  color: #667085;
+}
+
+.policy-version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.policy-version-card {
+  border: 1px solid #e3e7ed;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.policy-version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: #f8fafb;
+  border-bottom: 1px solid #e3e7ed;
+}
+
+.policy-version-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.policy-version-header strong {
+  font-size: 14px;
+  color: #172033;
+}
+
+.policy-version-header span {
+  font-size: 11px;
+  color: #667085;
+}
+
+.latest-version-badge {
+  background: #d9f3e8;
+  color: #08775a !important;
+  border-radius: 12px;
+  padding: 4px 9px;
+  font-weight: 700;
+}
+
+.policy-version-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  padding: 15px 16px;
+  border-bottom: 1px solid #e3e7ed;
+}
+
+.policy-version-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.policy-version-meta span,
+.policy-version-content > span {
+  font-size: 9px;
+  font-weight: 700;
+  color: #667085;
+}
+
+.policy-version-meta strong {
+  font-size: 12px;
+  color: #172033;
+}
+
+.policy-version-content {
+  padding: 16px;
+}
+
+.policy-version-content pre {
+  margin: 9px 0 0;
+  padding: 14px;
+  background: #f8fafb;
+  border: 1px solid #e3e7ed;
+  border-radius: 4px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #344054;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.policy-name-link {
+  color: #172033;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.policy-name-link:hover {
+  color: #08775a;
+  text-decoration: underline;
+}
+
+/* =========================================
+   COMPLETE REVIEW
+========================================= */
+
+.findings-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.findings-title-row h1 {
+  margin-bottom: 6px;
+}
+
+.complete-review-button {
+  border: none;
+  border-radius: 4px;
+  background: #08775a;
+  color: white;
+  padding: 10px 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.complete-review-button:hover {
+  opacity: 0.9;
+}
+
+/* =========================================================
+   CLEVELAND CLINIC DESIGN SYSTEM
+   Primary palette = main interface
+   Secondary palette = highlights/statuses only
+   ========================================================= */
+
+:root {
+  /* PRIMARY INTERFACE COLORS */
+  --cc-green: #007a33;
+  --cc-blue: #0066b3;
+  --cc-black: #1a1a1a;
+  --cc-white: #ffffff;
+
+  /* SUPPORTING NEUTRALS */
+  --cc-page: #f5f7f8;
+  --cc-surface: #ffffff;
+  --cc-border: #d5dadd;
+  --cc-muted: #5f6b73;
+  --cc-light-blue: #eaf4fa;
+  --cc-light-green: #e9f5ef;
+
+  /*
+     SECONDARY / HIGHLIGHT COLORS
+
+     These are intentionally reserved for:
+     - statuses
+     - priorities
+     - recommendations
+     - alerts
+     - selected/highlighted information
+  */
+  --cc-highlight-blue: #dceef8;
+  --cc-highlight-green: #dff2e8;
+  --cc-highlight-yellow: #fff2cc;
+  --cc-highlight-red: #f9dddd;
+  --cc-highlight-gray: #e9ecef;
+}
+
+
+/* =========================================================
+   GLOBAL TYPOGRAPHY
+   ========================================================= */
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
+
+.app-page,
+.login-page,
+.policy-selection-page,
+.selection-background,
+.policy-selection-modal,
+.review-findings-content,
+.policy-editor-content,
+.guidelines-content,
+.policies-content,
+.new-guideline-content,
+.new-policy-content {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  color: var(--cc-black);
+}
+
+
+/* =========================================================
+   MAIN PAGE BACKGROUNDS
+   ========================================================= */
+
+body,
+.login-page,
+.app-page,
+.new-review-content,
+.policy-selection-page,
+.selection-background-content,
+.review-findings-content,
+.policy-editor-content,
+.guidelines-content,
+.policies-content,
+.new-guideline-content,
+.new-policy-content {
+  background-color: var(--cc-page);
+}
+
+
+/* =========================================================
+   LOGIN PAGE
+   ========================================================= */
+
+.login-page {
+  color: var(--cc-black);
+}
+
+.login-box {
+  background: var(--cc-white);
+  border: 1px solid var(--cc-border);
+  border-top: 5px solid var(--cc-green);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.login-box h1 {
+  color: var(--cc-black);
+  font-weight: 700;
+}
+
+.login-links a {
+  color: var(--cc-blue);
+}
+
+.form-group label {
+  color: var(--cc-black);
+  font-weight: 500;
+}
+
+.form-group input {
+  border-color: var(--cc-border);
+  background: var(--cc-white);
+  color: var(--cc-black);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--cc-blue);
+  box-shadow: 0 0 0 2px rgba(0, 102, 179, 0.12);
+}
+
+.remember-me input {
+  accent-color: var(--cc-green);
+}
+
+.login-box button {
+  background: var(--cc-green);
+  border: 1px solid var(--cc-green);
+  color: var(--cc-white);
+}
+
+.login-box button:hover {
+  background: #00662b;
+}
+
+
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
+
+.top-bar {
+  background: var(--cc-green);
+  color: var(--cc-white);
+}
+
+.brand-name,
+.workspace-name,
+.top-icon,
+.user-area {
+  color: var(--cc-white);
+}
+
+.brand-divider {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.search-box {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.search-box input {
+  color: var(--cc-white);
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.user-avatar {
+  background: var(--cc-white);
+  color: var(--cc-green);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+  background: var(--cc-white);
+  border-right-color: var(--cc-border);
+}
+
+.nav-item {
+  color: #40484d;
+}
+
+.nav-item:hover {
+  background: var(--cc-light-blue);
+  color: var(--cc-blue);
+}
+
+.nav-item.active {
+  background: var(--cc-light-blue);
+  color: var(--cc-blue);
+  border-left-color: var(--cc-blue);
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+.back-link,
+.review-name,
+.selection-policy-name strong,
+.guideline-name-cell strong {
+  color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   MAIN CARDS / SURFACES
+   ========================================================= */
+
+.stat-card,
+.reviews-card,
+.recommendation-card,
+.new-review-card,
+.background-card,
+.selection-table,
+.findings-selection-summary,
+.findings-filter-bar,
+.findings-table,
+.editor-card,
+.guidelines-table,
+.policies-table,
+.selected-guideline-item,
+.selected-policy-file {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+}
+
+
+/* =========================================================
+   TABLE HEADERS
+   ========================================================= */
+
+.review-table-header,
+.policy-review-header,
+.selection-table-header,
+.findings-table-header,
+.editor-table-header,
+.guidelines-table-header,
+.policies-table-header {
+  background: #eef3f5;
+  color: #44525b;
+}
+
+
+/* =========================================================
+   FORM CONTROLS
+   ========================================================= */
+
+.review-search,
+.sort-area select,
+.review-name-input,
+.findings-sort select,
+.guidelines-search,
+.guidelines-sort select,
+.policies-search,
+.policies-sort select,
+.guideline-name-input,
+.policy-name-input {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  color: var(--cc-black);
+}
+
+.review-search:focus,
+.review-name-input:focus,
+.guidelines-search:focus-within,
+.policies-search:focus-within,
+.guideline-name-input:focus,
+.policy-name-input:focus {
+  border-color: var(--cc-blue);
+  outline: none;
+}
+
+
+/* =========================================================
+   PRIMARY ACTION BUTTONS
+   Main palette
+   ========================================================= */
+
+.new-review-button,
+.start-review-button,
+.confirm-selection-button,
+.upload-documents-button,
+.complete-review-button {
+  background: var(--cc-green);
+  border-color: var(--cc-green);
+  color: var(--cc-white);
+}
+
+.new-review-button:hover,
+.start-review-button:hover,
+.confirm-selection-button:hover,
+.upload-documents-button:hover,
+.complete-review-button:hover {
+  background: #00662b;
+}
+
+
+/* =========================================================
+   SECONDARY / OUTLINE ACTIONS
+   ========================================================= */
+
+.outline-action-button,
+.view-edit-report-button {
+  background: var(--cc-white);
+  border-color: var(--cc-blue);
+  color: var(--cc-blue);
+}
+
+.outline-action-button:hover,
+.view-edit-report-button:hover {
+  background: var(--cc-light-blue);
+}
+
+
+/* =========================================================
+   SELECTED FILTERS
+   ========================================================= */
+
+.filter-buttons button.selected,
+.guidelines-filter-buttons button.active,
+.policies-filter-buttons button.active,
+.finding-filter-button.active {
+  background: var(--cc-blue);
+  border-color: var(--cc-blue);
+  color: var(--cc-white);
+}
+
+.filter-buttons button:hover,
+.guidelines-filter-buttons button:hover,
+.policies-filter-buttons button:hover,
+.finding-filter-button:hover {
+  background: var(--cc-light-blue);
+}
+
+
+/* =========================================================
+   CHECKBOXES / RADIO BUTTONS
+   ========================================================= */
+
+input[type="checkbox"],
+input[type="radio"],
+.guideline-option input,
+.selection-checkbox-cell input[type="checkbox"] {
+  accent-color: var(--cc-green);
+}
+
+
+/* =========================================================
+   STATUS HIGHLIGHTS
+   Secondary palette only
+   ========================================================= */
+
+.status.completed {
+  background: var(--cc-highlight-green);
+  color: #17633b;
+}
+
+.status.in-review {
+  background: var(--cc-highlight-yellow);
+  color: #765700;
+}
+
+
+/* =========================================================
+   FINDING / RECOMMENDATION HIGHLIGHTS
+   Secondary palette only
+   ========================================================= */
+
+.recommendation-type.change {
+  background: var(--cc-highlight-blue);
+  color: #075f91;
+}
+
+.recommendation-type.add {
+  background: var(--cc-highlight-green);
+  color: #17633b;
+}
+
+.recommendation-type.remove {
+  background: var(--cc-highlight-red);
+  color: #8c2f2f;
+}
+
+.recommendation-priority.high {
+  background: var(--cc-highlight-red);
+  color: #8c2f2f;
+}
+
+.recommendation-priority.medium {
+  background: var(--cc-highlight-yellow);
+  color: #765700;
+}
+
+.recommendation-priority.low {
+  background: var(--cc-highlight-gray);
+  color: #4f5b62;
+}
+
+.finding-unread {
+  color: var(--cc-green);
+}
+
+
+/* =========================================================
+   DASHBOARD CHART / PROGRESS HIGHLIGHTS
+   Secondary colors can distinguish data
+   ========================================================= */
+
+.progress.criteria {
+  background: var(--cc-green);
+}
+
+.progress.mismatch {
+  background: var(--cc-blue);
+}
+
+.progress.evidence {
+  background: #6c757d;
+}
+
+
+/* =========================================================
+   UPLOAD / SELECTION AREAS
+   ========================================================= */
+
+.upload-area {
+  background: var(--cc-white);
+  border-color: #aebbc3;
+}
+
+.upload-area strong {
+  color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   POLICY / GUIDELINE CONTENT
+   ========================================================= */
+
+.finding-policy-column strong,
+.finding-guideline-column strong,
+.editor-policy-column strong,
+.editor-guideline-column strong,
+.recommendation-text {
+  color: var(--cc-blue);
+}
+
+.finding-criterion,
+.editor-policy-column > span,
+.editor-guideline-column > span,
+.proposed-change-label {
+  color: var(--cc-muted);
+}
+
+.proposed-change-box {
+  background: var(--cc-light-blue);
+  border-color: #b7d6e8;
+  color: #44525b;
+}
+
+
+/* =========================================================
+   EDITOR
+   ========================================================= */
+
+.policy-editor-textarea {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  color: var(--cc-black);
+}
+
+.policy-editor-textarea:focus {
+  border-color: var(--cc-blue);
+}
+
+
+/* =========================================================
+   CANCEL / DESTRUCTIVE ACTIONS
+   Secondary palette highlight
+   ========================================================= */
+
+.cancel-review-button,
+.cancel-guideline-button,
+.cancel-policy-button {
+  background: var(--cc-white);
+  border: 1px solid #b9c0c5;
+  color: var(--cc-black);
+}
+
+.cancel-review-button:hover,
+.cancel-guideline-button:hover,
+.cancel-policy-button:hover {
+  background: #f0f2f3;
+}
+
+.delete-policy-button,
+.delete-guideline-button,
+.selected-policy-file button,
+.selected-guideline-item button {
+  color: #9a3030;
+}
+
+
+/* =========================================================
+   MODALS
+   ========================================================= */
+
+.policy-selection-modal {
+  background: var(--cc-white);
+  border-color: var(--cc-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.selection-table-header {
+  background: #eef3f5;
+}
+
+
+/* =========================================================
+   GLOBAL FONT OVERRIDE
+   Keeps older page-specific Arial rules from taking priority
+   ========================================================= */
+
+.login-page,
+.login-page *,
+.app-page,
+.app-page *,
+.policy-selection-page,
+.policy-selection-page *,
+.policy-selection-modal,
+.policy-selection-modal *,
+.review-findings-content,
+.review-findings-content *,
+.policy-editor-content,
+.policy-editor-content *,
+.guidelines-content,
+.guidelines-content *,
+.policies-content,
+.policies-content *,
+.new-guideline-content,
+.new-guideline-content *,
+.new-policy-content,
+.new-policy-content * {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+}
+
+/* =========================================================
+   FINAL COLOR PALETTE OVERRIDES
+   Blue:      #0078BF
+   Green:     #00843D
+   Dark Gray: #4B4B45
+   ========================================================= */
+
+:root {
+  --brand-blue: #0078BF;
+  --brand-green: #00843D;
+  --brand-gray: #4B4B45;
+}
+
+/* Main top navigation */
+.top-bar {
+  background: var(--brand-blue);
+}
+
+/* Main text */
+.app-page,
+.policy-selection-page,
+.policy-editor-content,
+.guidelines-content {
+  color: var(--brand-gray);
+}
+
+/* Active sidebar */
+.nav-item.active {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+  border-left-color: var(--brand-blue);
+}
+
+.nav-item:hover {
+  background: #f0f7fa;
+}
+
+/* Main links */
+.back-link,
+.review-name,
+.upload-area strong,
+.selection-policy-name strong,
+.guideline-name-cell strong,
+.reviews-card a,
+.dashboard-content a {
+  color: var(--brand-blue);
+}
+
+/* Review session filter */
+.filter-buttons button.selected {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+}
+
+/* Guideline filters */
+.guidelines-filter-buttons button.active {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+/* Findings filters */
+.finding-filter-button.active {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: white;
+}
+
+/* Recommendation / report buttons */
+.view-edit-report-button {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+.view-edit-report-button:hover {
+  background: #e8f4fa;
+}
+
+/* Selection checkboxes */
+.selection-checkbox-cell input[type="checkbox"],
+.guideline-option input {
+  accent-color: var(--brand-blue);
+}
+
+/* Primary selection buttons */
+.confirm-selection-button,
+.start-review-button,
+.new-review-button {
+  border-color: var(--brand-green);
+}
+
+/* Completed / success states */
+.status.completed {
+  background: #e5f4ec;
+  color: var(--brand-green);
+}
+
+/* Dashboard progress bars */
+.progress.criteria {
+  background: var(--brand-green);
+}
+
+.progress.mismatch {
+  background: var(--brand-blue);
+}
+
+.progress.evidence {
+  background: var(--brand-gray);
+}
+
+/* Guideline icon */
+.guideline-icon {
+  color: var(--brand-blue);
+}
+
+/* Unread / positive indicators */
+.finding-unread {
+  color: var(--brand-green);
+}
+
+/* Recommendation type colors */
+.recommendation-type.change {
+  background: #e8f4fa;
+  color: var(--brand-blue);
+}
+
+.recommendation-type.add {
+  background: #e5f4ec;
+  color: var(--brand-green);
+}
+
+/* Editor links / accents */
+.policy-editor-content .back-link,
+.editor-policy-column strong,
+.editor-guideline-column strong,
+.recommendation-text {
+  color: var(--brand-blue);
+}
+
+/* Input focus */
+.policy-editor-textarea:focus,
+.review-search:focus,
+.review-name-input:focus {
+  border-color: var(--brand-blue);
+}
