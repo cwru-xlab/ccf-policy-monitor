@@ -10,15 +10,12 @@ from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
 
-from policy_radar import db, pipelines
+from policy_radar import db, parsing, pipelines
 from policy_radar.enums import JobKind, JobStatus
 from policy_radar.models import Source
 from policy_radar.sources import SOURCES
 
 log = logging.getLogger(__name__)
-
-CPB_MEDIA_TYPES = {"application/pdf", "text/html", "text/plain"}
-
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -96,19 +93,39 @@ async def get_guideline(guideline_id: str):
 # --- policies -------------------------------------------------------------------
 
 
+async def _read_uploads(files: list[UploadFile]) -> list[parsing.Upload]:
+    """Read and validate uploads. The bytes decide the format, not the declared type."""
+    uploads = []
+    for f in files:
+        content = await f.read()
+        name = f.filename or "upload"
+        if len(content) > parsing.MAX_UPLOAD_BYTES:
+            raise HTTPException(413, f"{name}: larger than {parsing.MAX_UPLOAD_BYTES // 2**20} MB")
+        media_type = parsing.sniff_media_type(f.filename, f.content_type, content)
+        if media_type is None:
+            raise HTTPException(
+                415, f"{name}: unsupported format; expected PDF, DOCX, HTML or plain text"
+            )
+        uploads.append(parsing.Upload(name, content, media_type))
+    return uploads
+
+
 @app.post("/policies/documents", status_code=201)
 async def upload_policies(files: list[UploadFile]) -> dict:
     """Store uploaded CPB files as source documents. Parse them with POST /policies/parse."""
     stored, duplicates = [], []
-    for f in files:
-        media_type = (f.content_type or "").split(";")[0]
-        if media_type not in CPB_MEDIA_TYPES:
-            raise HTTPException(415, f"{f.filename}: expected one of {sorted(CPB_MEDIA_TYPES)}")
-        doc = await pipelines.store_document(
-            db.CPB_SOURCE_KEY, await f.read(), media_type, origin_url=None
-        )
-        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+    for u in await _read_uploads(files):
+        doc = await pipelines.store_document(db.CPB_SOURCE_KEY, u.content, u.media_type, None)
+        (stored if doc else duplicates).append(doc.document_id if doc else u.filename)
     return {"stored": stored, "duplicates": duplicates}
+
+
+@app.post("/policies/ingest", status_code=202)
+async def ingest_policies(files: list[UploadFile], tasks: BackgroundTasks) -> dict:
+    """Upload PDF, DOCX, HTML or text policies and parse them into Policies in one background job."""
+    uploads = await _read_uploads(files)
+    detail = {"files": [u.filename for u in uploads]}
+    return await _start(tasks, JobKind.PARSE_CPB, detail, pipelines.ingest_policy_files(uploads))
 
 
 @app.post("/policies/parse", status_code=202)

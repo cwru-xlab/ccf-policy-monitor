@@ -269,10 +269,16 @@ JSON/XML as text) with a fixed instruction and the `ExtractedGuideline` schema �
 `guideline_id` and criterion ids → embed each criterion's text → write `guideline` and
 `criterion` rows in one transaction. Result: `{processed, failed}`.
 
-**Parse CPBs** (`POST /policies/documents` then `POST /policies/parse`): uploads (PDF,
-HTML or plain text) are stored as `source_document` rows with `source_key = cpb_upload`.
-Parsing does the same as atomize with the `ExtractedPolicy` schema and writes `policy`,
-`criterion` and `code` rows. Result: `{processed, failed}`.
+**Parse CPBs** (`POST /policies/ingest`, or `POST /policies/documents` then `POST /policies/parse`):
+uploads (PDF, DOCX, HTML, plain text or Markdown) are stored as `source_document` rows with
+`source_key = cpb_upload`. The file's bytes decide its format, not the declared type or filename
+(`policy_radar/parsing.py`); unsupported formats are refused with 415 and files over 25 MB with 413.
+PDFs go to the model as native files; other formats are converted to text first (DOCX tables become
+one `|`-separated line per row). Parsing does the same as atomize with the `ExtractedPolicy` schema
+and writes `policy`, `criterion` and `code` rows, up to 4 documents at a time. `/policies/ingest`
+stores the files and parses the new ones in one job; a file whose bytes are already stored is
+reported as a duplicate and not parsed again (retry failures with `/policies/parse`).
+Result: `{stored, duplicates, processed, failed}` for ingest, `{processed, failed}` for parse.
 
 Prompts and extraction schemas are in `policy_radar/llm.py`.
 
@@ -287,6 +293,7 @@ Prompts and extraction schemas are in `policy_radar/llm.py`.
 | GET | `/guidelines` | list guidelines |
 | GET | `/guidelines/{guideline_id}` | one guideline with criteria |
 | POST | `/policies/documents` | upload CPB files (multipart `files`) → `{stored, duplicates}` |
+| POST | `/policies/ingest` | upload CPB files and parse them in one background job → `{job_id}` |
 | POST | `/policies/parse` | start a CPB parse job → `{job_id}` |
 | GET | `/policies` | list policies |
 | GET | `/policies/{policy_number}` | one policy with criteria, codes, watched triggers |

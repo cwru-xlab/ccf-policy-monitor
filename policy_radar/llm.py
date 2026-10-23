@@ -8,11 +8,10 @@ require every field to be present (nullable where optional).
 import base64
 from datetime import date
 
-from bs4 import BeautifulSoup
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from policy_radar import storage
+from policy_radar import parsing, storage
 from policy_radar.config import settings
 from policy_radar.enums import (
     STRENGTH_VALUES,
@@ -85,16 +84,14 @@ class ExtractedPolicy(BaseModel):
 def _content(doc: SourceDocument) -> dict:
     """The document as one Responses-API input part: PDFs as files, everything else as text."""
     raw = storage.get(doc.storage_uri)
-    if doc.media_type == "application/pdf":
+    text = parsing.extract_text(doc.media_type, raw)
+    if text is None:  # PDF: let the model read the pages themselves
         data = base64.b64encode(raw).decode()
         return {
             "type": "input_file",
             "filename": doc.storage_uri.rsplit("/", 1)[-1],
             "file_data": f"data:application/pdf;base64,{data}",
         }
-    text = raw.decode("utf-8", errors="replace")
-    if doc.media_type == "text/html":
-        text = BeautifulSoup(text, "html.parser").get_text("\n", strip=True)
     return {"type": "input_text", "text": text[:MAX_TEXT_CHARS]}
 
 

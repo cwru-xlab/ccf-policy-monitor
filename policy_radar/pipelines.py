@@ -4,6 +4,7 @@ Each returns a small dict of counts that becomes the job's ``detail``. A failure
 document is recorded and the run continues; only a failure of the whole run fails the job.
 """
 
+import asyncio
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
@@ -18,9 +19,11 @@ from policy_radar.models import (
     PolicyCriterion,
     SourceDocument,
 )
+from policy_radar.parsing import Upload
 from policy_radar.sources import SOURCES
 
 DEFAULT_LOOKBACK = timedelta(days=30)
+PARSE_CONCURRENCY = 4  # documents in flight at once; bounds model and database load
 
 
 async def store_document(
@@ -104,13 +107,18 @@ async def _parse_cpb(doc: SourceDocument) -> None:
 
 
 async def _each(docs: list[SourceDocument], step) -> dict:
-    """Run ``step`` on every document, collecting per-document failures."""
-    failed = []
-    for doc in docs:
-        try:
-            await step(doc)
-        except Exception as e:  # noqa: BLE001 — one bad document must not stop the batch
-            failed.append({"document_id": doc.document_id, "error": f"{type(e).__name__}: {e}"})
+    """Run ``step`` on every document, at most PARSE_CONCURRENCY at a time, collecting failures."""
+    gate = asyncio.Semaphore(PARSE_CONCURRENCY)
+
+    async def one(doc: SourceDocument) -> dict | None:
+        async with gate:
+            try:
+                await step(doc)
+            except Exception as e:  # noqa: BLE001 — one bad document must not stop the batch
+                return {"document_id": doc.document_id, "error": f"{type(e).__name__}: {e}"}
+        return None
+
+    failed = [r for r in await asyncio.gather(*(one(d) for d in docs)) if r]
     return {"processed": len(docs) - len(failed), "failed": failed}
 
 
@@ -122,3 +130,20 @@ async def atomize_pending() -> dict:
 async def parse_pending_cpbs() -> dict:
     """Parse every uploaded CPB document that has no Policy yet."""
     return await _each(await db.unparsed_cpbs(), _parse_cpb)
+
+
+async def ingest_policy_files(uploads: list[Upload]) -> dict:
+    """Store uploaded policy files, then parse the new ones into Policies.
+
+    A file whose bytes are already stored is reported as a duplicate and not parsed again;
+    retry an earlier failure with ``parse_pending_cpbs``.
+    """
+    stored: list[SourceDocument] = []
+    duplicates: list[str] = []
+    for u in uploads:
+        doc = await store_document(db.CPB_SOURCE_KEY, u.content, u.media_type, origin_url=None)
+        if doc:
+            stored.append(doc)
+        else:
+            duplicates.append(u.filename)
+    return {"stored": [d.document_id for d in stored], "duplicates": duplicates, **await _each(stored, _parse_cpb)}

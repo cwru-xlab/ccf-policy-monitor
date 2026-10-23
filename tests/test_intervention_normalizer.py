@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "notebooks"))
-from intervention_normalizer import Concept, Kind, Normalizer  # noqa: E402
+from intervention_normalizer import Concept, Kind, Normalizer
 
 
 def _normalizer(handler) -> tuple[Normalizer, list[str]]:
@@ -60,7 +60,7 @@ def test_results_are_memoised_and_unresolved_is_none():
 
 
 def test_related_is_equal_for_same_key_and_unrelated_for_unresolved():
-    n, seen = _normalizer(lambda req: httpx.Response(500))
+    n, _ = _normalizer(lambda req: httpx.Response(500))
     a = n.normalize(Kind.PROCEDURE, "x").concept  # every source fails: unresolved
     assert a is None and n.related(a, a) == "unrelated"
     c = Concept("snomed", "1", "a")
