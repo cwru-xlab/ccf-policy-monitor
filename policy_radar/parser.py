@@ -84,13 +84,22 @@ def extract_codes_regex(markdown_text: str) -> list[Code]:
 
     for match in _CPT_CAT_III.finditer(markdown_text):
         add(CodeSystem.CPT, match.group(0).upper())
+    
     for match in _CPT_5.finditer(markdown_text):
         if _in_billing_context(markdown_text, match.start(), match.end()):
             add(CodeSystem.CPT, match.group(0))
+            
     for match in _HCPCS.finditer(markdown_text):
-        add(CodeSystem.HCPCS, match.group(0).upper())
+        if _in_billing_context(markdown_text, match.start(), match.end()):
+            add(CodeSystem.HCPCS, match.group(0).upper())
+            
     for match in _ICD10CM.finditer(markdown_text):
-        add(CodeSystem.ICD10CM, match.group(0).upper())
+        code_str = match.group(0).upper()
+        # ICD-10 codes with a decimal (e.g. E11.9) are specific enough, 
+        # but 3-character codes without a dot require a billing context check to avoid false positives.
+        if "." in code_str or _in_billing_context(markdown_text, match.start(), match.end()):
+            add(CodeSystem.ICD10CM, code_str)
+            
     return found
 
 
