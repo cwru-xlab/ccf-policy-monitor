@@ -17,7 +17,13 @@ from policy_radar.sources import SOURCES
 
 log = logging.getLogger(__name__)
 
-CPB_MEDIA_TYPES = {"application/pdf", "text/html", "text/plain"}
+UPLOAD_MEDIA_TYPES = {
+    "application/pdf",
+    "text/html",
+    "text/plain",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+CPB_MEDIA_TYPES = UPLOAD_MEDIA_TYPES
 
 
 @asynccontextmanager
@@ -74,6 +80,26 @@ async def ingest_all_guidelines(tasks: BackgroundTasks):
     """Fetch all"""
 
 
+@app.post("/guidelines/documents", status_code=201)
+async def upload_guidelines(
+    files: list[UploadFile], source_key: str = db.GUIDELINE_UPLOAD_SOURCE_KEY
+) -> dict:
+    """Store uploaded guideline files as source documents. Atomize with POST /guidelines/atomize."""
+    if source_key == db.CPB_SOURCE_KEY:
+        raise HTTPException(400, "use POST /policies/documents for CPB uploads")
+    known = {s.source_key for s in await db.list_sources()}
+    if source_key != db.GUIDELINE_UPLOAD_SOURCE_KEY and source_key not in known:
+        raise HTTPException(404, f"unknown source {source_key!r}")
+    stored, duplicates = [], []
+    for f in files:
+        media_type = (f.content_type or "").split(";")[0]
+        if media_type not in UPLOAD_MEDIA_TYPES:
+            raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
+        doc = await pipelines.store_document(source_key, await f.read(), media_type, origin_url=None)
+        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+    return {"stored": stored, "duplicates": duplicates}
+
+
 @app.post("/guidelines/atomize", status_code=202)
 async def atomize(tasks: BackgroundTasks) -> dict:
     """Atomize every ingested guideline document not yet atomized."""
@@ -102,8 +128,8 @@ async def upload_policies(files: list[UploadFile]) -> dict:
     stored, duplicates = [], []
     for f in files:
         media_type = (f.content_type or "").split(";")[0]
-        if media_type not in CPB_MEDIA_TYPES:
-            raise HTTPException(415, f"{f.filename}: expected one of {sorted(CPB_MEDIA_TYPES)}")
+        if media_type not in UPLOAD_MEDIA_TYPES:
+            raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
         doc = await pipelines.store_document(
             db.CPB_SOURCE_KEY, await f.read(), media_type, origin_url=None
         )

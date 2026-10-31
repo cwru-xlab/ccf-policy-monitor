@@ -8,11 +8,10 @@ require every field to be present (nullable where optional).
 import base64
 from datetime import date
 
-from bs4 import BeautifulSoup
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from policy_radar import storage
+from policy_radar import parser, storage
 from policy_radar.config import settings
 from policy_radar.enums import (
     STRENGTH_VALUES,
@@ -49,7 +48,8 @@ criteria, return an empty criteria list."""
 POLICY_PROMPT = f"""You parse a payer Clinical Policy Bulletin (CPB) into criteria and codes. \
 {_CRITERION_RULES} Include medical-necessity, experimental/investigational and exclusion \
 criteria. policy_number is the bulletin number as printed (e.g. "0584"). coverage_effect is \
-the bulletin's predominant determination. codes are only the codes the bulletin lists."""
+the bulletin's predominant determination. codes are only the codes the bulletin lists. \
+effective_date is the policy's own effective date, or null if the text states none."""
 
 
 class ExtractedCriterion(BaseModel):
@@ -76,26 +76,23 @@ class ExtractedPolicy(BaseModel):
     doc_type: PolicyDocumentType
     title: str
     coverage_effect: CoverageEffect
-    effective_date: date
+    effective_date: date | None
     last_reviewed: date | None
     codes: list[ExtractedCode]
     criteria: list[ExtractedCriterion]
 
 
-def _content(doc: SourceDocument) -> dict:
-    """The document as one Responses-API input part: PDFs as files, everything else as text."""
-    raw = storage.get(doc.storage_uri)
-    if doc.media_type == "application/pdf":
-        data = base64.b64encode(raw).decode()
-        return {
-            "type": "input_file",
-            "filename": doc.storage_uri.rsplit("/", 1)[-1],
-            "file_data": f"data:application/pdf;base64,{data}",
-        }
-    text = raw.decode("utf-8", errors="replace")
-    if doc.media_type == "text/html":
-        text = BeautifulSoup(text, "html.parser").get_text("\n", strip=True)
-    return {"type": "input_text", "text": text[:MAX_TEXT_CHARS]}
+def _content(doc: SourceDocument) -> list[dict]:
+    """Document as Responses-API input parts: local Markdown plus scanned-page images."""
+    parsed = parser.parse_document(storage.get(doc.storage_uri), doc.media_type)
+    text = parsed.markdown[:MAX_TEXT_CHARS]
+    if not text.strip() and parsed.scanned_images:
+        text = "[Document contains scanned pages; see attached images.]"
+    parts: list[dict] = [{"type": "input_text", "text": text}]
+    for png in parsed.scanned_images:
+        data = base64.b64encode(png).decode()
+        parts.append({"type": "input_image", "image_url": f"data:image/png;base64,{data}"})
+    return parts
 
 
 async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceDocument) -> M:
@@ -103,7 +100,7 @@ async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceD
     response = await client.responses.parse(
         model=settings.openai_model,
         instructions=instructions,
-        input=[{"role": "user", "content": [_content(doc)]}],
+        input=[{"role": "user", "content": _content(doc)}],
         text_format=schema,
     )
     if response.output_parsed is None:

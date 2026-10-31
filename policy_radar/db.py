@@ -20,6 +20,7 @@ from policy_radar.models import (
 )
 
 CPB_SOURCE_KEY = "cpb_upload"
+GUIDELINE_UPLOAD_SOURCE_KEY = "guideline_upload"
 
 _pool: asyncpg.Pool | None = None
 

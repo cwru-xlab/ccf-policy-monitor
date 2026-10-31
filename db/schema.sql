@@ -9,7 +9,7 @@ create extension if not exists vector;
 -- Every endpoint or page we fetch from, and who stands behind it. authority_kind sets
 -- how urgently its changes matter; trigger_type says which policies they can send back
 -- into review. Seeded below: one row per key in policy_radar/sources.py SOURCES, plus
--- 'cpb_upload' (tests/test_schema.py fails if the two drift).
+-- 'cpb_upload' and 'guideline_upload' (tests/test_schema.py fails if the two drift).
 create table if not exists source (
     source_key      text primary key,
     name            text not null,
@@ -37,7 +37,8 @@ values
     ('cdc_acip_adult', 'CDC ACIP adult immunization schedule', 'CDC Advisory Committee on Immunization Practices', 'federal_recommendation', 'preventive_recommendation_change', 'https://www.cdc.gov/vaccines/hcp/imz-schedules/adult-age.html'),
     ('cdc_acip_child', 'CDC ACIP child and adolescent immunization schedule', 'CDC Advisory Committee on Immunization Practices', 'federal_recommendation', 'preventive_recommendation_change', 'https://www.cdc.gov/vaccines/hcp/imz-schedules/child-adolescent-age.html'),
     ('pubmed', 'PubMed practice guidelines', 'Medical societies and expert panels, indexed by the National Library of Medicine', 'medical_society', 'specialty_guideline_update', 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'),
-    ('cpb_upload', 'Uploaded payer CPBs', 'Payer (uploaded by a user)', 'payer_policy', null, null)
+    ('cpb_upload', 'Uploaded payer CPBs', 'Payer (uploaded by a user)', 'payer_policy', null, null),
+    ('guideline_upload', 'Uploaded Guideline', 'Manual Upload', 'medical_society', 'specialty_guideline_update', null)
 on conflict (source_key) do update set
     name = excluded.name, authority = excluded.authority,
     authority_kind = excluded.authority_kind, trigger_type = excluded.trigger_type,
