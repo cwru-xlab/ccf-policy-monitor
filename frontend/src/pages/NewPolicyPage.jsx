@@ -172,6 +172,13 @@ function NewPolicyPage() {
           </Link>
 
           <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
+          <Link
             to="/audit-log"
             className="nav-item"
           >

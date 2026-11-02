@@ -1,5 +1,6 @@
 
 import './App.css'
+
 import {
   BrowserRouter,
   Routes,
@@ -21,6 +22,9 @@ import PoliciesPage from './pages/PoliciesPage'
 import NewPolicyPage from './pages/NewPolicyPage'
 import PolicyDetailsPage from './pages/PolicyDetailsPage'
 import AuditLogPage from './pages/AuditLogPage'
+
+// New policy-to-guideline mapping page
+import DocumentMappingsPage from './pages/DocumentMappingsPage'
 
 function App() {
   return (
@@ -89,6 +93,12 @@ function App() {
         <Route
           path="/policies/:policyId"
           element={<PolicyDetailsPage />}
+        />
+
+        {/* Policy-to-guideline mapping manager */}
+        <Route
+          path="/mappings"
+          element={<DocumentMappingsPage />}
         />
 
         <Route

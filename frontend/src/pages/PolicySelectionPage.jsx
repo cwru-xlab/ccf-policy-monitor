@@ -288,6 +288,13 @@ function PolicySelectionPage() {
               Guideline Database
             </Link>
 
+          <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
             <Link to="/audit-log" className="nav-item">
               Audit Log
             </Link>
