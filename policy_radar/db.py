@@ -178,7 +178,8 @@ async def get_guideline(guideline_id: str) -> Guideline | None:
 
 async def list_policies() -> list[dict]:
     rows = await pool().fetch(
-        "select policy_number, doc_type, title, effective_date from policy order by policy_number"
+        "select policy_number, doc_type, title, effective_date, document_id from policy"
+        " order by policy_number"
     )
     return [dict(r) for r in rows]
 
