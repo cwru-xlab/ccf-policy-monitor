@@ -107,9 +107,7 @@ function DashboardPage() {
 
   return (
     <div className="app-page">
-      {/* ======================================
-          TOP BAR
-      ====================================== */}
+      {/* TOP BAR */}
 
       <header className="top-bar">
         <div className="brand-area">
@@ -134,30 +132,21 @@ function DashboardPage() {
             />
           </div>
 
-          <span className="top-icon">
-            ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          <span className="top-icon">?</span>
+          <span className="top-icon">⚙</span>
 
           <div className="user-area">
             <div className="user-avatar">
               SC
             </div>
 
-            <span>
-              Sarah Chen
-            </span>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* ======================================
-            LEFT SIDEBAR
-        ====================================== */}
+        {/* LEFT SIDEBAR */}
 
         <aside className="sidebar">
           <Link
@@ -189,6 +178,13 @@ function DashboardPage() {
           </Link>
 
           <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
+          <Link
             to="/audit-log"
             className="nav-item"
           >
@@ -196,61 +192,38 @@ function DashboardPage() {
           </Link>
         </aside>
 
-        {/* ======================================
-            DASHBOARD CONTENT
-        ====================================== */}
+        {/* DASHBOARD CONTENT */}
 
         <main className="dashboard-content">
-          {/* ==================================
-              PAGE INTRODUCTION
-          ================================== */}
+          {/* PAGE INTRODUCTION */}
 
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              gap: '24px',
               marginBottom: '28px',
             }}
           >
-            <div>
-              <h1
-                style={{
-                  marginBottom: '8px',
-                }}
-              >
-                Dashboard
-              </h1>
-
-              <p
-                style={{
-                  margin: 0,
-                  color: '#666',
-                  maxWidth: '650px',
-                  lineHeight: '1.5',
-                }}
-              >
-                Monitor review sessions, policy recommendations,
-                and items that require your attention.
-              </p>
-            </div>
-
-            <Link
-              to="/reviews/new"
-              className="primary-button"
+            <h1
               style={{
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
+                marginBottom: '8px',
               }}
             >
-              + Start a Review Session
-            </Link>
+              Dashboard
+            </h1>
+
+            <p
+              style={{
+                margin: 0,
+                color: '#666',
+                maxWidth: '650px',
+                lineHeight: '1.5',
+              }}
+            >
+              Monitor review sessions, policy recommendations,
+              and items that require your attention.
+            </p>
           </div>
 
-          {/* ==================================
-              OVERVIEW CARDS
-          ================================== */}
+          {/* OVERVIEW CARDS */}
 
           <div
             className="stat-cards"
@@ -259,139 +232,195 @@ function DashboardPage() {
                 'repeat(3, minmax(0, 1fr))',
             }}
           >
-            <div className="stat-card">
-              <span>
-                ACTIVE REVIEW SESSIONS
-              </span>
+            {/* ACTIVE REVIEW SESSIONS */}
 
-              <strong>
-                {activeReviewCount}
-              </strong>
-
-              <small
-                style={{
-                  color: '#777',
-                  marginTop: '6px',
-                }}
-              >
-                Currently in progress
-              </small>
-            </div>
-
-            <div className="stat-card">
-              <span>
-                ITEMS REQUIRING ATTENTION
-              </span>
-
-              <strong>
-                {itemsRequiringAttention}
-              </strong>
-
-              <small
-                style={{
-                  color: '#777',
-                  marginTop: '6px',
-                }}
-              >
-                Suggested changes to review
-              </small>
-            </div>
-
-            <div className="stat-card">
-              <span>
-                COMPLETED SESSIONS
-              </span>
-
-              <strong>
-                {completedReviewCount}
-              </strong>
-
-              <small
-                style={{
-                  color: '#777',
-                  marginTop: '6px',
-                }}
-              >
-                Review sessions completed
-              </small>
-            </div>
-          </div>
-
-          {/* ==================================
-              DASHBOARD GRID
-          ================================== */}
-
-          <div className="dashboard-grid">
-            {/* ==================================
-                RECENT REVIEW SESSIONS
-            ================================== */}
-
-            <section className="reviews-card">
+            <div
+              className="stat-card"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '10px',
+                boxSizing: 'border-box',
+                minWidth: 0,
+                height: 'auto',
+                minHeight: '105px',
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '18px',
+                  flexWrap: 'wrap',
+                  alignItems: 'baseline',
+                  gap: '5px',
                 }}
               >
-                <div>
+                <span>ACTIVE REVIEW SESSIONS</span>
+
+                <small style={{ color: '#777' }}>
+                  – Currently in progress
+                </small>
+              </div>
+
+              <strong>{activeReviewCount}</strong>
+            </div>
+
+            {/* ITEMS REQUIRING ATTENTION */}
+
+            <div
+              className="stat-card"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '10px',
+                boxSizing: 'border-box',
+                minWidth: 0,
+                height: 'auto',
+                minHeight: '105px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'baseline',
+                  gap: '5px',
+                }}
+              >
+                <span>ITEMS REQUIRING ATTENTION</span>
+
+                <small style={{ color: '#777' }}>
+                  – Suggested changes to review
+                </small>
+              </div>
+
+              <strong>{itemsRequiringAttention}</strong>
+            </div>
+
+            {/* COMPLETED SESSIONS */}
+
+            <div
+              className="stat-card"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '10px',
+                boxSizing: 'border-box',
+                minWidth: 0,
+                height: 'auto',
+                minHeight: '105px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'baseline',
+                  gap: '5px',
+                }}
+              >
+                <span>COMPLETED SESSIONS</span>
+
+                <small style={{ color: '#777' }}>
+                  – Review sessions completed
+                </small>
+              </div>
+
+              <strong>{completedReviewCount}</strong>
+            </div>
+          </div>
+
+          {/* DASHBOARD GRID */}
+
+          <div className="dashboard-grid">
+            {/* RECENT REVIEW SESSIONS */}
+
+            <section
+              className="reviews-card"
+              style={{
+                padding: 0,
+                overflow: 'hidden',
+                minWidth: 0,
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* HEADER */}
+
+              <div
+                style={{
+                  padding: '18px 20px 14px',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    width: '100%',
+                  }}
+                >
                   <h2
                     style={{
-                      marginBottom: '5px',
+                      margin: 0,
+                      textAlign: 'left',
+                      fontSize: '18px',
                     }}
                   >
                     Recent Review Sessions
                   </h2>
 
-                  <p
+                  <Link
+                    to="/reviews"
                     style={{
-                      margin: 0,
-                      color: '#777',
                       fontSize: '13px',
+                      fontWeight: '600',
+                      textDecoration: 'underline',
+                      whiteSpace: 'nowrap',
+                      marginLeft: 'auto',
                     }}
                   >
-                    Continue an existing review or view recent activity.
-                  </p>
+                    View all sessions
+                  </Link>
                 </div>
 
-                <Link
-                  to="/reviews"
+                {/* CENTERED DESCRIPTION */}
+
+                <p
                   style={{
+                    margin: '12px 0 0',
+                    color: '#777',
                     fontSize: '13px',
-                    fontWeight: '600',
+                    textAlign: 'center',
+                    width: '100%',
                   }}
                 >
-                  View all sessions
-                </Link>
+                  Continue an existing review or view recent activity.
+                </p>
               </div>
+
+              {/* REVIEW TABLE HEADINGS */}
 
               <div className="review-table-header">
-                <span>
-                  REVIEW SESSION
-                </span>
-
-                <span>
-                  STATUS
-                </span>
-
-                <span>
-                  LAST UPDATED
-                </span>
-
-                <span>
-                  REVIEWER
-                </span>
+                <span>REVIEW SESSION</span>
+                <span>STATUS</span>
+                <span>LAST UPDATED</span>
+                <span>REVIEWER</span>
               </div>
+
+              {/* REVIEW SESSION ROWS */}
 
               {recentReviews.map((review) => (
                 <div
                   className="review-row"
                   key={review.id}
                 >
-                  <strong>
-                    {review.name}
-                  </strong>
+                  <strong>{review.name}</strong>
 
                   <span
                     className={
@@ -403,89 +432,65 @@ function DashboardPage() {
                     {review.status}
                   </span>
 
-                  <span>
-                    {review.date}
-                  </span>
-
-                  <span>
-                    {review.reviewer}
-                  </span>
+                  <span>{review.date}</span>
+                  <span>{review.reviewer}</span>
                 </div>
               ))}
             </section>
 
-            {/* ==================================
-                ATTENTION SUMMARY
-            ================================== */}
+            {/* ITEMS REQUIRING ATTENTION */}
 
             <section className="recommendation-card">
-              <h2>
-                Items Requiring Attention
-              </h2>
+              <h2>Items Requiring Attention</h2>
 
               <p>
                 Recommendations identified during policy review.
               </p>
 
+              {/* HIGH PRIORITY */}
+
               <div className="recommendation-item">
                 <div className="recommendation-label">
-                  <strong>
-                    High Priority Changes
-                  </strong>
-
-                  <span>
-                    5
-                  </span>
+                  <strong>High Priority Changes</strong>
+                  <span>5</span>
                 </div>
 
                 <div className="progress-background">
                   <div
                     className="progress criteria"
-                    style={{
-                      width: '75%',
-                    }}
+                    style={{ width: '75%' }}
                   ></div>
                 </div>
               </div>
 
+              {/* LOW PRIORITY */}
+
               <div className="recommendation-item">
                 <div className="recommendation-label">
-                  <strong>
-                    Low Priority Changes
-                  </strong>
-
-                  <span>
-                    6
-                  </span>
+                  <strong>Low Priority Changes</strong>
+                  <span>6</span>
                 </div>
 
                 <div className="progress-background">
                   <div
                     className="progress mismatch"
-                    style={{
-                      width: '55%',
-                    }}
+                    style={{ width: '55%' }}
                   ></div>
                 </div>
               </div>
 
+              {/* NEW EVIDENCE */}
+
               <div className="recommendation-item">
                 <div className="recommendation-label">
-                  <strong>
-                    New Evidence Available
-                  </strong>
-
-                  <span>
-                    3
-                  </span>
+                  <strong>New Evidence Available</strong>
+                  <span>3</span>
                 </div>
 
                 <div className="progress-background">
                   <div
                     className="progress evidence"
-                    style={{
-                      width: '35%',
-                    }}
+                    style={{ width: '35%' }}
                   ></div>
                 </div>
               </div>

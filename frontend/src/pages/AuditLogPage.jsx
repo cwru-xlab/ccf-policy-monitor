@@ -351,6 +351,13 @@ function AuditLogPage() {
           </Link>
 
           <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
+          <Link
             to="/audit-log"
             className="nav-item active"
           >
@@ -374,31 +381,7 @@ function AuditLogPage() {
 
           {/* SUMMARY CARDS */}
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '16px',
-              marginTop: '26px',
-              marginBottom: '28px',
-            }}
-          >
-            {[
-              ['TOTAL CHANGES', allRecords.length],
-              ['POLICY CHANGES', policyCount],
-              ['GUIDELINE CHANGES', guidelineCount],
-              ['RECOMMENDATION DECISIONS', decisionCount],
-              ['REVIEW SESSIONS', reviewCount],
-            ].map(([label, count]) => (
-              <div className="stat-card" key={label}>
-                <span>{label}</span>
-                <strong>{count}</strong>
-              </div>
-            ))}
-          </div>
-
-          {/* SEARCH AND FILTER */}
+{/* SEARCH AND FILTER */}
 
           <div
             style={{

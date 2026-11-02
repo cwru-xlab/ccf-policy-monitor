@@ -352,6 +352,13 @@ function PoliciesPage() {
             Guideline Database
           </Link>
 
+          <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
           <Link to="/audit-log" className="nav-item">
             Audit Log
           </Link>
@@ -360,7 +367,34 @@ function PoliciesPage() {
         {/* MAIN PAGE */}
 
         <main className="policies-content">
-          <h1>Policies</h1>
+          <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '16px',
+              flexWrap: 'wrap',
+            }}>
+              <h1>Policies</h1>
+          {/* UPLOAD POLICY BUTTON */}
+
+          <button
+            type="button"
+            onClick={() => navigate('/policies/new')}
+            style={{
+              backgroundColor: '#0077bb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '5px',
+              padding: '10px 16px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            + Upload Policy
+          </button>
+            </div>
 
           <p className="policies-subtitle">
             View and manage your policies. Hover over
@@ -594,18 +628,7 @@ function PoliciesPage() {
             })}
           </div>
 
-          {/* NEW POLICY BUTTON */}
 
-          <button
-            type="button"
-            className="new-policy-button"
-            onClick={() =>
-              navigate('/policies/new')
-            }
-          >
-            New Policy
-            <span>＋</span>
-          </button>
         </main>
       </div>
     </div>
