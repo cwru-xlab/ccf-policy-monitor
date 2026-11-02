@@ -75,22 +75,27 @@ def _criteria[C: (GuidelineCriterion, PolicyCriterion)](
 
 
 def _sanitize_strength(
-    strength: str | None, strength_system: StrengthSystem | None
+    strength: str | None, strength_system_str: str | None
 ) -> tuple[str | None, StrengthSystem | None]:
     """Coerce incomplete or out-of-vocabulary grades to (None, None) so Guideline validates."""
-    if strength is None and strength_system is None:
+    if strength is None or strength_system_str is None:
+        if strength or strength_system_str:
+            log.warning("dropping unpaired strength=%r strength_system=%r", strength, strength_system_str)
         return None, None
-    if strength is None or strength_system is None:
-        log.warning("dropping unpaired strength=%r strength_system=%r", strength, strength_system)
+    try:
+        system_enum = StrengthSystem(strength_system_str)
+    except ValueError:
+        log.warning("dropping invalid strength_system %r", strength_system_str)
         return None, None
-    allowed = {m.value for m in STRENGTH_VALUES[strength_system]}
+
+    allowed = {m.value for m in STRENGTH_VALUES[system_enum]}
     if strength not in allowed:
         log.warning(
             "dropping invalid strength %r for %s; allowed %s",
-            strength, strength_system, sorted(allowed),
+            strength, system_enum, sorted(allowed),
         )
         return None, None
-    return strength, strength_system
+    return strength, system_enum
 
 
 def _merge_codes(llm_codes: list[llm.ExtractedCode], regex_codes: list[Code]) -> tuple[Code, ...]:

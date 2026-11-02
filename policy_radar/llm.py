@@ -14,7 +14,7 @@ import os
 from dotenv import load_dotenv
 import boto3
 import instructor
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from policy_radar import parser, storage
 from policy_radar.config import settings
@@ -68,28 +68,25 @@ class ExtractedCriterion(BaseModel):
     text: str
     concept_words: list[str]
 
-
 class ExtractedCode(BaseModel):
-    system: CodeSystem
+    system: str = Field(description="e.g. cpt, hcpcs, icd10cm")
     value: str
-
 
 class ExtractedGuideline(BaseModel):
     title: str
-    published: date | None
+    published: str | None = Field(description="YYYY-MM-DD")
     version: str | None
     strength: str | None
-    strength_system: StrengthSystem | None
+    strength_system: str | None = Field(description="e.g. uspstf, acc_aha, grade")
     criteria: list[ExtractedCriterion]
-
 
 class ExtractedPolicy(BaseModel):
     policy_number: str
-    doc_type: PolicyDocumentType
+    doc_type: str = Field(description="e.g. medical_clinical_policy_bulletin")
     title: str
-    coverage_effect: CoverageEffect
-    effective_date: date | None
-    last_reviewed: date | None
+    coverage_effect: str = Field(description="e.g. covered, not_covered, covered_with_prior_auth")
+    effective_date: str | None = Field(description="YYYY-MM-DD")
+    last_reviewed: str | None = Field(description="YYYY-MM-DD")
     codes: list[ExtractedCode]
     criteria: list[ExtractedCriterion]
 
