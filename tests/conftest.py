@@ -3,4 +3,3 @@
 import os
 
 os.environ.setdefault("DATABASE_URL", "postgresql://unused")
-os.environ.setdefault("OPENAI_API_KEY", "unused")

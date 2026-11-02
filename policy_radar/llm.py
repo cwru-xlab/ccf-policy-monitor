@@ -1,14 +1,19 @@
-"""OpenAI calls: structured extraction of a document into criteria, and embeddings.
+"""Bedrock calls: structured extraction of a document into criteria, and embeddings.
 
 The Extracted* models are what the model fills in; pipelines.py turns them into domain
-models by adding ids. They have no defaults because OpenAI strict structured outputs
-require every field to be present (nullable where optional).
+models by adding ids. They have no defaults because structured outputs require every
+field to be present (nullable where optional).
 """
 
+import asyncio
 import base64
+import json
 from datetime import date
+import os
 
-from openai import AsyncOpenAI
+from dotenv import load_dotenv
+import boto3
+import instructor
 from pydantic import BaseModel
 
 from policy_radar import parser, storage
@@ -24,7 +29,14 @@ from policy_radar.models import SourceDocument
 
 MAX_TEXT_CHARS = 400_000  # keeps one document inside the model's context window
 
-client = AsyncOpenAI(api_key=settings.openai_api_key)
+load_dotenv()  # Forces system to read the .env file
+
+bedrock_client = boto3.client(
+    "bedrock-runtime",
+    region_name=os.getenv("AWS_REGION_NAME", "us-east-1")
+)
+
+client = instructor.from_bedrock(bedrock_client)
 
 _CRITERION_RULES = """A criterion is one self-contained, testable condition: who it applies to, \
 what service or drug, and what is recommended, required, covered or excluded. Keep the source \
@@ -83,34 +95,54 @@ class ExtractedPolicy(BaseModel):
 
 
 def _content(doc: SourceDocument) -> list[dict]:
-    """Document as Responses-API input parts: local Markdown plus scanned-page images."""
+    """Document as Anthropic multimodal parts: local Markdown plus scanned-page PNGs."""
     parsed = parser.parse_document(storage.get(doc.storage_uri), doc.media_type)
     text = parsed.markdown[:MAX_TEXT_CHARS]
     if not text.strip() and parsed.scanned_images:
         text = "[Document contains scanned pages; see attached images.]"
-    parts: list[dict] = [{"type": "input_text", "text": text}]
+    parts: list[dict] = [{"type": "text", "text": text}]
     for png in parsed.scanned_images:
         data = base64.b64encode(png).decode()
-        parts.append({"type": "input_image", "image_url": f"data:image/png;base64,{data}"})
+        parts.append(
+            {
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/png", "data": data},
+            }
+        )
     return parts
 
 
 async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceDocument) -> M:
     """Ask the model to fill ``schema`` from ``doc``."""
-    response = await client.responses.parse(
-        model=settings.openai_model,
-        instructions=instructions,
-        input=[{"role": "user", "content": _content(doc)}],
-        text_format=schema,
-    )
-    if response.output_parsed is None:
-        raise ValueError(f"model returned no parsable output for {doc.document_id}")
-    return response.output_parsed
+
+    def _call() -> M:
+        return client.create(
+            modelId=settings.bedrock_model,
+            system=[{"text": instructions}],
+            messages=[{"role": "user", "content": _content(doc)}],
+            response_model=schema,
+            max_tokens=4096,
+        )
+
+    return await asyncio.to_thread(_call)
 
 
 async def embed(texts: list[str]) -> list[list[float]]:
     """One embedding per text, in order. Empty input makes no API call."""
     if not texts:
         return []
-    response = await client.embeddings.create(model=settings.openai_embedding_model, input=texts)
-    return [d.embedding for d in response.data]
+
+    def _embed_all() -> list[list[float]]:
+        embeddings: list[list[float]] = []
+        for text in texts:
+            response = bedrock.invoke_model(
+                modelId=settings.bedrock_embedding_model,
+                body=json.dumps({"inputText": text}),
+                accept="application/json",
+                contentType="application/json",
+            )
+            payload = json.loads(response["body"].read())
+            embeddings.append(payload["embedding"])
+        return embeddings
+
+    return await asyncio.to_thread(_embed_all)

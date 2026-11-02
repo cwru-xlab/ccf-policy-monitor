@@ -105,7 +105,7 @@ create table if not exists guideline_criterion (
     position       int not null,                    -- order within the guideline, from 1
     text           text not null,
     concept_words  text[] not null default '{}',
-    embedding      vector(1536)                     -- OpenAI text-embedding-3-small
+    embedding      vector(1024)                     -- Amazon Titan Text Embeddings V2
 );
 create index if not exists guideline_criterion_parent_idx on guideline_criterion (parent_id);
 create index if not exists guideline_criterion_embedding_idx
@@ -117,7 +117,7 @@ create table if not exists policy_criterion (
     position       int not null,
     text           text not null,
     concept_words  text[] not null default '{}',
-    embedding      vector(1536)
+    embedding      vector(1024)                     -- Amazon Titan Text Embeddings V2
 );
 create index if not exists policy_criterion_parent_idx on policy_criterion (parent_id);
 create index if not exists policy_criterion_embedding_idx

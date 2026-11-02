@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str
-    openai_api_key: str
-    openai_model: str = "gpt-6-luna"
-    openai_embedding_model: str = "text-embedding-3-small"
+    aws_region: str = "us-east-1"
+    bedrock_model: str = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    bedrock_embedding_model: str = "amazon.titan-embed-text-v2:0"
     storage_root: Path = Path("data/objects")
 
     # Per-source keys. A source whose key is empty is fetched without one where the
