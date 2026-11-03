@@ -1,16 +1,19 @@
 
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { uploadPolicy } from '../api'
 
 function NewPolicyPage() {
   const navigate = useNavigate()
 
   const [policyName, setPolicyName] = useState('')
 
-  const [selectedFile, setSelectedFile] = useState({
-    name: 'Cardiac_Coverage_Policy_v4.pdf',
-    size: '2.4 MB',
-  })
+  const [selectedFile, setSelectedFile] = useState(null)
+
+  // Backend upload state
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [parsedPolicy, setParsedPolicy] = useState(null)
 
   // Handles selecting a file from the computer
   function handleFileChange(event) {
@@ -20,6 +23,7 @@ function NewPolicyPage() {
       setSelectedFile({
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        file,
       })
     }
   }
@@ -30,7 +34,7 @@ function NewPolicyPage() {
   }
 
   // Runs when Upload Documents is clicked
-  function uploadDocuments() {
+  async function uploadDocuments() {
     // Make sure the user entered a policy name
     if (policyName.trim() === '') {
       alert('Please enter a policy name.')
@@ -42,6 +46,23 @@ function NewPolicyPage() {
       alert('Please select a policy document.')
       return
     }
+
+    // Upload to the backend and wait for the parse job
+    setUploading(true)
+    setUploadError('')
+    setParsedPolicy(null)
+
+    let policy
+    try {
+      policy = await uploadPolicy(selectedFile.file)
+    } catch (error) {
+      setUploadError(error.message)
+      return
+    } finally {
+      setUploading(false)
+    }
+
+    setParsedPolicy(policy)
 
     // Get today's date
     const today = new Date().toLocaleDateString('en-US', {
@@ -83,9 +104,6 @@ function NewPolicyPage() {
       'addedPolicies',
       JSON.stringify(savedPolicies)
     )
-
-    // Go back to the Policies page
-    navigate('/policies')
   }
 
   return (
@@ -315,10 +333,28 @@ function NewPolicyPage() {
               type="button"
               className="upload-policy-button"
               onClick={uploadDocuments}
+              disabled={uploading}
             >
-              Upload Documents
+              {uploading ? 'Parsing…' : 'Upload Documents'}
             </button>
           </div>
+
+          {/* =========================
+              PARSE RESULT
+              Placeholder: raw backend output until real rendering is built
+          ========================= */}
+
+          {uploadError && (
+            <p className="new-policy-error">
+              {uploadError}
+            </p>
+          )}
+
+          {parsedPolicy && (
+            <pre className="new-policy-result">
+              {JSON.stringify(parsedPolicy, null, 2)}
+            </pre>
+          )}
         </main>
       </div>
     </div>

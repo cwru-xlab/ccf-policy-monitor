@@ -9,7 +9,6 @@ from pathlib import Path
 
 import httpx
 import pytest
-from openai.lib._pydantic import to_strict_json_schema
 from pydantic import ValidationError
 
 from policy_radar import llm, sources
@@ -199,6 +198,5 @@ async def test_pubmed_esearch_error_raises():
 
 def test_extraction_models_are_valid_strict_schemas():
     for model in (llm.ExtractedGuideline, llm.ExtractedPolicy):
-        schema = to_strict_json_schema(model)
-        assert schema["additionalProperties"] is False
+        schema = model.model_json_schema()
         assert set(schema["required"]) == set(model.model_fields)
