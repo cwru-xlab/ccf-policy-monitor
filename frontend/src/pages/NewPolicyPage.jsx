@@ -52,17 +52,17 @@ function NewPolicyPage() {
     setUploadError('')
     setParsedPolicy(null)
 
-    let policy
+    // A failed parse is still saved below (as 'Parse Failed') so it shows in the
+    // Policies view and can be deleted or re-uploaded.
+    let parseFailed = false
     try {
-      policy = await uploadPolicy(selectedFile.file)
+      setParsedPolicy(await uploadPolicy(selectedFile.file))
     } catch (error) {
       setUploadError(error.message)
-      return
+      parseFailed = true
     } finally {
       setUploading(false)
     }
-
-    setParsedPolicy(policy)
 
     // Get today's date
     const today = new Date().toLocaleDateString('en-US', {
@@ -87,14 +87,16 @@ function NewPolicyPage() {
 
       updatedAge: 'Just now',
 
-      status: 'In Review',
+      status: parseFailed ? 'Parse Failed' : 'In Review',
 
       fileName: selectedFile.name,
     }
 
-    // Get policies that were previously added
-    const savedPolicies =
+    // Get policies that were previously added, dropping an earlier upload of
+    // the same file so a retry replaces it
+    const savedPolicies = (
       JSON.parse(localStorage.getItem('addedPolicies')) || []
+    ).filter((policy) => policy.fileName !== selectedFile.name)
 
     // Add the new policy
     savedPolicies.push(newPolicy)

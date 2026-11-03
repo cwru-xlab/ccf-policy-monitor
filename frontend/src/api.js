@@ -12,28 +12,40 @@ async function call(path, options) {
 }
 
 // Background jobs report through GET /jobs/{id}. A job "succeeds" even when single
-// documents fail, so the failed list is checked too.
-async function waitForJob(jobId) {
+// documents fail, so the failed list is checked too — but only for ``documentId``,
+// since a parse job also retries earlier uploads that failed.
+async function waitForJob(jobId, documentId) {
   for (;;) {
     const job = await call(`/jobs/${jobId}`)
     if (job.status === 'failed') throw new Error(job.error)
     if (job.status === 'succeeded') {
-      if (job.detail.failed?.length) throw new Error(job.detail.failed[0].error)
+      const failure = job.detail.failed?.find((f) => f.document_id === documentId)
+      if (failure) throw new Error(failure.error)
       return job
     }
     await new Promise((r) => setTimeout(r, 2000))
   }
 }
 
-// Upload one CPB file, parse it, and return the full parsed Policy.
+async function findPolicy(documentId) {
+  const item = (await call('/policies')).find((p) => p.document_id === documentId)
+  return item && call(`/policies/${encodeURIComponent(item.policy_number)}`)
+}
+
+// Upload one CPB file, parse it, and return the full parsed Policy. Re-uploading a
+// file returns its existing Policy, or retries the parse if it failed before.
 export async function uploadPolicy(file) {
   const form = new FormData()
   form.append('files', file)
-  const { stored } = await call('/policies/documents', { method: 'POST', body: form })
-  if (!stored.length) throw new Error(`${file.name} was already uploaded`)
+  const { stored, duplicates } = await call('/policies/documents', { method: 'POST', body: form })
+  const documentId = stored[0] ?? duplicates[0]
+  if (!stored.length) {
+    const existing = await findPolicy(documentId)
+    if (existing) return existing
+  }
   const { job_id } = await call('/policies/parse', { method: 'POST' })
-  await waitForJob(job_id)
-  const item = (await call('/policies')).find((p) => p.document_id === stored[0])
-  if (!item) throw new Error(`no policy found for ${file.name} after parsing`)
-  return call(`/policies/${encodeURIComponent(item.policy_number)}`)
+  await waitForJob(job_id, documentId)
+  const policy = await findPolicy(documentId)
+  if (!policy) throw new Error(`no policy found for ${file.name} after parsing`)
+  return policy
 }

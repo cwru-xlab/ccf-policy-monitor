@@ -10,7 +10,7 @@ from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
 
-from policy_radar import db, pipelines
+from policy_radar import db, pipelines, storage
 from policy_radar.enums import JobKind, JobStatus
 from policy_radar.models import Source
 from policy_radar.sources import SOURCES
@@ -124,16 +124,21 @@ async def get_guideline(guideline_id: str):
 
 @app.post("/policies/documents", status_code=201)
 async def upload_policies(files: list[UploadFile]) -> dict:
-    """Store uploaded CPB files as source documents. Parse them with POST /policies/parse."""
+    """Store uploaded CPB files as source documents. Parse them with POST /policies/parse.
+
+    Both lists hold document ids, so a re-uploaded file can be found and re-parsed."""
     stored, duplicates = [], []
     for f in files:
         media_type = (f.content_type or "").split(";")[0]
         if media_type not in UPLOAD_MEDIA_TYPES:
             raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
-        doc = await pipelines.store_document(
-            db.CPB_SOURCE_KEY, await f.read(), media_type, origin_url=None
-        )
-        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+        content = await f.read()
+        doc = await pipelines.store_document(db.CPB_SOURCE_KEY, content, media_type, origin_url=None)
+        if doc:
+            stored.append(doc.document_id)
+        else:
+            _, sha = storage.object_key(db.CPB_SOURCE_KEY, content, media_type)
+            duplicates.append(f"{db.CPB_SOURCE_KEY}-{sha[:16]}")
     return {"stored": stored, "duplicates": duplicates}
 
 

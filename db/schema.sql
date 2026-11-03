@@ -54,6 +54,7 @@ create table if not exists source_document (
     content_sha256  char(64) not null,
     media_type      text not null,                  -- e.g. 'application/pdf'
     origin_url      text,
+    file_name       text,
     unique (source_key, content_sha256)
 );
 

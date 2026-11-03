@@ -76,6 +76,7 @@ class SourceDocument(_Frozen):
     content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     media_type: str = Field(min_length=1)
     origin_url: str | None = None
+    file_name: str | None = None
 
 
 class Code(_Frozen):
