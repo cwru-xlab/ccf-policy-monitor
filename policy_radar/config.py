@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     database_url: str
     aws_region: str = "us-east-1"
-    bedrock_model: str = "us.anthropic.claude-haiku-5-5"  # criteria extraction
+    bedrock_model: str = "us.anthropic.claude-opus-5-5"  # criteria extraction
     comparison_model: str = "us.anthropic.claude-opus-5-5"  # guideline-vs-policy conflict check
     bedrock_embedding_model: str = "amazon.titan-embed-text-v2:0"
     storage_root: Path = Path("data/objects")

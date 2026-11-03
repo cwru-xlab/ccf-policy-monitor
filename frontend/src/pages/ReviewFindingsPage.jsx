@@ -1132,6 +1132,40 @@ function ReviewFindingsPage() {
                           {result.guidelineCriterion}
                         </strong>
                       </div>
+
+                      {/* QUOTED CRITERIA */}
+
+                      {!noChange && (
+                        <div
+                          style={{
+                            marginTop: '12px',
+                            display: 'grid',
+                            gap: '8px',
+                            fontSize: '13px',
+                            lineHeight: '1.5',
+                            color: '#444',
+                          }}
+                        >
+                          {[
+                            ['Guideline', result.guidelineText],
+                            ['Policy', result.policyText],
+                          ]
+                            .filter(([, text]) => text)
+                            .map(([side, text]) => (
+                              <blockquote
+                                key={side}
+                                style={{
+                                  margin: 0,
+                                  padding: '6px 10px',
+                                  borderLeft: '3px solid #d4d4d4',
+                                  background: '#fafafa',
+                                }}
+                              >
+                                <strong>{side}:</strong> “{text}”
+                              </blockquote>
+                            ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* ACTION */}

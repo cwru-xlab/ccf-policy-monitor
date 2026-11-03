@@ -66,6 +66,8 @@ criteria, return an empty criteria list."""
 
 POLICY_PROMPT = f"""You parse a payer Clinical Policy Bulletin (CPB) into criteria and codes. \
 {_CRITERION_RULES} Include medical-necessity, experimental/investigational and exclusion \
+criteria. Take criteria only from the bulletin's policy (coverage) section: background, \
+literature reviews and other bodies' recommendations quoted there are not the payer's \
 criteria. policy_number is the bulletin number as printed (e.g. "0584"). coverage_effect is \
 the bulletin's predominant determination. codes are only the codes the bulletin lists. \
 effective_date is the policy's own effective date, or null if the text states none."""
@@ -125,7 +127,7 @@ async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceD
             system=[{"text": instructions}],
             messages=[{"role": "user", "content": _content(doc)}],
             response_model=schema,
-            max_tokens=4096,
+            max_tokens=16000,  # Opus 5.5 always thinks, and thinking counts toward this
         )
 
     result = await asyncio.to_thread(_call)
