@@ -18,6 +18,8 @@ const USPSTF = 'https://www.uspreventiveservicestaskforce.org/uspstf/recommendat
 const AETNA = 'https://www.aetna.com/cpb/medical/data/'
 
 const NCD_API = 'https://api.coverage.cms.gov/v1/data/ncd/'
+const ACR_TRANSGENDER = 'https://acsearch.acr.org/list/TopicNarrativePdf?topicId=283' // already a PDF
+const DEMO_MAMMOGRAPHY = path.join(__dirname, 'demo_guideline_mammography.html') // fictional
 
 // [topic, guideline page, policy: Aetna page or {ncdid, ncdver, number}, what to expect].
 // Checked by reading both documents' coverage text (November 2026).
@@ -34,6 +36,10 @@ const PAIRS = [
     'no conflict: follows USPSTF'],
   ['breast', `${USPSTF}breast-cancer-screening`, `${AETNA}500_599/0584.html`,
     'no conflict: Aetna is broader (annual from 40, no upper age)'],
+  ['breast_acr_transgender', ACR_TRANSGENDER, `${AETNA}500_599/0584.html`,
+    'conflict: ACR rates mammography usually appropriate for transmasculine patients (variants 6-8) and high-risk transfeminine patients from 25-30 (variant 2); Aetna covers transfeminine persons from 40 only'],
+  ['breast_demo', DEMO_MAMMOGRAPHY, `${AETNA}500_599/0584.html`,
+    'conflict (FICTIONAL guideline written for the demo): R3-R8 conflict, R1, R2 and R9 should not; see the file header'],
   ['prostate', `${USPSTF}prostate-cancer-screening`, `${AETNA}500_599/0521.html`,
     'no conflict: Aetna is broader (PSA from 45)'],
   ['osteoporosis', `${USPSTF}osteoporosis-screening`, `${AETNA}100_199/0134.html`,
@@ -53,6 +59,14 @@ async function print(page, url, file, html) {
   const text = await page.evaluate(() => document.body.innerText.length)
   if (text < 1500) throw new Error(`${url}: only ${text} characters of text rendered`)
   return page.title()
+}
+
+// A document the source already serves as a PDF.
+async function save(page, url, file) {
+  const res = await page.request.get(url, { timeout: 90000 })
+  const type = res.headers()['content-type'] || ''
+  if (!res.ok() || !type.includes('pdf')) throw new Error(`${url}: HTTP ${res.status()} ${type}`)
+  fs.writeFileSync(file, await res.body())
 }
 
 function escape(text) {
@@ -88,17 +102,28 @@ async function main() {
   try {
     const done = new Set()
     for (const [topic, guidelineUrl, policy, expect] of PAIRS) {
-      const guideline = `guideline_uspstf_${topic}.pdf`
+      const guideline = guidelineUrl === ACR_TRANSGENDER
+        ? 'guideline_acr_transgender_breast_screening.pdf'
+        : guidelineUrl === DEMO_MAMMOGRAPHY
+        ? 'guideline_DEMO_fictional_mammography.pdf'
+        : `guideline_uspstf_${topic}.pdf`
       const isNcd = typeof policy !== 'string'
       const name = isNcd
-        ? `policy_medicare_ncd_${policy.number.replace('.', '_')}_${topic}.pdf`
-        : `policy_aetna_${path.basename(policy, '.html')}_${topic}.pdf`
+        ? `policy_medicare_ncd_${policy.number.replace('.', '_')}.pdf`
+        : `policy_aetna_${path.basename(policy, '.html')}.pdf`
       if (!done.has(guideline)) {
-        await print(page, guidelineUrl, path.join(out, guideline))
+        const file = path.join(out, guideline)
+        if (guidelineUrl === ACR_TRANSGENDER) await save(page, guidelineUrl, file)
+        else if (guidelineUrl === DEMO_MAMMOGRAPHY)
+          await print(page, null, file, fs.readFileSync(DEMO_MAMMOGRAPHY, 'utf8'))
+        else await print(page, guidelineUrl, file)
         done.add(guideline)
       }
-      const html = isNcd ? await ncdHtml(page, policy) : undefined
-      await print(page, isNcd ? null : policy, path.join(out, name), html)
+      if (!done.has(name)) {
+        const html = isNcd ? await ncdHtml(page, policy) : undefined
+        await print(page, isNcd ? null : policy, path.join(out, name), html)
+        done.add(name)
+      }
       console.log(`${guideline} + ${name}\n    expect ${expect}`)
     }
   } finally {

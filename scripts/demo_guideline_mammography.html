@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DEMO Breast Cancer Screening Guideline (fictional)</title>
+<!--
+  A FICTIONAL guideline for demonstrating the conflict engine against Aetna CPB 0584
+  (Mammography). Each recommendation targets a clause of that bulletin's policy section
+  (read November 2026); the "consistent" ones are controls that should not be flagged.
+  Built into a PDF by scripts/sample_docs.cjs.
+
+  Expected conflicts (recommendation -> Aetna 0584 clause):
+    R3 AI-supported reading            -> II: AI-based mammography is experimental
+    R4 CEM for extremely dense breasts -> I.I: CEM only for high-risk members who cannot have MRI
+    R5 transmasculine, no top surgery  -> no criterion; II: "all other indications" experimental
+    R6 transfeminine high-risk from 30 -> I.D: transfeminine persons covered from 40
+    R7 male BRCA/PALB2 carriers at 40  -> I.B: BRCA-positive men from 50
+    R8 men with Klinefelter syndrome   -> II: screening of men for other indications experimental
+  Expected no conflict: R1 (annual from 40), R2 (tomosynthesis), R9 (>=20% lifetime risk).
+-->
+<style>
+  body { font: 12.5px/1.55 Georgia, serif; margin: 48px 56px; color: #111; }
+  .banner { border: 2px solid #b00; color: #b00; padding: 10px 14px; font: bold 12px/1.4 Arial, sans-serif; }
+  h1 { font-size: 21px; margin: 22px 0 4px; }
+  h2 { font-size: 15px; margin: 24px 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+  .meta { color: #555; font-size: 12px; }
+  .rec { margin: 12px 0; padding: 8px 12px; border-left: 3px solid #555; background: #f6f6f6; }
+  .grade { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  DEMONSTRATION DOCUMENT. FICTIONAL. NOT CLINICAL GUIDANCE. Written to test the Policy Radar
+  conflict engine. It is not issued or endorsed by any medical society, agency or payer.
+</div>
+
+<h1>Breast Cancer Screening with Mammography: Demonstration Guideline</h1>
+<p class="meta">Policy Radar Demo Panel (fictional) &middot; Version 1.0 &middot; Published 2026-11-01</p>
+
+<h2>Scope</h2>
+<p>This guideline covers screening mammography for asymptomatic people with breast tissue,
+including transgender and gender-diverse people and men at increased genetic risk. It does not
+address diagnostic imaging of symptoms. Grades: A, strong recommendation; B, moderate
+recommendation.</p>
+
+<h2>Recommendations</h2>
+
+<div class="rec"><b>R1.</b> The panel recommends annual screening mammography for women aged 40 years
+and older at average risk, continuing while the woman is in good health.
+<span class="grade">(Grade A)</span></div>
+
+<div class="rec"><b>R2.</b> Digital breast tomosynthesis (3D mammography) is recommended as an
+acceptable screening alternative to 2D digital mammography. <span class="grade">(Grade A)</span></div>
+
+<div class="rec"><b>R3.</b> The panel recommends that screening mammograms be read with an FDA-cleared
+artificial intelligence (AI) decision-support system as a concurrent or second reader, for all
+screening populations. <span class="grade">(Grade B)</span></div>
+
+<div class="rec"><b>R4.</b> For women aged 40 to 74 years with extremely dense breasts (BI-RADS density
+category D) at otherwise average risk, the panel recommends annual supplemental screening with
+contrast-enhanced mammography (CEM) in addition to standard mammography, whether or not the
+woman could undergo breast MRI. <span class="grade">(Grade B)</span></div>
+
+<div class="rec"><b>R5.</b> The panel recommends annual screening mammography for transmasculine people
+aged 40 years and older who have had no chest surgery or reduction mammoplasty only, on the same
+schedule as average-risk women. <span class="grade">(Grade A)</span></div>
+
+<div class="rec"><b>R6.</b> For transfeminine people with 5 or more years of past or current
+feminizing hormone use who are at higher-than-average risk (a pathogenic BRCA1, BRCA2 or PALB2
+variant, or a first-degree relative with breast cancer), the panel recommends annual screening
+mammography starting at age 30. <span class="grade">(Grade B)</span></div>
+
+<div class="rec"><b>R7.</b> For men who carry a pathogenic BRCA1, BRCA2 or PALB2 variant, the panel
+recommends annual screening mammography starting at age 40. <span class="grade">(Grade B)</span></div>
+
+<div class="rec"><b>R8.</b> For men with Klinefelter syndrome (47,XXY), the panel recommends annual
+screening mammography starting at age 40. <span class="grade">(Grade B)</span></div>
+
+<div class="rec"><b>R9.</b> For women with a lifetime breast cancer risk of 20% or greater by a
+validated model (for example Tyrer-Cuzick), the panel recommends annual screening mammography
+starting at age 30. <span class="grade">(Grade A)</span></div>
+
+</body>
+</html>
