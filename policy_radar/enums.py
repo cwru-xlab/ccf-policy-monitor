@@ -149,3 +149,18 @@ class JobStatus(StrEnum):
     RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class ConflictCategory(StrEnum):
+    """How a payer policy criterion falls short of a guideline criterion it addresses.
+
+    ``coverage_gap`` is the only category without a policy criterion: the guideline
+    recommends something no policy criterion addresses."""
+
+    COVERAGE_GAP = "coverage_gap"
+    OPPOSITE_STANCE = "opposite_stance"  # policy excludes or calls investigational what is recommended
+    EXCLUDED_SERVICE = "excluded_service"  # a recommended drug, test or service is excluded
+    NARROWER_POPULATION = "narrower_population"  # stricter age range, risk group or diagnosis
+    FREQUENCY_LIMIT = "frequency_limit"
+    PRIOR_AUTHORIZATION = "prior_authorization"
+    OTHER_RESTRICTION = "other_restriction"  # setting, provider, step therapy, documentation

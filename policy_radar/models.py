@@ -13,6 +13,7 @@ from policy_radar.enums import (
     STRENGTH_VALUES,
     AuthorityKind,
     CodeSystem,
+    ConflictCategory,
     CoverageEffect,
     PolicyDocumentType,
     StrengthSystem,
@@ -189,3 +190,29 @@ class CriterionMatch(_Frozen):
     policy_criterion_id: str | None = None
     similarity: float = Field(ge=0.0, le=1.0)
     divergence: str | None = None
+
+
+class CriterionConflict(_Frozen):
+    """One guideline criterion that ``policy_number`` covers more narrowly than recommended,
+    or not at all (``coverage_gap``, the only category with no ``policy_criterion_id``).
+
+    Quotes are verbatim substrings of the two criteria's text."""
+
+    guideline_criterion_id: str = Field(min_length=1)
+    policy_number: str = Field(min_length=1)
+    policy_criterion_id: str | None = None
+    category: ConflictCategory
+    explanation: str = Field(min_length=1)
+    guideline_quote: str = Field(min_length=1)
+    policy_quote: str | None = None
+    model: str = Field(min_length=1)
+    checked_at: datetime
+
+    @model_validator(mode="after")
+    def _gap_has_no_policy_side(self) -> "CriterionConflict":
+        is_gap = self.category == ConflictCategory.COVERAGE_GAP
+        if is_gap != (self.policy_criterion_id is None):
+            raise ValueError("coverage_gap, and only coverage_gap, has no policy criterion")
+        if (self.policy_quote is None) != (self.policy_criterion_id is None):
+            raise ValueError("policy_quote is set exactly when policy_criterion_id is")
+        return self

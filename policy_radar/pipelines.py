@@ -1,4 +1,5 @@
 """The three background pipelines: ingest guidelines, atomize guidelines, parse CPBs.
+Plus on-demand lookups that run the atomize or parse step for one document if it is missing.
 
 Each returns a small dict of counts that becomes the job's ``detail``. A failure on one
 document is recorded and the run continues; only a failure of the whole run fails the job.
@@ -165,3 +166,25 @@ async def atomize_pending() -> dict:
 async def parse_pending_cpbs() -> dict:
     """Parse every uploaded CPB document that has no Policy yet."""
     return await _each(await db.unparsed_cpbs(), _parse_cpb)
+
+
+async def guideline_for_document(document_id: str) -> Guideline | None:
+    """The guideline from one guideline document, atomizing it first if that has not run.
+    None if ``document_id`` is not a stored guideline document."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key == db.CPB_SOURCE_KEY:
+        return None
+    if await db.guideline_by_document(document_id) is None:
+        await _atomize(doc)
+    return await db.guideline_by_document(document_id)
+
+
+async def policy_for_document(document_id: str) -> Policy | None:
+    """The policy from one uploaded CPB document, parsing it first if that has not run.
+    None if ``document_id`` is not a stored CPB document."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key != db.CPB_SOURCE_KEY:
+        return None
+    if await db.policy_by_document(document_id) is None:
+        await _parse_cpb(doc)
+    return await db.policy_by_document(document_id)

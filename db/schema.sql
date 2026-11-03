@@ -180,6 +180,27 @@ create table if not exists criterion_match (
     unique nulls not distinct (guideline_criterion_id, policy_number, policy_criterion_id)
 );
 
+-- One guideline criterion that a user-linked policy covers more narrowly than recommended,
+-- or not at all (category 'coverage_gap', the only one with a null policy_criterion_id).
+-- Written by POST /conflicts; re-checking a (guideline, policy) pair replaces its rows.
+create table if not exists criterion_conflict (
+    conflict_id             bigint generated always as identity primary key,
+    guideline_criterion_id  text not null references guideline_criterion on delete cascade,
+    policy_number           text not null references policy on delete cascade,
+    policy_criterion_id     text references policy_criterion on delete cascade,
+    category                text not null check (category in (
+        'coverage_gap', 'opposite_stance', 'excluded_service', 'narrower_population',
+        'frequency_limit', 'prior_authorization', 'other_restriction')),
+    explanation             text not null,
+    guideline_quote         text not null,
+    policy_quote            text,
+    model                   text not null,                -- Bedrock model id that judged it
+    checked_at              timestamptz not null default now(),
+    check ((category = 'coverage_gap') = (policy_criterion_id is null)),
+    check ((policy_quote is null) = (policy_criterion_id is null))
+);
+create index if not exists criterion_conflict_policy_idx on criterion_conflict (policy_number);
+
 -- Status of one background pipeline run. Jobs run in the API process.
 create table if not exists job (
     job_id       text primary key,

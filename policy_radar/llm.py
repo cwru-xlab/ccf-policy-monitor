@@ -1,4 +1,5 @@
-"""Bedrock calls: structured extraction of a document into criteria, and embeddings.
+"""Bedrock calls: structured extraction of a document into criteria, the guideline-vs-policy
+conflict check, and embeddings.
 
 The Extracted* models are what the model fills in; pipelines.py turns them into domain
 models by adding ids. They have no defaults because structured outputs require every
@@ -21,6 +22,7 @@ from policy_radar.config import settings
 from policy_radar.enums import (
     STRENGTH_VALUES,
     CodeSystem,
+    ConflictCategory,
     CoverageEffect,
     PolicyDocumentType,
     StrengthSystem,
@@ -127,6 +129,77 @@ async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceD
         f"\n--- LLM structured output: {doc.document_id} ({schema.__name__}) ---\n"
         f"{result.model_dump_json(indent=2)}\n"
         "--- End LLM structured output ---",
+        flush=True,
+    )
+    return result
+
+
+# The notebook's arm B "criteria list" task (notebooks/rag_approach_comparison.ipynb),
+# reframed: the guideline-policy link is given by the user, and only conflicts are reported.
+CONFLICT_PROMPT = f"""You compare an external clinical guideline against one payer coverage \
+policy that a reviewer has linked to it. Both are given as JSON lists of criteria \
+({{criterion_id, text}}). For each guideline criterion, find every policy criterion that \
+addresses the same service, population and recommendation, and report the pairs where the \
+policy conflicts with the guideline: the policy does not cover something the guideline \
+recommends or implies should be covered, or covers it more narrowly. Categories: \
+{", ".join(c.value for c in ConflictCategory)}. Use opposite_stance when the policy calls a \
+recommended service not covered, not medically necessary, experimental or investigational; \
+excluded_service when it excludes a specific recommended drug, test or service; \
+narrower_population for a stricter age range, risk group or diagnosis; frequency_limit and \
+prior_authorization for those added limits; other_restriction for any other added limit \
+(setting, provider, step therapy, documentation). Report only pairs that genuinely address the \
+same clinical question and an overlapping population; do not match merely similar topics \
+(e.g. a different disease). Do not report pairs where the policy is consistent with or broader \
+than the guideline. If no policy criterion addresses a guideline recommendation, report it once \
+with a null policy_criterion_id, a null policy_quote and category coverage_gap. A guideline \
+criterion that recommends against a service, or is background rather than a recommendation, \
+is never a coverage gap. Cite criterion ids exactly as given. Quote excerpts verbatim from the \
+criterion text. explanation is one sentence a policy reviewer can act on. If nothing \
+conflicts, return an empty conflicts list."""
+
+
+class ConflictMatch(BaseModel):
+    """The notebook's IdMatch, with the verdict narrowed to a conflict category."""
+
+    guideline_criterion_id: str
+    policy_criterion_id: str | None
+    category: ConflictCategory
+    explanation: str
+    guideline_quote: str
+    policy_quote: str | None
+
+
+class ConflictResult(BaseModel):
+    conflicts: list[ConflictMatch]
+
+
+def conflict_payload(guideline_criteria: list[dict], policy_criteria: list[dict]) -> str:
+    """The user message: both criteria lists as ``{criterion_id, text}`` JSON."""
+    return json.dumps(
+        {"guideline_criteria": guideline_criteria, "policy_criteria": policy_criteria}, indent=1
+    )
+
+
+async def find_conflicts(payload: str) -> ConflictResult:
+    """One structured call over the two criteria lists.
+
+    BEDROCK_JSON asks for JSON in the system prompt rather than forcing a tool call, which
+    Opus 5.5 rejects; instructor validates the reply and re-asks once if it does not parse."""
+
+    def _call() -> ConflictResult:
+        return client.create(
+            modelId=settings.comparison_model,
+            system=[{"text": CONFLICT_PROMPT}],
+            messages=[{"role": "user", "content": [{"text": payload}]}],
+            response_model=ConflictResult,
+            max_tokens=16000,
+        )
+
+    result = await asyncio.to_thread(_call)
+    print(
+        f"\n--- LLM conflict check ({settings.comparison_model}) ---\n"
+        f"{result.model_dump_json(indent=2)}\n"
+        "--- End LLM conflict check ---",
         flush=True,
     )
     return result

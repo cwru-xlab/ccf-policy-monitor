@@ -4,14 +4,16 @@ Pipelines run as FastAPI background tasks inside this process and report through
 ``job`` table; a job still running when the process stops is left in ``running``.
 """
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 
-from policy_radar import db, pipelines, storage
+from policy_radar import conflicts, db, pipelines, storage
 from policy_radar.enums import JobKind, JobStatus
 from policy_radar.models import Source
 from policy_radar.sources import SOURCES
@@ -221,6 +223,41 @@ async def get_policy(policy_number: str):
     if p is None:
         raise HTTPException(404, "policy not found")
     return p
+
+
+# --- conflicts ------------------------------------------------------------------
+
+
+class ConflictCheck(BaseModel):
+    """One guideline and the policies the user linked to it, by stored document id (the id
+    both upload endpoints return, and the one the frontend keeps)."""
+
+    guideline_document_id: str = Field(min_length=1)
+    policy_document_ids: list[str] = Field(min_length=1)
+
+
+@app.post("/conflicts")
+async def check_conflicts(req: ConflictCheck) -> list[conflicts.ConflictReport]:
+    """Check each linked policy against the guideline and return (and store) its conflicts.
+
+    Runs synchronously: one LLM call per policy, in parallel. A document not yet atomized or
+    parsed is extracted first. Only the policies named here are ever compared."""
+    try:
+        guideline = await pipelines.guideline_for_document(req.guideline_document_id)
+        if guideline is None:
+            raise HTTPException(404, f"guideline document {req.guideline_document_id!r} not found")
+        policies = []
+        for document_id in dict.fromkeys(req.policy_document_ids):
+            policy = await pipelines.policy_for_document(document_id)
+            if policy is None:
+                raise HTTPException(404, f"policy document {document_id!r} not found")
+            policies.append(policy)
+        return await asyncio.gather(*(conflicts.check(guideline, p) for p in policies))
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("conflict check failed")
+        raise HTTPException(502, f"conflict check failed: {type(e).__name__}: {e}") from e
 
 
 # --- jobs -------------------------------------------------------------------------

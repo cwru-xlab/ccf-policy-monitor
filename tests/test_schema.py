@@ -13,6 +13,7 @@ from policy_radar.enums import (
     STRENGTH_VALUES,
     AuthorityKind,
     CodeSystem,
+    ConflictCategory,
     CoverageEffect,
     JobKind,
     JobStatus,
@@ -59,6 +60,7 @@ _UPDATE_TABLES = ("guideline_criterion_update", "policy_criterion_update")
         *[(t, "kind", UpdateKind) for t in _UPDATE_TABLES],
         *[(t, "origin", UpdateOrigin) for t in _UPDATE_TABLES],
         *[(t, "status", UpdateStatus) for t in _UPDATE_TABLES],
+        ("criterion_conflict", "category", ConflictCategory),
         ("job", "kind", JobKind),
         ("job", "status", JobStatus),
     ],
@@ -83,6 +85,7 @@ _CRITERION_DB_ONLY = {"position", "embedding"}
         ("guideline_criterion_update", models.GuidelineCriterionUpdate, set(), set()),
         ("policy_criterion_update", models.PolicyCriterionUpdate, set(), set()),
         ("criterion_match", models.CriterionMatch, set(), {"match_id"}),
+        ("criterion_conflict", models.CriterionConflict, set(), {"conflict_id"}),
     ],
 )
 def test_tables_match_models(table, model, not_stored, db_only):

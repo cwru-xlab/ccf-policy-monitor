@@ -11,6 +11,7 @@ from policy_radar.config import settings
 from policy_radar.enums import JobKind, JobStatus
 from policy_radar.models import (
     Code,
+    CriterionConflict,
     Guideline,
     GuidelineCriterion,
     Policy,
@@ -203,6 +204,49 @@ async def get_policy(policy_number: str) -> Policy | None:
         criteria=await _criteria(PolicyCriterion, "policy_criterion", policy_number),
         codes=tuple(Code(**dict(c)) for c in codes),
     )
+
+
+async def guideline_by_document(document_id: str) -> Guideline | None:
+    """The guideline atomized from ``document_id``, if any."""
+    guideline_id = await pool().fetchval(
+        "select guideline_id from guideline where document_id = $1", document_id
+    )
+    return guideline_id and await get_guideline(guideline_id)
+
+
+async def policy_by_document(document_id: str) -> Policy | None:
+    """The policy parsed from ``document_id``, if any."""
+    policy_number = await pool().fetchval(
+        "select policy_number from policy where document_id = $1", document_id
+    )
+    return policy_number and await get_policy(policy_number)
+
+
+# --- conflicts -------------------------------------------------------------------
+
+
+async def save_conflicts(
+    guideline_id: str, policy_number: str, conflicts: list[CriterionConflict]
+) -> None:
+    """Replace the stored conflicts of one (guideline, policy) pair."""
+    async with pool().acquire() as conn, conn.transaction():
+        await conn.execute(
+            """delete from criterion_conflict
+               where policy_number = $1 and guideline_criterion_id in (
+                   select criterion_id from guideline_criterion where parent_id = $2)""",
+            policy_number, guideline_id,
+        )
+        await conn.executemany(
+            """insert into criterion_conflict (guideline_criterion_id, policy_number,
+                   policy_criterion_id, category, explanation, guideline_quote, policy_quote,
+                   model, checked_at)
+               values ($1, $2, $3, $4, $5, $6, $7, $8, $9)""",
+            [
+                (c.guideline_criterion_id, c.policy_number, c.policy_criterion_id, c.category,
+                 c.explanation, c.guideline_quote, c.policy_quote, c.model, c.checked_at)
+                for c in conflicts
+            ],
+        )
 
 
 # --- jobs ----------------------------------------------------------------------
