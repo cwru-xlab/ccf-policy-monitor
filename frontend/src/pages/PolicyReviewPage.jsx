@@ -292,6 +292,13 @@ function PolicyReviewPage() {
             Guideline Database
           </Link>
 
+          <Link
+            to="/mappings"
+            className="nav-item"
+          >
+            Document Mappings
+          </Link>
+
           <Link to="/audit-log" className="nav-item">
             Audit Log
           </Link>
@@ -330,6 +337,9 @@ function PolicyReviewPage() {
                 position: 'static',
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
+                backgroundColor: '#0077bb',
+                color: '#ffffff',
+                borderColor: '#0077bb',
               }}
             >
               Start a Review Session
