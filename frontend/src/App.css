@@ -4477,3 +4477,8 @@ input[type="radio"],
   margin-bottom: 12px;
 }
 .document-preview-note { color: #536174; font-size: 13px; }
+
+.guideline-details-link { color: #0078bf; font-weight: 600; text-decoration: none; }
+.guideline-details-link:hover { text-decoration: underline; }
+.new-guideline-content .new-guideline-actions { position: static; margin: 24px 0; gap: 16px; flex-wrap: wrap; }
+.new-guideline-content button:disabled { opacity: .6; cursor: not-allowed; }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchPolicyDocument } from '../api'
 
-export default function PolicyDocumentViewer({ documentId, fileName }) {
+export default function PolicyDocumentViewer({ documentId, fileName, collection = 'policies' }) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
   const [error, setError] = useState('')
@@ -10,7 +10,7 @@ export default function PolicyDocumentViewer({ documentId, fileName }) {
     if (!open || !documentId) return
     const controller = new AbortController()
     let objectUrl
-    fetchPolicyDocument(documentId, controller.signal)
+    fetchPolicyDocument(documentId, controller.signal, collection)
       .then((blob) => {
         if (controller.signal.aborted) return
         objectUrl = URL.createObjectURL(blob)
@@ -23,7 +23,7 @@ export default function PolicyDocumentViewer({ documentId, fileName }) {
       controller.abort()
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [open, documentId])
+  }, [open, documentId, collection])
 
   if (!documentId) return <p className="document-preview-note">Upload this document again to enable preview.</p>
   if (!fileName?.toLowerCase().endsWith('.pdf')) {

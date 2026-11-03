@@ -121,7 +121,15 @@ async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceD
             max_tokens=4096,
         )
 
-    return await asyncio.to_thread(_call)
+    result = await asyncio.to_thread(_call)
+    # Demo output goes directly to the backend console, independent of log level.
+    print(
+        f"\n--- LLM structured output: {doc.document_id} ({schema.__name__}) ---\n"
+        f"{result.model_dump_json(indent=2)}\n"
+        "--- End LLM structured output ---",
+        flush=True,
+    )
+    return result
 
 
 async def embed(texts: list[str]) -> list[list[float]]:

@@ -18,6 +18,7 @@ import ReviewFindingsPage from './pages/ReviewFindingsPage'
 import PolicyReviewEditingPage from './pages/PolicyReviewEditingPage'
 import GuidelinesPage from './pages/GuidelinesPage'
 import NewGuidelinePage from './pages/NewGuidelinePage'
+import GuidelineDetailsPage from './pages/GuidelineDetailsPage'
 import PoliciesPage from './pages/PoliciesPage'
 import NewPolicyPage from './pages/NewPolicyPage'
 import PolicyDetailsPage from './pages/PolicyDetailsPage'
@@ -30,6 +31,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/guidelines/:guidelineId" element={<GuidelineDetailsPage />} />
         <Route
           path="/login"
           element={<LoginPage />}

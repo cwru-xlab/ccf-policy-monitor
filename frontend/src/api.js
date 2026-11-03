@@ -51,8 +51,17 @@ export async function uploadPolicy(file, onStored = () => {}) {
   return policy
 }
 
-export async function fetchPolicyDocument(documentId, signal) {
-  const res = await fetch(`${API}/policies/documents/${encodeURIComponent(documentId)}`, { signal })
+export async function fetchPolicyDocument(documentId, signal, collection = 'policies') {
+  const res = await fetch(`${API}/${collection}/documents/${encodeURIComponent(documentId)}`, { signal })
   if (!res.ok) throw new Error('Unable to load this document. It may no longer be available.')
   return res.blob()
+}
+
+export async function uploadGuidelineDocument(file) {
+  const form = new FormData()
+  form.append('files', file)
+  const { stored, duplicates } = await call('/guidelines/documents', { method: 'POST', body: form })
+  const documentId = stored[0] ?? duplicates[0]
+  if (!documentId) throw new Error('The guideline document could not be stored.')
+  return documentId
 }

@@ -1,5 +1,6 @@
 
 import { useState } from 'react'
+import { uploadGuidelineDocument } from '../api'
 import { Link, useNavigate } from 'react-router-dom'
 
 function NewGuidelinePage() {
@@ -7,6 +8,8 @@ function NewGuidelinePage() {
 
   const [guidelineName, setGuidelineName] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   // ==========================================
   // READ SAVED DATA SAFELY
@@ -32,19 +35,21 @@ function NewGuidelinePage() {
       return
     }
 
-    const allowedExtensions = ['pdf', 'doc', 'docx']
+    const allowedExtensions = ['pdf', 'docx']
     const extension = file.name
       .split('.')
       .pop()
       .toLowerCase()
 
     if (!allowedExtensions.includes(extension)) {
-      alert('Please select a PDF, DOC, or DOCX file.')
+      alert('Please select a PDF or DOCX file.')
       event.target.value = ''
       return
     }
 
+    setUploadError('')
     setSelectedFile({
+      file,
       name: file.name,
       size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
       type: extension.toUpperCase(),
@@ -63,7 +68,7 @@ function NewGuidelinePage() {
   // UPLOAD GUIDELINE
   // ==========================================
 
-  function uploadGuideline() {
+  async function uploadGuideline() {
     const name = guidelineName.trim()
 
     if (name === '') {
@@ -76,73 +81,83 @@ function NewGuidelinePage() {
       return
     }
 
-    const now = new Date()
+    setUploading(true)
+    setUploadError('')
+    try {
+      const documentId = await uploadGuidelineDocument(selectedFile.file)
+      const now = new Date()
 
-    const today = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+      const today = now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
 
-    // Create a new guideline record.
-    // policyIds starts empty because new guidelines
-    // are mapped manually from Policy Details.
+      // Create a new guideline record.
+      // policyIds starts empty because new guidelines
+      // are mapped manually from Policy Details.
 
-    const newGuideline = {
-      id: Date.now(),
-      name: name,
-      description: `Guideline document: ${selectedFile.name}`,
-      created: today,
-      createdAge: 'Just now',
-      updated: today,
-      updatedAge: 'Just now',
-      createdAt: now.toISOString(),
-      status: 'In Review',
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      fileType: selectedFile.type,
-      policyIds: [],
+      const newGuideline = {
+        id: Date.now(),
+        name: name,
+        description: `Guideline document: ${selectedFile.name}`,
+        created: today,
+        createdAge: 'Just now',
+        updated: today,
+        updatedAge: 'Just now',
+        createdAt: now.toISOString(),
+        status: 'In Review',
+        fileName: selectedFile.name,
+        documentId,
+        fileSize: selectedFile.size,
+        fileType: selectedFile.type,
+        policyIds: [],
+      }
+
+      // ==========================================
+      // SAVE TO GUIDELINE DATABASE
+      // ==========================================
+
+      const savedGuidelines = getSavedArray('addedGuidelines')
+
+      savedGuidelines.push(newGuideline)
+
+      localStorage.setItem(
+        'addedGuidelines',
+        JSON.stringify(savedGuidelines)
+      )
+
+      // ==========================================
+      // RECORD UPLOAD IN AUDIT LOG
+      // ==========================================
+
+      const auditEvents = getSavedArray('auditEvents')
+
+      auditEvents.push({
+        id: `guideline-upload-${newGuideline.id}`,
+        timestamp: now.toISOString(),
+        user: 'Sarah Chen',
+        action: 'Guideline Uploaded',
+        category: 'Guideline Changes',
+        item: newGuideline.name,
+        details: `Uploaded guideline document: ${selectedFile.name}`,
+      })
+
+      localStorage.setItem(
+        'auditEvents',
+        JSON.stringify(auditEvents)
+      )
+
+      // ==========================================
+      // RETURN TO GUIDELINE DATABASE
+      // ==========================================
+
+      navigate('/guidelines/' + newGuideline.id)
+    } catch (error) {
+      setUploadError('Unable to upload or save the guideline. ' + error.message)
+    } finally {
+      setUploading(false)
     }
-
-    // ==========================================
-    // SAVE TO GUIDELINE DATABASE
-    // ==========================================
-
-    const savedGuidelines = getSavedArray('addedGuidelines')
-
-    savedGuidelines.push(newGuideline)
-
-    localStorage.setItem(
-      'addedGuidelines',
-      JSON.stringify(savedGuidelines)
-    )
-
-    // ==========================================
-    // RECORD UPLOAD IN AUDIT LOG
-    // ==========================================
-
-    const auditEvents = getSavedArray('auditEvents')
-
-    auditEvents.push({
-      id: `guideline-upload-${newGuideline.id}`,
-      timestamp: now.toISOString(),
-      user: 'Sarah Chen',
-      action: 'Guideline Uploaded',
-      category: 'Guideline Changes',
-      item: newGuideline.name,
-      details: `Uploaded guideline document: ${selectedFile.name}`,
-    })
-
-    localStorage.setItem(
-      'auditEvents',
-      JSON.stringify(auditEvents)
-    )
-
-    // ==========================================
-    // RETURN TO GUIDELINE DATABASE
-    // ==========================================
-
-    navigate('/guidelines')
   }
 
   return (
@@ -249,6 +264,7 @@ function NewGuidelinePage() {
               type="text"
               placeholder="Enter a name for this guideline"
               value={guidelineName}
+              disabled={uploading}
               onChange={(event) =>
                 setGuidelineName(event.target.value)
               }
@@ -261,14 +277,15 @@ function NewGuidelinePage() {
             <h2>Guideline Document</h2>
 
             <p>
-              Select a PDF, DOC, or DOCX document to
+              Select a PDF or DOCX document to
               register in the Guideline Database.
             </p>
 
             <label className="guideline-upload-area">
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                disabled={uploading}
+                accept=".pdf,.docx"
                 hidden
                 onChange={handleFileChange}
               />
@@ -282,7 +299,7 @@ function NewGuidelinePage() {
 
                 <span>
                   {' '}
-                  a PDF, DOC, or DOCX document from
+                  a PDF or DOCX document from
                   your computer.
                 </span>
               </div>
@@ -304,11 +321,14 @@ function NewGuidelinePage() {
               <button
                 type="button"
                 onClick={removeFile}
+                disabled={uploading}
               >
                 Remove
               </button>
             </div>
           )}
+
+          {uploadError && <p role="alert" className="new-policy-error">{uploadError}</p>}
 
           {/* BOTTOM BUTTONS */}
 
@@ -316,6 +336,7 @@ function NewGuidelinePage() {
             <button
               type="button"
               className="cancel-guideline-button"
+              disabled={uploading}
               onClick={() => navigate('/guidelines')}
             >
               Cancel
@@ -325,8 +346,9 @@ function NewGuidelinePage() {
               type="button"
               className="upload-documents-button"
               onClick={uploadGuideline}
+              disabled={uploading}
             >
-              Upload Guideline
+              {uploading ? 'Uploading…' : 'Upload Guideline'}
             </button>
           </div>
         </main>

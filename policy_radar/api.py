@@ -96,8 +96,18 @@ async def upload_guidelines(
         media_type = (f.content_type or "").split(";")[0]
         if media_type not in UPLOAD_MEDIA_TYPES:
             raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
-        doc = await pipelines.store_document(source_key, await f.read(), media_type, origin_url=None)
-        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+        content = await f.read()
+        doc = await pipelines.store_document(source_key, content, media_type, origin_url=None)
+        if doc:
+            stored.append(doc.document_id)
+        else:
+            _, sha = storage.object_key(source_key, content, media_type)
+            duplicates.append(f"{source_key}-{sha[:16]}")
+        print(
+            f"Guideline stored: {f.filename}. Upload does not run LLM extraction; "
+            "POST /guidelines/atomize starts extraction and prints its structured output.",
+            flush=True,
+        )
     return {"stored": stored, "duplicates": duplicates}
 
 
@@ -110,6 +120,24 @@ async def atomize(tasks: BackgroundTasks) -> dict:
 @app.get("/guidelines")
 async def list_guidelines() -> list[dict]:
     return await db.list_guidelines()
+
+
+@app.get("/guidelines/documents/{document_id}")
+async def view_guideline_document(document_id: str):
+    """Return the stored guideline PDF, without requiring atomization."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key == db.CPB_SOURCE_KEY:
+        raise HTTPException(404, "guideline document not found")
+    if doc.media_type != "application/pdf":
+        raise HTTPException(415, "In-app preview is available for PDF documents only.")
+    try:
+        content = storage.get(doc.storage_uri)
+    except FileNotFoundError:
+        raise HTTPException(404, "guideline document file not found") from None
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": 'inline; filename="guideline.pdf"',
+        "X-Content-Type-Options": "nosniff",
+    })
 
 
 @app.get("/guidelines/{guideline_id}")
@@ -137,9 +165,24 @@ async def upload_policies(files: list[UploadFile]) -> dict:
         doc = await pipelines.store_document(db.CPB_SOURCE_KEY, content, media_type, origin_url=None)
         if doc:
             stored.append(doc.document_id)
+            print(f"Policy uploaded: {doc.document_id}; awaiting LLM parsing.", flush=True)
         else:
             _, sha = storage.object_key(db.CPB_SOURCE_KEY, content, media_type)
-            duplicates.append(f"{db.CPB_SOURCE_KEY}-{sha[:16]}")
+            document_id = f"{db.CPB_SOURCE_KEY}-{sha[:16]}"
+            duplicates.append(document_id)
+            existing = next(
+                (p for p in await db.list_policies() if p["document_id"] == document_id),
+                None,
+            )
+            if existing:
+                policy = await db.get_policy(existing["policy_number"])
+                if policy is not None:
+                    print(
+                        f"\n--- Cached structured policy output: {document_id} ---\n"
+                        f"{policy.model_dump_json(indent=2)}\n"
+                        "--- End cached output (no new LLM call) ---",
+                        flush=True,
+                    )
     return {"stored": stored, "duplicates": duplicates}
 
 

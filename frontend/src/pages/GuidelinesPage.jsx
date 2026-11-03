@@ -1,10 +1,25 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { originalGuidelines, deleteGuideline } from '../data/guidelines'
 import { getPoliciesForGuideline } from '../data/guidelineMappings'
 
 function GuidelinesPage() {
   const [search, setSearch] = useState('')
+  const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(() => getSavedArray('deletedGuidelineIds'))
+  const [deleteError, setDeleteError] = useState('')
+
+  function handleDelete(guideline) {
+    if (!window.confirm('Are you sure you want to delete "' + guideline.name + '"?')) return
+    try {
+      deleteGuideline(guideline)
+      setDeleteError('')
+    } catch {
+      setDeleteError('Could not finish deleting the guideline. Please try again.')
+    } finally {
+      setDeletedGuidelineIds(getSavedArray('deletedGuidelineIds'))
+    }
+  }
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
 
@@ -37,58 +52,7 @@ function GuidelinesPage() {
   // ORIGINAL GUIDELINES
   // ==========================================
 
-  const originalGuidelines = [
-    {
-      id: 1,
-      name: 'Cardiac Coverage Guideline',
-      description: 'Policy review for cardiac procedures and treatments.',
-      created: 'Sep 23, 2026',
-      createdAge: '2 days ago',
-      updated: 'Sep 23, 2026',
-      updatedAge: '2 days ago',
-      status: 'In Review',
-    },
-    {
-      id: 2,
-      name: 'Diabetes Treatment Guideline',
-      description: 'Policy review for diabetes management and treatment.',
-      created: 'Sep 18, 2026',
-      createdAge: '6 days ago',
-      updated: 'Sep 18, 2026',
-      updatedAge: '6 days ago',
-      status: 'Completed',
-    },
-    {
-      id: 3,
-      name: 'Oncology Coverage Guideline',
-      description: 'Policy review for oncology services and treatments.',
-      created: 'Sep 10, 2026',
-      createdAge: '14 days ago',
-      updated: 'Sep 10, 2026',
-      updatedAge: '14 days ago',
-      status: 'Completed',
-    },
-    {
-      id: 4,
-      name: 'Orthopedic Surgery Guideline',
-      description: 'Policy review for orthopedic procedures and rehab.',
-      created: 'Sep 5, 2026',
-      createdAge: '19 days ago',
-      updated: 'Sep 5, 2026',
-      updatedAge: '19 days ago',
-      status: 'In Review',
-    },
-    {
-      id: 5,
-      name: 'Mental Health Guideline',
-      description: 'Policy review for mental health services and treatment.',
-      created: 'Aug 28, 2026',
-      createdAge: '27 days ago',
-      updated: 'Aug 28, 2026',
-      updatedAge: '27 days ago',
-      status: 'Completed',
-    },
-  ]
+
 
   // ==========================================
   // LOAD POLICIES FROM DATABASE
@@ -112,7 +76,6 @@ function GuidelinesPage() {
   // ==========================================
 
   const addedGuidelines = getSavedArray('addedGuidelines')
-  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
 
   const allGuidelines = [
     ...addedGuidelines,
@@ -348,6 +311,8 @@ function GuidelinesPage() {
             </div>
           </div>
 
+          {deleteError && <p role="alert" className="new-policy-error">{deleteError}</p>}
+
           {/* GUIDELINES TABLE */}
 
           <div className="guidelines-table">
@@ -370,8 +335,12 @@ function GuidelinesPage() {
                   key={guideline.id}
                 >
                   <div className="guideline-name-cell">
-                    <strong>{guideline.name}</strong>
+                    <Link className="guideline-details-link" to={"/guidelines/" + guideline.id}>{guideline.name}</Link>
                     <p>{guideline.description}</p>
+                    <button type="button" className="delete-policy-button"
+                      aria-label={'Delete ' + guideline.name} onClick={() => handleDelete(guideline)}>
+                      Delete
+                    </button>
                   </div>
 
                   <div className="guideline-date-cell">
