@@ -1,5 +1,6 @@
 
 import { Link, useParams } from 'react-router-dom'
+import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
 import { getGuidelinesForPolicy } from '../data/guidelineMappings'
 
 function getSavedArray(key) {
@@ -375,6 +376,8 @@ function PolicyDetailsPage() {
               </div>
             </div>
           </section>
+
+          <PolicyDocumentViewer key={policy.id} documentId={policy.documentId} fileName={policy.fileName} />
 
           {/* ==================================
               NEW: ASSOCIATED GUIDELINES

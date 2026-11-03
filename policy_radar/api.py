@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
+from fastapi.responses import Response
 
 from policy_radar import db, pipelines, storage
 from policy_radar.enums import JobKind, JobStatus
@@ -146,6 +147,24 @@ async def upload_policies(files: list[UploadFile]) -> dict:
 async def parse(tasks: BackgroundTasks) -> dict:
     """Parse every uploaded CPB not yet parsed into a Policy."""
     return await _start(tasks, JobKind.PARSE_CPB, {}, pipelines.parse_pending_cpbs())
+
+
+@app.get("/policies/documents/{document_id}")
+async def view_policy_document(document_id: str):
+    """Return an uploaded policy PDF, independently of its parse status."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key != db.CPB_SOURCE_KEY:
+        raise HTTPException(404, "policy document not found")
+    if doc.media_type != "application/pdf":
+        raise HTTPException(415, "In-app preview is available for PDF documents only.")
+    try:
+        content = storage.get(doc.storage_uri)
+    except FileNotFoundError:
+        raise HTTPException(404, "policy document file not found") from None
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": 'inline; filename="policy.pdf"',
+        "X-Content-Type-Options": "nosniff",
+    })
 
 
 @app.get("/policies")

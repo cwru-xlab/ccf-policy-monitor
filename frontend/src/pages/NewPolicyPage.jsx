@@ -2,6 +2,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { uploadPolicy } from '../api'
+import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
 
 function NewPolicyPage() {
   const navigate = useNavigate()
@@ -13,13 +14,17 @@ function NewPolicyPage() {
   // Backend upload state
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
-  const [parsedPolicy, setParsedPolicy] = useState(null)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [documentId, setDocumentId] = useState(null)
 
   // Handles selecting a file from the computer
   function handleFileChange(event) {
     const file = event.target.files[0]
 
     if (file) {
+      setUploadSuccess(false)
+      setUploadError('')
+      setDocumentId(null)
       setSelectedFile({
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
@@ -31,6 +36,9 @@ function NewPolicyPage() {
   // Removes the selected file
   function removeFile() {
     setSelectedFile(null)
+    setUploadSuccess(false)
+    setUploadError('')
+    setDocumentId(null)
   }
 
   // Runs when Upload Documents is clicked
@@ -50,18 +58,21 @@ function NewPolicyPage() {
     // Upload to the backend and wait for the parse job
     setUploading(true)
     setUploadError('')
-    setParsedPolicy(null)
+    setUploadSuccess(false)
+    setDocumentId(null)
 
     // A failed parse is still saved below (as 'Parse Failed') so it shows in the
     // Policies view and can be deleted or re-uploaded.
     let parseFailed = false
+    let storedDocumentId = null
     try {
-      setParsedPolicy(await uploadPolicy(selectedFile.file))
+      await uploadPolicy(selectedFile.file, (id) => {
+        storedDocumentId = id
+        setDocumentId(id)
+      })
     } catch (error) {
       setUploadError(error.message)
       parseFailed = true
-    } finally {
-      setUploading(false)
     }
 
     // Get today's date
@@ -90,22 +101,27 @@ function NewPolicyPage() {
       status: parseFailed ? 'Parse Failed' : 'In Review',
 
       fileName: selectedFile.name,
+      documentId: storedDocumentId,
     }
 
     // Get policies that were previously added, dropping an earlier upload of
     // the same file so a retry replaces it
-    const savedPolicies = (
-      JSON.parse(localStorage.getItem('addedPolicies')) || []
-    ).filter((policy) => policy.fileName !== selectedFile.name)
+    try {
+      const savedPolicies = (
+        JSON.parse(localStorage.getItem('addedPolicies')) || []
+      ).filter((policy) => policy.fileName !== selectedFile.name)
 
-    // Add the new policy
-    savedPolicies.push(newPolicy)
+      // Add the new policy
+      savedPolicies.push(newPolicy)
 
-    // Save the updated list
-    localStorage.setItem(
-      'addedPolicies',
-      JSON.stringify(savedPolicies)
-    )
+      // Save the updated list
+      localStorage.setItem('addedPolicies', JSON.stringify(savedPolicies))
+      setUploadSuccess(!parseFailed)
+    } catch {
+      setUploadError('The document was uploaded, but the policy could not be saved in this browser.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -246,6 +262,7 @@ function NewPolicyPage() {
               type="text"
               placeholder="Enter a name for this policy"
               value={policyName}
+              disabled={uploading}
               onChange={(event) =>
                 setPolicyName(event.target.value)
               }
@@ -268,7 +285,8 @@ function NewPolicyPage() {
             <label className="new-policy-upload-area">
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.docx"
+                disabled={uploading}
                 hidden
                 onChange={handleFileChange}
               />
@@ -303,13 +321,14 @@ function NewPolicyPage() {
                 </strong>
 
                 <small>
-                  PDF • {selectedFile.size}
+                  {selectedFile.name.split('.').pop().toUpperCase()} • {selectedFile.size}
                 </small>
               </div>
 
               <button
                 type="button"
                 onClick={removeFile}
+                disabled={uploading}
               >
                 Remove
               </button>
@@ -324,6 +343,7 @@ function NewPolicyPage() {
             <button
               type="button"
               className="cancel-policy-button"
+              disabled={uploading}
               onClick={() =>
                 navigate('/policies')
               }
@@ -335,7 +355,7 @@ function NewPolicyPage() {
               type="button"
               className="upload-policy-button"
               onClick={uploadDocuments}
-              disabled={uploading}
+              disabled={uploading || uploadSuccess}
             >
               {uploading ? 'Parsing…' : 'Upload Documents'}
             </button>
@@ -343,19 +363,24 @@ function NewPolicyPage() {
 
           {/* =========================
               PARSE RESULT
-              Placeholder: raw backend output until real rendering is built
+              Upload status
           ========================= */}
 
           {uploadError && (
-            <p className="new-policy-error">
+            <p className="new-policy-error" role="alert">
               {uploadError}
             </p>
           )}
 
-          {parsedPolicy && (
-            <pre className="new-policy-result">
-              {JSON.stringify(parsedPolicy, null, 2)}
-            </pre>
+          {uploadSuccess && (
+            <div className="new-policy-success" role="status">
+              <strong>Policy uploaded successfully.</strong>
+              <p>Your document has been processed and is ready for review.</p>
+              <Link to="/policies">Go to Policies</Link>
+            </div>
+          )}
+          {documentId && (
+            <PolicyDocumentViewer key={documentId} documentId={documentId} fileName={selectedFile?.name} />
           )}
         </main>
       </div>

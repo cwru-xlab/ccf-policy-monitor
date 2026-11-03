@@ -71,6 +71,13 @@ async def last_retrieved(source_key: str) -> datetime | None:
     )
 
 
+async def get_source_document(document_id: str) -> SourceDocument | None:
+    row = await pool().fetchrow(
+        "select * from source_document where document_id = $1", document_id
+    )
+    return SourceDocument(**dict(row)) if row else None
+
+
 async def unatomized_documents() -> list[SourceDocument]:
     """Guideline-source documents that have no guideline yet."""
     rows = await pool().fetch(

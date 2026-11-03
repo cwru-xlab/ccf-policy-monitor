@@ -3391,10 +3391,9 @@
    ========================================================= */
 
 .new-policy-actions {
-  position: absolute;
-  left: 34px;
-  right: 34px;
-  bottom: 28px;
+  margin: 24px 0;
+  gap: 16px;
+  flex-wrap: wrap;
 
   display: flex;
   align-items: center;
@@ -4452,3 +4451,29 @@ input[type="radio"],
 .review-name-input:focus {
   border-color: var(--brand-blue);
 }
+
+.new-policy-success, .new-policy-error {
+  margin: 20px 0;
+  padding: 18px 20px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.new-policy-success { background: #e5f4ea; color: #205d39; }
+.new-policy-success p { margin: 8px 0; }
+.new-policy-error { background: #fff0f0; color: #9e2020; }
+.new-policy-content button:disabled { opacity: .6; cursor: not-allowed; }
+.new-policy-name-input { max-width: 100%; }
+.policy-document-viewer { margin: 20px 0; }
+.policy-document-preview { margin-top: 16px; }
+.policy-document-preview h2 { font-size: 16px; overflow-wrap: anywhere; }
+.policy-document-preview iframe {
+  display: block;
+  width: 100%;
+  height: 75vh;
+  min-height: 360px;
+  border: 1px solid #d7e0e7;
+  border-radius: 6px;
+  background: white;
+  margin-bottom: 12px;
+}
+.document-preview-note { color: #536174; font-size: 13px; }

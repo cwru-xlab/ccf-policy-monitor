@@ -34,11 +34,12 @@ async function findPolicy(documentId) {
 
 // Upload one CPB file, parse it, and return the full parsed Policy. Re-uploading a
 // file returns its existing Policy, or retries the parse if it failed before.
-export async function uploadPolicy(file) {
+export async function uploadPolicy(file, onStored = () => {}) {
   const form = new FormData()
   form.append('files', file)
   const { stored, duplicates } = await call('/policies/documents', { method: 'POST', body: form })
   const documentId = stored[0] ?? duplicates[0]
+  onStored(documentId)
   if (!stored.length) {
     const existing = await findPolicy(documentId)
     if (existing) return existing
@@ -48,4 +49,10 @@ export async function uploadPolicy(file) {
   const policy = await findPolicy(documentId)
   if (!policy) throw new Error(`no policy found for ${file.name} after parsing`)
   return policy
+}
+
+export async function fetchPolicyDocument(documentId, signal) {
+  const res = await fetch(`${API}/policies/documents/${encodeURIComponent(documentId)}`, { signal })
+  if (!res.ok) throw new Error('Unable to load this document. It may no longer be available.')
+  return res.blob()
 }
