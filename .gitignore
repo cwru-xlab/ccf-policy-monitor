@@ -232,6 +232,7 @@ Thumbs.db
 # Backend / local
 node_modules/
 tmp/
-data/
+# Ignore backend document storage, not frontend source modules.
+/data/
 notebooks/.cache/
 *.pdf
