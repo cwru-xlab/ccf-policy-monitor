@@ -256,7 +256,7 @@ async def test_atomize_drops_unpaired_strength(monkeypatch):
     async def fake_extract(schema, instructions, doc):
         return llm.ExtractedGuideline(
             title="Unpaired",
-            published=date(2025, 1, 1),
+            published="2025-01-01",
             version="1",
             strength="A",
             strength_system=None,
@@ -282,7 +282,7 @@ async def test_atomize_drops_unpaired_strength(monkeypatch):
 def test_llm_content_uses_markdown_and_scanned_images(monkeypatch):
     monkeypatch.setattr(llm.storage, "get", lambda uri: _scanned_pdf_bytes())
     parts = llm._content(_doc(media_type="application/pdf", storage_uri="x.pdf"))
-    assert parts[0]["type"] == "input_text"
+    assert parts[0]["type"] == "text"
     assert parts[0]["text"]
-    assert any(p["type"] == "input_image" for p in parts)
+    assert any(p["type"] == "image" for p in parts)
     assert "file_data" not in str(parts)
