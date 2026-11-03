@@ -7,7 +7,17 @@ const API = import.meta.env.VITE_API_URL ?? '/api'
 
 async function call(path, options) {
   const res = await fetch(API + path, options)
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`)
+  if (!res.ok) {
+    const text = await res.text()
+    let detail = text
+    try {
+      const parsed = JSON.parse(text).detail
+      if (parsed) detail = typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
+    } catch {
+      // not JSON: keep the raw body
+    }
+    throw new Error(`${res.status} ${detail}`)
+  }
   return res.json()
 }
 
@@ -64,4 +74,18 @@ export async function uploadGuidelineDocument(file) {
   const documentId = stored[0] ?? duplicates[0]
   if (!documentId) throw new Error('The guideline document could not be stored.')
   return documentId
+}
+
+// Run the conflict engine for one guideline and the policies the user mapped to
+// it. Returns one report per policy. The backend makes one LLM call per policy
+// and answers when all are done, so this can take a minute or two.
+export function checkConflicts(guidelineDocumentId, policyDocumentIds) {
+  return call('/conflicts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      guideline_document_id: guidelineDocumentId,
+      policy_document_ids: policyDocumentIds,
+    }),
+  })
 }

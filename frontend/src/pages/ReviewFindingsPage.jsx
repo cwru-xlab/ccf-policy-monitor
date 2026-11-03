@@ -6,6 +6,14 @@ import {
   getGuidelinesForPolicy,
   getPoliciesForGuideline,
 } from '../data/guidelineMappings'
+import { checkConflicts } from '../api'
+import {
+  checkablePairs,
+  conflictFindings,
+  loadConflictReports,
+  pairKey,
+  saveConflictReports,
+} from '../data/conflictFindings'
 
 // ==========================================
 // READ LOCAL STORAGE SAFELY
@@ -30,74 +38,6 @@ function getSavedObject(key) {
     return null
   }
 }
-
-// ==========================================
-// DEMONSTRATION FINDINGS
-// These are examples, not actual AI results.
-// Each example belongs to a specific demo policy.
-// ==========================================
-
-const demonstrationFindings = [
-  {
-    id: 1,
-    policyId: 1,
-    guidelineId: 1,
-    status: 'Suggested Change',
-    priority: 'High',
-    category: 'Coverage Criteria',
-    policyCriterion: 'Criterion 4.2.1',
-    guidelineCriterion: 'Criterion 4.2.1',
-    summary:
-      'Current policy criteria may be narrower than the selected reference guideline.',
-    rationale:
-      'The reference guideline includes an additional qualifying clinical pathway that is not clearly represented in the current policy language.',
-    policyText:
-      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A and B, including documented ischemia.',
-    guidelineText:
-      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, and C, including documented ischemia or significant anatomical findings.',
-    suggestedText:
-      'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
-  },
-  {
-    id: 2,
-    policyId: 2,
-    guidelineId: 2,
-    status: 'Suggested Change',
-    priority: 'Low',
-    category: 'Prior Authorization',
-    policyCriterion: 'Prior Authorization',
-    guidelineCriterion: 'Criterion 7.1.2',
-    summary:
-      'Prior authorization wording should be clarified to better match the selected guideline.',
-    rationale:
-      'The policy and guideline are generally aligned, but the guideline provides clearer language regarding exceptions to prior authorization requirements.',
-    policyText:
-      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except in certain cases.',
-    guidelineText:
-      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, with exceptions for patients meeting established continuation-of-therapy criteria.',
-    suggestedText:
-      'Prior authorization is required for advanced diabetes therapies, including GLP-1 agonists, except for patients who meet established continuation-of-therapy criteria.',
-  },
-  {
-    id: 3,
-    policyId: 3,
-    guidelineId: 3,
-    status: 'No Change Needed',
-    priority: 'None',
-    category: 'Clinical Eligibility',
-    policyCriterion: 'Eligibility Criteria',
-    guidelineCriterion: 'Clinical Eligibility',
-    summary:
-      'The reviewed policy language is consistent with the selected reference guideline.',
-    rationale:
-      'The demonstration screening did not identify a meaningful difference between the example policy criteria and example reference guideline.',
-    policyText:
-      'Coverage is available when clinical eligibility requirements and documented treatment criteria are satisfied.',
-    guidelineText:
-      'Coverage is appropriate when established clinical eligibility and treatment criteria are satisfied.',
-    suggestedText: '',
-  },
-]
 
 function ReviewFindingsPage() {
   const navigate = useNavigate()
@@ -166,57 +106,71 @@ function ReviewFindingsPage() {
   }
 
   // ==========================================
-  // MATCH DEMONSTRATION FINDINGS
-  // TO ACTUAL POLICY/GUIDELINE PAIRS
+  // CONFLICT ENGINE RESULTS
+  // Only guideline-policy pairs the user mapped are
+  // checked, and only stored documents can be sent.
   // ==========================================
 
-  const results = demonstrationFindings
-    .map((finding) => {
-      const matchingPolicy = selectedPolicies.find(
-        (policy) =>
-          String(policy.id) === String(finding.policyId)
-      )
+  const reviewKey = String(currentReview?.id ?? 'current')
 
-      const matchingGuideline = selectedGuidelines.find(
-        (guideline) =>
-          String(guideline.id) ===
-          String(finding.guidelineId)
-      )
+  const [reports, setReports] = useState(() =>
+    loadConflictReports(reviewKey)
+  )
+  const [checking, setChecking] = useState(false)
+  const [checkError, setCheckError] = useState('')
 
-      if (!matchingPolicy || !matchingGuideline) {
-        return null
+  const pairs = checkablePairs(
+    selectedPolicies,
+    selectedGuidelines
+  )
+
+  const pairCount = pairs.reduce(
+    (total, pair) => total + pair.policies.length,
+    0
+  )
+
+  const uncheckable = [
+    ...selectedPolicies.filter((policy) => !policy.documentId),
+    ...selectedGuidelines.filter(
+      (guideline) => !guideline.documentId
+    ),
+  ]
+
+  const results = conflictFindings(reports, pairs)
+
+  const lastChecked = Object.values(reports)
+    .map((report) => report.checked_at)
+    .sort()
+    .pop()
+
+  const checkModel = Object.values(reports)[0]?.model
+
+  async function runConflictCheck() {
+    setChecking(true)
+    setCheckError('')
+    let updated = { ...reports }
+    const failures = []
+    for (const { guideline, policies } of pairs) {
+      try {
+        const pairReports = await checkConflicts(
+          guideline.documentId,
+          policies.map((policy) => policy.documentId)
+        )
+        pairReports.forEach((report) => {
+          updated = {
+            ...updated,
+            [pairKey(guideline.documentId, report.policy_document_id)]: report,
+          }
+        })
+        setReports(updated)
+        saveConflictReports(reviewKey, updated)
+      } catch (error) {
+        failures.push(`${guideline.name}: ${error.message}`)
       }
-
-      // Double-check the actual policy-to-guideline
-      // relationship before showing the finding.
-
-      const associatedGuidelines = getGuidelinesForPolicy(
-        matchingPolicy,
-        selectedGuidelines
-      )
-
-      const isMapped = associatedGuidelines.some(
-        (guideline) =>
-          String(guideline.id) ===
-          String(matchingGuideline.id)
-      )
-
-      if (!isMapped) {
-        return null
-      }
-
-      return {
-        ...finding,
-        policy:
-          matchingPolicy.name ||
-          matchingPolicy.fileName ||
-          'Unnamed Policy',
-        guideline:
-          matchingGuideline.name ||
-          'Unnamed Guideline',
-      }
-    })
-    .filter(Boolean)
+    }
+    setCheckError(failures.join('\n'))
+    setChecking(false)
+  }
 
   // ==========================================
   // COUNTS
@@ -304,7 +258,9 @@ function ReviewFindingsPage() {
       JSON.stringify(result)
     )
 
-    navigate(`/reviews/findings/${result.id}/edit`)
+    navigate(
+      `/reviews/findings/${encodeURIComponent(result.id)}/edit`
+    )
   }
 
   // ==========================================
@@ -319,7 +275,7 @@ function ReviewFindingsPage() {
 
     if (results.length === 0) {
       const confirmed = window.confirm(
-        'No demonstration findings were generated for these policies. This does not mean the policies have been clinically screened. Complete the review session anyway?'
+        'No conflict-check results exist for these policies. This does not mean the policies have been clinically screened. Complete the review session anyway?'
       )
 
       if (!confirmed) return
@@ -335,7 +291,7 @@ function ReviewFindingsPage() {
       if (!continueAnyway) return
     } else {
       const confirmed = window.confirm(
-        'All demonstration recommendations have been reviewed. Mark this review session as completed?'
+        'All recommendations have been reviewed. Mark this review session as completed?'
       )
 
       if (!confirmed) return
@@ -497,8 +453,9 @@ function ReviewFindingsPage() {
               <h1>{reviewName}</h1>
 
               <p className="review-findings-subtitle">
-                Review the demonstration screening findings
-                and take action on suggested policy changes.
+                Run the conflict check on the mapped policies
+                and guidelines, then act on each conflict it
+                reports.
               </p>
 
               {reviewDescription && (
@@ -525,11 +482,11 @@ function ReviewFindingsPage() {
             )}
           </div>
 
-          {/* DEMO NOTICE */}
+          {/* CONFLICT CHECK */}
 
           <section
             style={{
-              padding: '12px 16px',
+              padding: '14px 16px',
               marginTop: '20px',
               background: '#f8fafc',
               border: '1px solid #dbe3eb',
@@ -540,12 +497,69 @@ function ReviewFindingsPage() {
               color: '#475569',
             }}
           >
-            <strong>Demonstration results:</strong>{' '}
-            This page currently uses sample screening
-            findings. The policy-to-guideline associations
-            are based on the selected review references,
-            but no real clinical document comparison has
-            been performed.
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '16px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <strong>Conflict check:</strong>{' '}
+                {pairCount === 0
+                  ? 'none of the mapped guideline-policy pairs has an uploaded document on both sides, so nothing can be checked.'
+                  : `${pairCount} mapped guideline-policy ${
+                      pairCount === 1 ? 'pair' : 'pairs'
+                    } can be checked. Each guideline criterion is compared with the criteria of its mapped policies only.`}
+                {lastChecked && (
+                  <div>
+                    Last checked{' '}
+                    {new Date(lastChecked).toLocaleString()}
+                    {checkModel && ` with ${checkModel}`}.
+                  </div>
+                )}
+              </div>
+
+              {pairCount > 0 && (
+                <button
+                  type="button"
+                  className="complete-review-button"
+                  onClick={runConflictCheck}
+                  disabled={checking}
+                >
+                  {checking
+                    ? 'Checking… (can take a minute)'
+                    : lastChecked
+                    ? 'Re-run Conflict Check'
+                    : 'Run Conflict Check'}
+                </button>
+              )}
+            </div>
+
+            {uncheckable.length > 0 && (
+              <div style={{ marginTop: '8px' }}>
+                Not checked (no uploaded document):{' '}
+                {uncheckable
+                  .map((item) => item.name || item.fileName)
+                  .join(', ')}
+                .
+              </div>
+            )}
+
+            {checkError && (
+              <div
+                role="alert"
+                style={{
+                  marginTop: '8px',
+                  color: '#9f2424',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                Conflict check failed. {checkError}
+              </div>
+            )}
           </section>
 
           {/* REVIEW SUMMARY */}
@@ -715,8 +729,8 @@ function ReviewFindingsPage() {
               <div>
                 <strong>
                   {totalSuggestedChanges === 0
-                    ? 'No demonstration recommendations require a decision.'
-                    : 'All demonstration recommendations have been reviewed.'}
+                    ? 'No recommendations require a decision.'
+                    : 'All recommendations have been reviewed.'}
                 </strong>
 
                 <div
@@ -727,8 +741,8 @@ function ReviewFindingsPage() {
                   }}
                 >
                   {results.length === 0
-                    ? 'No sample findings are available for these selected policies. This does not indicate clinical approval.'
-                    : 'There are no outstanding reviewer decisions for the available demonstration findings.'}
+                    ? 'No conflict-check results yet for these selected policies. This does not indicate clinical approval.'
+                    : 'There are no outstanding reviewer decisions for the reported conflicts.'}
                 </div>
               </div>
 
@@ -1198,16 +1212,14 @@ function ReviewFindingsPage() {
                 {results.length === 0 ? (
                   <>
                     <strong>
-                      No demonstration findings available.
+                      No conflict-check results yet.
                     </strong>
 
                     <p style={{ marginTop: '8px' }}>
                       Your selected policies and their mapped
-                      guidelines are listed above. The current
-                      demo only contains example findings for
-                      Cardiac, Diabetes, and Oncology policies.
-                      A screening engine would be needed to
-                      generate findings for other policies.
+                      guidelines are listed above. Run the
+                      conflict check to compare each mapped
+                      pair that has uploaded documents.
                     </p>
                   </>
                 ) : (
