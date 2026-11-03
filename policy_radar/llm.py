@@ -33,6 +33,11 @@ MAX_TEXT_CHARS = 400_000  # keeps one document inside the model's context window
 
 load_dotenv()  # Forces system to read the .env file
 
+# boto3 reads a Bedrock API key only from AWS_BEARER_TOKEN_BEDROCK; accept the
+# AWS_BEDROCK_API_KEY name too (example.env).
+if os.getenv("AWS_BEDROCK_API_KEY") and not os.getenv("AWS_BEARER_TOKEN_BEDROCK"):
+    os.environ["AWS_BEARER_TOKEN_BEDROCK"] = os.environ["AWS_BEDROCK_API_KEY"]
+
 bedrock_client = boto3.client(
     "bedrock-runtime",
     region_name=os.getenv("AWS_REGION_NAME", "us-east-1")
