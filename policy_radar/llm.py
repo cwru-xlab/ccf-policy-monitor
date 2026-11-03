@@ -36,7 +36,7 @@ bedrock_client = boto3.client(
     region_name=os.getenv("AWS_REGION_NAME", "us-east-1")
 )
 
-client = instructor.from_bedrock(bedrock_client)
+client = instructor.from_bedrock(bedrock_client, mode=instructor.Mode.BEDROCK_JSON)
 
 _CRITERION_RULES = """A criterion is one self-contained, testable condition: who it applies to, \
 what service or drug, and what is recommended, required, covered or excluded. Keep the source \
@@ -132,7 +132,7 @@ async def embed(texts: list[str]) -> list[list[float]]:
     def _embed_all() -> list[list[float]]:
         embeddings: list[list[float]] = []
         for text in texts:
-            response = bedrock.invoke_model(
+            response = bedrock_client.invoke_model(
                 modelId=settings.bedrock_embedding_model,
                 body=json.dumps({"inputText": text}),
                 accept="application/json",
