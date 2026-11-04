@@ -62,6 +62,12 @@ export function saveConflictReports(reviewKey, reports) {
   )
 }
 
+// Criterion ids are '{parent id}:{position}'; reviewers see the position.
+export function criterionLabel(criterionId) {
+  const position = String(criterionId).split(':').pop()
+  return /^\d+$/.test(position) ? `Criterion ${position}` : String(criterionId)
+}
+
 function findingId(report, conflict) {
   return [
     report.guideline_document_id,
@@ -113,9 +119,12 @@ export function conflictFindings(reports, pairs) {
           status: 'Suggested Change',
           priority: HIGH_PRIORITY.has(conflict.category) ? 'High' : 'Low',
           category: label,
-          policyCriterion:
-            conflict.policy_criterion_id || 'No matching policy criterion',
-          guidelineCriterion: conflict.guideline_criterion_id,
+          policyCriterion: conflict.policy_criterion_id
+            ? criterionLabel(conflict.policy_criterion_id)
+            : 'No matching policy criterion',
+          guidelineCriterion: criterionLabel(conflict.guideline_criterion_id),
+          policyCriterionId: conflict.policy_criterion_id,
+          guidelineCriterionId: conflict.guideline_criterion_id,
           summary: conflict.explanation,
           rationale: `${label}: ${conflict.explanation}`,
           policyText: conflict.policy_quote || '',
