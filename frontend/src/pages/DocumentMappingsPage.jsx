@@ -9,7 +9,7 @@ import {
 import './DocumentMappingsPage.css'
 
 // ==========================================
-// ORIGINAL POLICIES
+// ORIGINAL POLICIES AND GUIDELINES
 // ==========================================
 
 const originalPolicies = [
@@ -20,10 +20,6 @@ const originalPolicies = [
   { id: 5, name: 'Mental Health Coverage Policy' },
 ]
 
-// ==========================================
-// ORIGINAL GUIDELINES
-// ==========================================
-
 const originalGuidelines = [
   { id: 1, name: 'Cardiac Coverage Guideline' },
   { id: 2, name: 'Diabetes Treatment Guideline' },
@@ -33,7 +29,7 @@ const originalGuidelines = [
 ]
 
 // ==========================================
-// READ SAVED DATA
+// HELPERS
 // ==========================================
 
 function getSavedArray(key) {
@@ -44,10 +40,6 @@ function getSavedArray(key) {
     return []
   }
 }
-
-// ==========================================
-// RECORD AN AUDIT LOG EVENT
-// ==========================================
 
 function recordMappingAudit(action, policy, guideline) {
   const auditEvents = getSavedArray('auditEvents')
@@ -67,10 +59,45 @@ function recordMappingAudit(action, policy, guideline) {
     guidelineId: guideline.id,
   })
 
-  localStorage.setItem(
-    'auditEvents',
-    JSON.stringify(auditEvents)
-  )
+  localStorage.setItem('auditEvents', JSON.stringify(auditEvents))
+}
+
+// ==========================================
+// DYNAMIC MODE STYLING
+// ==========================================
+
+const primaryButton = {
+  padding: '12px 22px',
+  background: '#2563eb',
+  color: 'white',
+  border: 'none',
+  borderRadius: '8px',
+  fontWeight: 600,
+  cursor: 'pointer',
+}
+
+const secondaryButton = {
+  padding: '12px 22px',
+  background: 'white',
+  color: '#334155',
+  border: '1px solid #cbd5e1',
+  borderRadius: '8px',
+  fontWeight: 600,
+  cursor: 'pointer',
+}
+
+const dynamicCard = {
+  background: 'white',
+  border: '1px solid #e2e8f0',
+  borderRadius: '10px',
+  padding: '24px',
+}
+
+const actionRow = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: '12px',
+  marginTop: '24px',
 }
 
 // ==========================================
@@ -78,6 +105,8 @@ function recordMappingAudit(action, policy, guideline) {
 // ==========================================
 
 function DocumentMappingsPage() {
+  // MANUAL MODE
+  const [mappingMode, setMappingMode] = useState('manual')
   const [policySearch, setPolicySearch] = useState('')
   const [guidelineSearch, setGuidelineSearch] = useState('')
   const [policyFilter, setPolicyFilter] = useState('All')
@@ -85,12 +114,22 @@ function DocumentMappingsPage() {
 
   const [selectedPolicyId, setSelectedPolicyId] = useState(null)
   const [selectedGuidelineIds, setSelectedGuidelineIds] = useState([])
-
-  const [, setRevision] = useState(0)
   const [message, setMessage] = useState('')
 
+  // DYNAMIC MODE
+  const [dynamicStep, setDynamicStep] = useState(1)
+  const [dynamicPolicyId, setDynamicPolicyId] = useState(null)
+  const [dynamicPolicySearch, setDynamicPolicySearch] = useState('')
+  const [dynamicSelectedIds, setDynamicSelectedIds] = useState([])
+  const [dynamicResults, setDynamicResults] = useState([])
+  const [dynamicMessage, setDynamicMessage] = useState('')
+  const [previewGuideline, setPreviewGuideline] = useState(null)
+
+  // Forces the page to refresh after mapping changes
+  const [, setRevision] = useState(0)
+
   // ==========================================
-  // LOAD DOCUMENTS
+  // LOAD DOCUMENT DATABASES
   // ==========================================
 
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
@@ -117,12 +156,15 @@ function DocumentMappingsPage() {
   )
 
   // ==========================================
-  // SELECTED POLICY AND MAPPINGS
+  // SELECTED DOCUMENTS
   // ==========================================
 
   const selectedPolicy = policies.find(
-    (policy) =>
-      String(policy.id) === String(selectedPolicyId)
+    (policy) => String(policy.id) === String(selectedPolicyId)
+  )
+
+  const dynamicPolicy = policies.find(
+    (policy) => String(policy.id) === String(dynamicPolicyId)
   )
 
   const mappedGuidelines = selectedPolicy
@@ -135,7 +177,7 @@ function DocumentMappingsPage() {
     )
 
   // ==========================================
-  // MAPPING COUNTS
+  // MAPPING STATISTICS
   // ==========================================
 
   const mappingCountForPolicy = (policy) =>
@@ -166,7 +208,7 @@ function DocumentMappingsPage() {
     policies.length + guidelines.length - mappedDocuments
 
   // ==========================================
-  // FILTER POLICIES
+  // MANUAL MODE FILTERS
   // ==========================================
 
   const visiblePolicies = policies.filter((policy) => {
@@ -184,10 +226,6 @@ function DocumentMappingsPage() {
     )
   })
 
-  // ==========================================
-  // FILTER GUIDELINES
-  // ==========================================
-
   const visibleGuidelines = guidelines.filter((guideline) => {
     const matchesSearch = String(guideline.name || '')
       .toLowerCase()
@@ -204,7 +242,7 @@ function DocumentMappingsPage() {
   })
 
   // ==========================================
-  // SELECT POLICY
+  // MANUAL MODE FUNCTIONS
   // ==========================================
 
   function selectPolicy(policyId) {
@@ -212,10 +250,6 @@ function DocumentMappingsPage() {
     setSelectedGuidelineIds([])
     setMessage('')
   }
-
-  // ==========================================
-  // SELECT GUIDELINES
-  // ==========================================
 
   function toggleGuideline(guidelineId) {
     const id = String(guidelineId)
@@ -228,10 +262,6 @@ function DocumentMappingsPage() {
 
     setMessage('')
   }
-
-  // ==========================================
-  // CREATE OR REMOVE MAPPINGS
-  // ==========================================
 
   function updateMappings(action) {
     if (!selectedPolicy || selectedGuidelineIds.length === 0) {
@@ -252,7 +282,6 @@ function DocumentMappingsPage() {
         const policyId = String(selectedPolicy.id)
         const alreadyMapped = currentIds.includes(policyId)
 
-        // CREATE MAPPING
         if (action === 'add' && !alreadyMapped) {
           saveGuidelinePolicyIds(
             guideline.id,
@@ -268,7 +297,6 @@ function DocumentMappingsPage() {
           changed++
         }
 
-        // REMOVE MAPPING
         if (action === 'remove' && alreadyMapped) {
           saveGuidelinePolicyIds(
             guideline.id,
@@ -297,15 +325,10 @@ function DocumentMappingsPage() {
     )
   }
 
-  // ==========================================
-  // UNLINK A SINGLE GUIDELINE
-  // ==========================================
-
   function removeSingleMapping(guideline) {
     if (!selectedPolicy) return
 
     const policyId = String(selectedPolicy.id)
-
     const currentIds =
       getGuidelinePolicyIds(guideline).map(String)
 
@@ -335,15 +358,116 @@ function DocumentMappingsPage() {
     setMessage('Mapping removed.')
   }
 
-  // ==========================================
-  // CLEAR SELECTION
-  // ==========================================
-
   function clearSelection() {
     setSelectedPolicyId(null)
     setSelectedGuidelineIds([])
     setMessage('')
   }
+
+  // ==========================================
+  // DYNAMIC MODE FUNCTIONS
+  // ==========================================
+
+  function chooseDynamicPolicy(policyId) {
+    setDynamicPolicyId(policyId)
+    setDynamicResults([])
+    setDynamicSelectedIds([])
+    setDynamicMessage('')
+    setPreviewGuideline(null)
+    setDynamicStep(3)
+  }
+
+  function startGuidelineSearch() {
+    if (!dynamicPolicy) return
+
+    // PRELIMINARY SEARCH:
+    // Use existing Guideline Database records.
+    // Replace this with the backend API later.
+    setDynamicResults([...guidelines])
+    setDynamicSelectedIds([])
+    setDynamicMessage('')
+    setDynamicStep(4)
+  }
+
+  function toggleDynamicGuideline(guidelineId) {
+    const id = String(guidelineId)
+
+    setDynamicSelectedIds((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id]
+    )
+  }
+
+  function saveDynamicMappings() {
+    if (!dynamicPolicy || dynamicSelectedIds.length === 0) {
+      setDynamicMessage('Select at least one guideline.')
+      return
+    }
+
+    let created = 0
+    let alreadyMapped = 0
+
+    dynamicResults
+      .filter((guideline) =>
+        dynamicSelectedIds.includes(String(guideline.id))
+      )
+      .forEach((guideline) => {
+        const currentIds =
+          getGuidelinePolicyIds(guideline).map(String)
+
+        const policyId = String(dynamicPolicy.id)
+
+        if (currentIds.includes(policyId)) {
+          alreadyMapped++
+          return
+        }
+
+        saveGuidelinePolicyIds(
+          guideline.id,
+          [...currentIds, policyId]
+        )
+
+        recordMappingAudit(
+          'Mapping Created',
+          dynamicPolicy,
+          guideline
+        )
+
+        created++
+      })
+
+    setRevision((previous) => previous + 1)
+
+    setDynamicMessage(
+      `${created} new mapping${created === 1 ? '' : 's'} created.` +
+      (alreadyMapped > 0
+        ? ` ${alreadyMapped} already existed.`
+        : '')
+    )
+
+    setDynamicStep(5)
+  }
+
+  function resetDynamicMapping() {
+    setDynamicStep(1)
+    setDynamicPolicyId(null)
+    setDynamicPolicySearch('')
+    setDynamicSelectedIds([])
+    setDynamicResults([])
+    setDynamicMessage('')
+    setPreviewGuideline(null)
+  }
+
+  // ==========================================
+  // DYNAMIC POLICY FILTER
+  // ==========================================
+
+  const dynamicVisiblePolicies = policies.filter((policy) =>
+    String(policy.name || '')
+      .toLowerCase()
+      .includes(dynamicPolicySearch.toLowerCase())
+  )
 
   // ==========================================
   // PAGE LAYOUT
@@ -366,10 +490,7 @@ function DocumentMappingsPage() {
 
         <div className="top-right">
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
+            <div className="user-avatar">SC</div>
             <span>Sarah Chen</span>
           </div>
         </div>
@@ -409,271 +530,817 @@ function DocumentMappingsPage() {
         <main className="mapping-content">
           <div className="mapping-heading">
             <h1>Document Mappings</h1>
-
             <p>
               Manage associations between internal policies
               and external guidelines.
             </p>
           </div>
 
-          {/* SUMMARY COUNTS */}
+          {/* MODE SWITCH */}
 
-          <div className="mapping-stats">
-            <div className="mapping-stat">
-              <span>Total Mappings</span>
-              <strong>{totalMappings}</strong>
-            </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              marginTop: '24px',
+              marginBottom: '28px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setMappingMode('manual')}
+              style={{
+                ...primaryButton,
+                background:
+                  mappingMode === 'manual'
+                    ? '#2563eb'
+                    : 'white',
+                color:
+                  mappingMode === 'manual'
+                    ? 'white'
+                    : '#2563eb',
+                border: '1px solid #2563eb',
+              }}
+            >
+              Manual Mapping
+            </button>
 
-            <div className="mapping-stat">
-              <span>Mapped Documents</span>
-              <strong>{mappedDocuments}</strong>
-            </div>
-
-            <div className="mapping-stat">
-              <span>Unmapped Documents</span>
-              <strong>{unmappedDocuments}</strong>
-            </div>
+            <button
+              type="button"
+              onClick={() => setMappingMode('dynamic')}
+              style={{
+                ...primaryButton,
+                background:
+                  mappingMode === 'dynamic'
+                    ? '#2563eb'
+                    : 'white',
+                color:
+                  mappingMode === 'dynamic'
+                    ? 'white'
+                    : '#2563eb',
+                border: '1px solid #2563eb',
+              }}
+            >
+              Dynamic Mapping
+            </button>
           </div>
 
-          {/* DOCUMENT LISTS */}
+          {/* ==================================
+              MANUAL MAPPING MODE
+          ================================== */}
 
-          <div className="mapping-columns">
-            {/* POLICIES */}
+          {mappingMode === 'manual' && (
+            <>
+              {/* SUMMARY COUNTS */}
 
-            <section className="mapping-panel">
-              <h2>Internal Policies</h2>
+              <div className="mapping-stats">
+                <div className="mapping-stat">
+                  <span>Total Mappings</span>
+                  <strong>{totalMappings}</strong>
+                </div>
 
-              <input
-                className="mapping-search"
-                type="text"
-                placeholder="Search policies..."
-                value={policySearch}
-                onChange={(event) =>
-                  setPolicySearch(event.target.value)
-                }
-              />
+                <div className="mapping-stat">
+                  <span>Mapped Documents</span>
+                  <strong>{mappedDocuments}</strong>
+                </div>
 
-              <div className="mapping-filters">
-                {['All', 'Mapped', 'Unmapped'].map(
-                  (option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={
-                        policyFilter === option ? 'selected' : ''
-                      }
-                      onClick={() => setPolicyFilter(option)}
-                    >
-                      {option}
-                    </button>
-                  )
-                )}
+                <div className="mapping-stat">
+                  <span>Unmapped Documents</span>
+                  <strong>{unmappedDocuments}</strong>
+                </div>
               </div>
 
-              <div className="mapping-list">
-                {visiblePolicies.map((policy) => {
-                  const count = mappingCountForPolicy(policy)
+              {/* DOCUMENT LISTS */}
 
-                  const selected =
-                    String(selectedPolicyId) === String(policy.id)
+              <div className="mapping-columns">
+                {/* POLICIES */}
 
-                  return (
-                    <button
-                      key={policy.id}
-                      type="button"
-                      className={`mapping-document ${
-                        selected ? 'selected' : ''
-                      }`}
-                      onClick={() => selectPolicy(policy.id)}
-                    >
-                      <strong>{policy.name}</strong>
+                <section className="mapping-panel">
+                  <h2>Internal Policies</h2>
 
-                      <small>Policy ID: {policy.id}</small>
+                  <input
+                    className="mapping-search"
+                    type="text"
+                    placeholder="Search policies..."
+                    value={policySearch}
+                    onChange={(event) =>
+                      setPolicySearch(event.target.value)
+                    }
+                  />
 
-                      <span
-                        className={count ? 'mapped' : 'unmapped'}
-                      >
-                        {count ? `${count} mapped` : 'Unmapped'}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </section>
-
-            {/* GUIDELINES */}
-
-            <section className="mapping-panel">
-              <h2>External Guidelines</h2>
-
-              <input
-                className="mapping-search"
-                type="text"
-                placeholder="Search guidelines..."
-                value={guidelineSearch}
-                onChange={(event) =>
-                  setGuidelineSearch(event.target.value)
-                }
-              />
-
-              <div className="mapping-filters">
-                {['All', 'Mapped', 'Unmapped'].map(
-                  (option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={
-                        guidelineFilter === option
-                          ? 'selected'
-                          : ''
-                      }
-                      onClick={() => setGuidelineFilter(option)}
-                    >
-                      {option}
-                    </button>
-                  )
-                )}
-              </div>
-
-              <div className="mapping-list">
-                {visibleGuidelines.map((guideline) => {
-                  const count =
-                    mappingCountForGuideline(guideline)
-
-                  const checked =
-                    selectedGuidelineIds.includes(
-                      String(guideline.id)
-                    )
-
-                  const linked =
-                    selectedPolicy &&
-                    isMapped(selectedPolicy, guideline)
-
-                  return (
-                    <label
-                      key={guideline.id}
-                      className={`mapping-document ${
-                        checked ? 'selected' : ''
-                      }`}
-                    >
-                      <div className="mapping-checkbox-row">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            toggleGuideline(guideline.id)
+                  <div className="mapping-filters">
+                    {['All', 'Mapped', 'Unmapped'].map(
+                      (option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={
+                            policyFilter === option
+                              ? 'selected'
+                              : ''
                           }
-                        />
+                          onClick={() =>
+                            setPolicyFilter(option)
+                          }
+                        >
+                          {option}
+                        </button>
+                      )
+                    )}
+                  </div>
 
-                        <strong>{guideline.name}</strong>
-                      </div>
+                  <div className="mapping-list">
+                    {visiblePolicies.map((policy) => {
+                      const count =
+                        mappingCountForPolicy(policy)
 
-                      <small>
-                        Guideline ID: {guideline.id}
-                      </small>
+                      const selected =
+                        String(selectedPolicyId) ===
+                        String(policy.id)
 
-                      <span
-                        className={count ? 'mapped' : 'unmapped'}
-                      >
-                        {count ? `${count} mapped` : 'Unmapped'}
-                      </span>
+                      return (
+                        <button
+                          key={policy.id}
+                          type="button"
+                          className={`mapping-document ${
+                            selected ? 'selected' : ''
+                          }`}
+                          onClick={() =>
+                            selectPolicy(policy.id)
+                          }
+                        >
+                          <strong>{policy.name}</strong>
 
-                      {linked && (
-                        <em>Linked to selected policy</em>
-                      )}
-                    </label>
-                  )
-                })}
+                          <small>
+                            Policy ID: {policy.id}
+                          </small>
+
+                          <span
+                            className={
+                              count ? 'mapped' : 'unmapped'
+                            }
+                          >
+                            {count
+                              ? `${count} mapped`
+                              : 'Unmapped'}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+
+                {/* GUIDELINES */}
+
+                <section className="mapping-panel">
+                  <h2>External Guidelines</h2>
+
+                  <input
+                    className="mapping-search"
+                    type="text"
+                    placeholder="Search guidelines..."
+                    value={guidelineSearch}
+                    onChange={(event) =>
+                      setGuidelineSearch(event.target.value)
+                    }
+                  />
+
+                  <div className="mapping-filters">
+                    {['All', 'Mapped', 'Unmapped'].map(
+                      (option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={
+                            guidelineFilter === option
+                              ? 'selected'
+                              : ''
+                          }
+                          onClick={() =>
+                            setGuidelineFilter(option)
+                          }
+                        >
+                          {option}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <div className="mapping-list">
+                    {visibleGuidelines.map((guideline) => {
+                      const count =
+                        mappingCountForGuideline(guideline)
+
+                      const checked =
+                        selectedGuidelineIds.includes(
+                          String(guideline.id)
+                        )
+
+                      const linked =
+                        selectedPolicy &&
+                        isMapped(selectedPolicy, guideline)
+
+                      return (
+                        <label
+                          key={guideline.id}
+                          className={`mapping-document ${
+                            checked ? 'selected' : ''
+                          }`}
+                        >
+                          <div className="mapping-checkbox-row">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                toggleGuideline(guideline.id)
+                              }
+                            />
+
+                            <strong>
+                              {guideline.name}
+                            </strong>
+                          </div>
+
+                          <small>
+                            Guideline ID: {guideline.id}
+                          </small>
+
+                          <span
+                            className={
+                              count ? 'mapped' : 'unmapped'
+                            }
+                          >
+                            {count
+                              ? `${count} mapped`
+                              : 'Unmapped'}
+                          </span>
+
+                          {linked && (
+                            <em>
+                              Linked to selected policy
+                            </em>
+                          )}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </section>
               </div>
-            </section>
-          </div>
 
-          {/* MAPPING ACTIONS */}
+              {/* MAPPING ACTIONS */}
 
-          <section className="mapping-actions">
-            <h2>Mapping Actions</h2>
+              <section className="mapping-actions">
+                <h2>Mapping Actions</h2>
 
-            <p>
-              Selected policy:{' '}
-              <strong>
-                {selectedPolicy?.name || 'None'}
-              </strong>
-              {' | '}
-              Selected guidelines:{' '}
-              <strong>{selectedGuidelineIds.length}</strong>
-            </p>
+                <p>
+                  Selected policy:{' '}
+                  <strong>
+                    {selectedPolicy?.name || 'None'}
+                  </strong>
+                  {' | '}
+                  Selected guidelines:{' '}
+                  <strong>
+                    {selectedGuidelineIds.length}
+                  </strong>
+                </p>
 
-            <div className="mapping-action-buttons">
-              <button
-                type="button"
-                onClick={() => updateMappings('add')}
-              >
-                Create Mapping
-              </button>
+                <div className="mapping-action-buttons">
+                  <button
+                    type="button"
+                    onClick={() => updateMappings('add')}
+                  >
+                    Create Mapping
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => updateMappings('remove')}
-              >
-                Remove Mapping
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => updateMappings('remove')}
+                  >
+                    Remove Mapping
+                  </button>
 
-              <button
-                type="button"
-                onClick={clearSelection}
-              >
-                Clear Selection
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
 
-            {message && (
-              <p role="status" className="mapping-message">
-                {message}
-              </p>
-            )}
-          </section>
+                {message && (
+                  <p
+                    role="status"
+                    className="mapping-message"
+                  >
+                    {message}
+                  </p>
+                )}
+              </section>
 
-          {/* ASSOCIATION INSPECTOR */}
+              {/* ASSOCIATION INSPECTOR */}
 
-          <section className="mapping-inspector">
-            <h2>Association Inspector</h2>
+              <section className="mapping-inspector">
+                <h2>Association Inspector</h2>
 
-            {!selectedPolicy ? (
-              <p>
-                Select a policy to view its associated guidelines.
-              </p>
-            ) : (
-              <>
-                <h3>{selectedPolicy.name}</h3>
-
-                {mappedGuidelines.length === 0 ? (
+                {!selectedPolicy ? (
                   <p>
-                    No guidelines currently mapped to this policy.
+                    Select a policy to view its associated
+                    guidelines.
                   </p>
                 ) : (
-                  <div className="mapping-inspector-list">
-                    {mappedGuidelines.map((guideline) => (
-                      <div
-                        key={guideline.id}
-                        className="mapping-inspector-item"
+                  <>
+                    <h3>{selectedPolicy.name}</h3>
+
+                    {mappedGuidelines.length === 0 ? (
+                      <p>
+                        No guidelines currently mapped to
+                        this policy.
+                      </p>
+                    ) : (
+                      <div className="mapping-inspector-list">
+                        {mappedGuidelines.map((guideline) => (
+                          <div
+                            key={guideline.id}
+                            className="mapping-inspector-item"
+                          >
+                            <span>
+                              {guideline.name}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeSingleMapping(guideline)
+                              }
+                            >
+                              Unlink
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+            </>
+          )}
+
+          {/* ==================================
+              DYNAMIC MAPPING MODE
+          ================================== */}
+
+          {mappingMode === 'dynamic' && (
+            <section style={dynamicCard}>
+              {/* STEP 1: START */}
+
+              {dynamicStep === 1 && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '45px 20px',
+                  }}
+                >
+                  <h2>Dynamic Document Mapping</h2>
+
+                  <p style={{ color: '#64748b' }}>
+                    Select a policy to find and review
+                    guidelines for mapping.
+                  </p>
+
+                  <button
+                    type="button"
+                    style={{
+                      ...primaryButton,
+                      marginTop: '20px',
+                    }}
+                    onClick={() => setDynamicStep(2)}
+                  >
+                    Select a Policy
+                  </button>
+                </div>
+              )}
+
+              {/* STEP 2: POLICY DATABASE */}
+
+              {dynamicStep === 2 && (
+                <div>
+                  <h2>Select a Policy</h2>
+
+                  <p style={{ color: '#64748b' }}>
+                    Choose a policy from your Policy Database.
+                  </p>
+
+                  <input
+                    className="mapping-search"
+                    type="text"
+                    placeholder="Search policy database..."
+                    value={dynamicPolicySearch}
+                    onChange={(event) =>
+                      setDynamicPolicySearch(
+                        event.target.value
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      margin: '16px 0',
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: '10px',
+                    }}
+                  >
+                    {dynamicVisiblePolicies.map((policy) => (
+                      <button
+                        key={policy.id}
+                        type="button"
+                        onClick={() =>
+                          chooseDynamicPolicy(policy.id)
+                        }
+                        style={{
+                          padding: '16px',
+                          textAlign: 'left',
+                          background: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                        }}
                       >
-                        <span>{guideline.name}</span>
+                        <strong>{policy.name}</strong>
+
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            color: '#64748b',
+                            marginTop: '5px',
+                          }}
+                        >
+                          Policy ID: {policy.id}
+                        </div>
+                      </button>
+                    ))}
+
+                    {dynamicVisiblePolicies.length === 0 && (
+                      <p>No policies found.</p>
+                    )}
+                  </div>
+
+                  <div style={actionRow}>
+                    <button
+                      type="button"
+                      style={secondaryButton}
+                      onClick={() => setDynamicStep(1)}
+                    >
+                      Back
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: SELECTED POLICY */}
+
+              {dynamicStep === 3 && (
+                <div>
+                  <h2>Selected Policy</h2>
+
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '20px',
+                      marginTop: '20px',
+                    }}
+                  >
+                    <strong>
+                      {dynamicPolicy?.name}
+                    </strong>
+
+                    <p
+                      style={{
+                        color: '#64748b',
+                        marginBottom: 0,
+                      }}
+                    >
+                      Policy ID: {dynamicPolicy?.id}
+                    </p>
+                  </div>
+
+                  <p style={{ marginTop: '20px' }}>
+                    Start the guideline search for this policy.
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: '#64748b',
+                    }}
+                  >
+                    Preliminary version: this searches the
+                    existing Guideline Database. External
+                    guideline discovery will be connected
+                    to the backend later.
+                  </p>
+
+                  <div style={actionRow}>
+                    <button
+                      type="button"
+                      style={secondaryButton}
+                      onClick={() => setDynamicStep(2)}
+                    >
+                      Back
+                    </button>
+
+                    <button
+                      type="button"
+                      style={primaryButton}
+                      onClick={startGuidelineSearch}
+                    >
+                      Start Guideline Search
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: GUIDELINE RESULTS */}
+
+              {dynamicStep === 4 && (
+                <div>
+                  <h2>Guidelines Found</h2>
+
+                  <p style={{ color: '#64748b' }}>
+                    Select guidelines to map to{' '}
+                    <strong>{dynamicPolicy?.name}</strong>.
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: '#64748b',
+                    }}
+                  >
+                    Showing existing Guideline Database
+                    records, not external backend search
+                    results.
+                  </p>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: '12px',
+                      marginTop: '20px',
+                    }}
+                  >
+                    {dynamicResults.map((guideline) => {
+                      const checked =
+                        dynamicSelectedIds.includes(
+                          String(guideline.id)
+                        )
+
+                      const linked =
+                        dynamicPolicy &&
+                        isMapped(dynamicPolicy, guideline)
+
+                      return (
+                        <div
+                          key={guideline.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '16px',
+                            padding: '16px',
+                            border: checked
+                              ? '2px solid #2563eb'
+                              : '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            background: checked
+                              ? '#eff6ff'
+                              : 'white',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <label
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                toggleDynamicGuideline(
+                                  guideline.id
+                                )
+                              }
+                            />
+
+                            <span>
+                              <strong>
+                                {guideline.name}
+                              </strong>
+
+                              {linked && (
+                                <small
+                                  style={{
+                                    display: 'block',
+                                    color: '#64748b',
+                                    marginTop: '4px',
+                                  }}
+                                >
+                                  Already mapped to this policy
+                                </small>
+                              )}
+                            </span>
+                          </label>
+
+                          <button
+                            type="button"
+                            style={secondaryButton}
+                            onClick={() =>
+                              setPreviewGuideline(guideline)
+                            }
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      )
+                    })}
+
+                    {dynamicResults.length === 0 && (
+                      <p>No guidelines are available.</p>
+                    )}
+                  </div>
+
+                  {/* GUIDELINE DETAILS */}
+
+                  {previewGuideline && (
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginTop: '20px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
+                        }}
+                      >
+                        <h3 style={{ margin: 0 }}>
+                          Guideline Details
+                        </h3>
 
                         <button
                           type="button"
+                          style={secondaryButton}
                           onClick={() =>
-                            removeSingleMapping(guideline)
+                            setPreviewGuideline(null)
                           }
                         >
-                          Unlink
+                          Close
                         </button>
                       </div>
-                    ))}
+
+                      <h4>{previewGuideline.name}</h4>
+
+                      <p>
+                        Guideline ID: {previewGuideline.id}
+                      </p>
+
+                      {previewGuideline.description && (
+                        <p>
+                          {previewGuideline.description}
+                        </p>
+                      )}
+
+                      {previewGuideline.url &&
+                        /^https?:\/\//i.test(
+                          previewGuideline.url
+                        ) && (
+                          <a
+                            href={previewGuideline.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Open Guideline Document
+                          </a>
+                        )}
+
+                      {!previewGuideline.url && (
+                        <p
+                          style={{
+                            fontSize: '13px',
+                            color: '#64748b',
+                          }}
+                        >
+                          No external document link is
+                          available for this guideline.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={actionRow}>
+                    <button
+                      type="button"
+                      style={secondaryButton}
+                      onClick={() => {
+                        setPreviewGuideline(null)
+                        setDynamicStep(3)
+                      }}
+                    >
+                      Back
+                    </button>
+
+                    <button
+                      type="button"
+                      style={{
+                        ...primaryButton,
+                        opacity:
+                          dynamicSelectedIds.length === 0
+                            ? 0.5
+                            : 1,
+                      }}
+                      disabled={
+                        dynamicSelectedIds.length === 0
+                      }
+                      onClick={saveDynamicMappings}
+                    >
+                      Map to Policy (
+                      {dynamicSelectedIds.length})
+                    </button>
                   </div>
-                )}
-              </>
-            )}
-          </section>
+                </div>
+              )}
+
+              {/* STEP 5: CONFIRMATION */}
+
+              {dynamicStep === 5 && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '45px 20px',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '42px',
+                      color: '#16a34a',
+                    }}
+                  >
+                    ✓
+                  </div>
+
+                  <h2>Guidelines Mapped Successfully</h2>
+
+                  <p role="status">
+                    {dynamicMessage}
+                  </p>
+
+                  <p style={{ color: '#64748b' }}>
+                    Your selected guidelines are now
+                    associated with{' '}
+                    <strong>{dynamicPolicy?.name}</strong>.
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: '13px',
+                      color: '#64748b',
+                    }}
+                  >
+                    These guidelines were already in the
+                    Guideline Database. No new external
+                    documents were imported.
+                  </p>
+
+                  <button
+                    type="button"
+                    style={{
+                      ...primaryButton,
+                      marginTop: '20px',
+                    }}
+                    onClick={resetDynamicMapping}
+                  >
+                    Start Another Mapping
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
         </main>
       </div>
     </div>
