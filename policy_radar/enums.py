@@ -135,11 +135,14 @@ class UpdateStatus(StrEnum):
 
 
 class JobKind(StrEnum):
-    """The three background pipelines."""
+    """Background jobs: the three pipelines and the mapping engine's runs."""
 
     INGEST = "ingest"
     ATOMIZE = "atomize"
     PARSE_CPB = "parse_cpb"
+    DISCOVER = "discover"
+    CHECK_UPDATES = "check_updates"
+    SCHEDULED_RUN = "scheduled_run"
 
 
 class JobStatus(StrEnum):
@@ -164,3 +167,19 @@ class ConflictCategory(StrEnum):
     FREQUENCY_LIMIT = "frequency_limit"
     PRIOR_AUTHORIZATION = "prior_authorization"
     OTHER_RESTRICTION = "other_restriction"  # setting, provider, step therapy, documentation
+
+
+class MappingStatus(StrEnum):
+    """Review state of a proposed authority or (guideline URL, policy) mapping."""
+
+    PROPOSED = "proposed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class MappingOrigin(StrEnum):
+    """What proposed a mapping."""
+
+    DISCOVERY = "discovery"  # a user-started discovery run
+    SCHEDULED = "scheduled"  # a scheduled discovery run
+    MANUAL = "manual"  # a URL a user added by hand

@@ -200,7 +200,7 @@ The diagram's `guideline_id` was dropped: it follows from the guideline criterio
 | Column | Type | Notes |
 |---|---|---|
 | job_id | text **PK** | |
-| kind | text | `ingest`, `atomize`, `parse_cpb` |
+| kind | text | `ingest`, `atomize`, `parse_cpb`; mapping engine: `discover`, `check_updates`, `scheduled_run` |
 | status | text | `queued` → `running` → `succeeded` or `failed` |
 | detail | jsonb | inputs, then result counts and per-document failures |
 | error | text | set when the whole job fails |
@@ -291,6 +291,7 @@ Prompts and extraction schemas are in `policy_radar/llm.py`.
 | GET | `/policies` | list policies |
 | GET | `/policies/{policy_number}` | one policy with criteria, codes, watched triggers |
 | GET | `/jobs/{job_id}` | job status and result |
+| * | `/mapping/...` | the mapping engine: guideline discovery, approvals, tracking, schedule — see [MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md) |
 
 No authentication yet.
 
@@ -316,7 +317,10 @@ policy_radar/
   sources.py               one fetch function per guideline source
   llm.py                   OpenAI extraction and embeddings
   pipelines.py             ingest, atomize, parse
+  jobs.py                  background job runner (job table)
   api.py                   FastAPI routes
+  mapping_api.py           /mapping routes; with firecrawl.py, discovery.py, tracking.py and
+                           scheduler.py, the mapping engine (MAPPING_ENGINE_SPEC.md)
 notebooks/                 exploratory work, not imported by the app: intervention normalizer
                            (see [INTERVENTION_NORMALIZATION.md](INTERVENTION_NORMALIZATION.md)) and RAG comparison
 tests/

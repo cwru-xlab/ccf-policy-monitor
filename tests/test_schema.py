@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from policy_radar import models
-from policy_radar.db import CPB_SOURCE_KEY, GUIDELINE_UPLOAD_SOURCE_KEY
+from policy_radar.db import CPB_SOURCE_KEY, GUIDELINE_UPLOAD_SOURCE_KEY, WEB_DISCOVERY_SOURCE_KEY
 from policy_radar.enums import (
     STRENGTH_VALUES,
     AuthorityKind,
@@ -17,6 +17,8 @@ from policy_radar.enums import (
     CoverageEffect,
     JobKind,
     JobStatus,
+    MappingOrigin,
+    MappingStatus,
     PolicyDocumentType,
     StrengthSystem,
     TriggerType,
@@ -63,6 +65,9 @@ _UPDATE_TABLES = ("guideline_criterion_update", "policy_criterion_update")
         ("criterion_conflict", "category", ConflictCategory),
         ("job", "kind", JobKind),
         ("job", "status", JobStatus),
+        ("authority", "status", MappingStatus),
+        ("source_mapping", "status", MappingStatus),
+        ("source_mapping", "origin", MappingOrigin),
     ],
 )
 def test_check_constraints_match_enums(table, column, enum):
@@ -111,7 +116,8 @@ def _source_seed() -> dict[str, tuple[str, str | None]]:
 
 
 def test_every_source_is_seeded_and_every_seed_is_a_source():
-    assert set(_source_seed()) == set(SOURCES) | {CPB_SOURCE_KEY, GUIDELINE_UPLOAD_SOURCE_KEY}
+    assert set(_source_seed()) == set(SOURCES) | {
+        CPB_SOURCE_KEY, GUIDELINE_UPLOAD_SOURCE_KEY, WEB_DISCOVERY_SOURCE_KEY}
 
 
 def test_seeded_sources_use_known_vocabulary():

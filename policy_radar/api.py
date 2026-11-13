@@ -13,8 +13,9 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from policy_radar import conflicts, db, pipelines, storage
-from policy_radar.enums import JobKind, JobStatus
+from policy_radar import conflicts, db, mapping_api, pipelines, scheduler, storage
+from policy_radar.enums import JobKind
+from policy_radar.jobs import start as _start
 from policy_radar.models import Source
 from policy_radar.sources import SOURCES
 
@@ -32,27 +33,14 @@ CPB_MEDIA_TYPES = UPLOAD_MEDIA_TYPES
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await db.open_pool()
+    schedule = asyncio.create_task(scheduler.loop())
     yield
+    schedule.cancel()
     await db.close_pool()
 
 
 app = FastAPI(title="Policy Radar", lifespan=lifespan)
-
-
-async def _run(job_id: str, work) -> None:
-    """Run one pipeline coroutine and record its outcome on the job row."""
-    await db.set_job(job_id, JobStatus.RUNNING)
-    try:
-        await db.set_job(job_id, JobStatus.SUCCEEDED, await work)
-    except Exception as e:
-        log.exception("job %s failed", job_id)
-        await db.set_job(job_id, JobStatus.FAILED, error=f"{type(e).__name__}: {e}")
-
-
-async def _start(tasks: BackgroundTasks, kind: JobKind, detail: dict, work) -> dict:
-    job_id = await db.create_job(kind, detail)
-    tasks.add_task(_run, job_id, work)
-    return {"job_id": job_id}
+app.include_router(mapping_api.router)
 
 
 @app.get("/health")

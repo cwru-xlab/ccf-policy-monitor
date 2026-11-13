@@ -23,5 +23,11 @@ class Settings(BaseSettings):
     ncbi_api_key: str = ""
     uspstf_api_key: str = ""
 
+    # Mapping engine (docs/MAPPING_ENGINE_SPEC.md). Without a Firecrawl key the /mapping
+    # routes that search or fetch answer 503; the rest of the app is unaffected.
+    firecrawl_api_key: str = ""
+    discovery_model: str = "us.anthropic.claude-opus-5-5"  # the discovery agent
+    scheduler_poll_seconds: int = 60
+
 
 settings = Settings()

@@ -231,3 +231,33 @@ async def embed(texts: list[str]) -> list[list[float]]:
         return embeddings
 
     return await asyncio.to_thread(_embed_all)
+
+
+CHANGE_PROMPT = """You review a change to a clinical guideline web page or document that a \
+payer tracks. You get the page title and a unified diff of its text. material is true only if \
+the change could affect coverage decisions: a recommendation, population, age range, interval, \
+grade or strength, drug, test or service, or the guideline's status (new version, withdrawn, \
+superseded) changed. Navigation, formatting, dates of page review, related links, contact \
+details and wording edits that keep the meaning are not material. summary is two to four \
+sentences a policy reviewer can act on, naming what changed; for a non-material change, say \
+briefly what changed."""
+
+
+class ChangeVerdict(BaseModel):
+    material: bool
+    summary: str
+
+
+async def judge_change(title: str, diff: str) -> ChangeVerdict:
+    """Whether a tracked guideline's text change matters for coverage, with a summary."""
+
+    def _call() -> ChangeVerdict:
+        return client.create(
+            modelId=settings.comparison_model,
+            system=[{"text": CHANGE_PROMPT}],
+            messages=[{"role": "user", "content": [{"text": f"Title: {title}\n\n{diff}"}]}],
+            response_model=ChangeVerdict,
+            max_tokens=8000,
+        )
+
+    return await asyncio.to_thread(_call)

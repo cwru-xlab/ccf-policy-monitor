@@ -8,7 +8,7 @@ import asyncpg
 from pgvector.asyncpg import register_vector
 
 from policy_radar.config import settings
-from policy_radar.enums import JobKind, JobStatus
+from policy_radar.enums import JobKind, JobStatus, MappingOrigin, MappingStatus
 from policy_radar.models import (
     Code,
     CriterionConflict,
@@ -22,6 +22,7 @@ from policy_radar.models import (
 
 CPB_SOURCE_KEY = "cpb_upload"
 GUIDELINE_UPLOAD_SOURCE_KEY = "guideline_upload"
+WEB_DISCOVERY_SOURCE_KEY = "web_discovery"  # snapshots of tracked guideline URLs
 
 _pool: asyncpg.Pool | None = None
 
@@ -247,6 +248,226 @@ async def save_conflicts(
                 for c in conflicts
             ],
         )
+
+
+# --- mapping engine (docs/MAPPING_ENGINE_SPEC.md) ------------------------------------
+
+_MAPPING_SELECT = """select m.source_id, m.policy_document_id, m.rationale, m.origin, m.status,
+        m.proposed_at, m.decided_at, s.url, s.title, s.authority_id, s.document_id,
+        a.name as authority_name
+    from source_mapping m join tracked_source s using (source_id)
+    left join authority a using (authority_id)"""
+
+
+async def known_urls(policy_document_id: str) -> set[str]:
+    """URLs already proposed, mapped or rejected for one policy: never proposed again."""
+    rows = await pool().fetch(
+        """select s.url from source_mapping m join tracked_source s using (source_id)
+           where m.policy_document_id = $1""",
+        policy_document_id,
+    )
+    return {r["url"] for r in rows}
+
+
+async def add_authority(authority_id: str, name: str, homepage_url: str, rationale: str) -> None:
+    """Propose an authority; one already known keeps its row and status."""
+    await pool().execute(
+        """insert into authority (authority_id, name, homepage_url, rationale)
+           values ($1, $2, $3, $4) on conflict do nothing""",
+        authority_id, name, homepage_url, rationale,
+    )
+
+
+async def list_authorities() -> list[dict]:
+    rows = await pool().fetch("select * from authority order by status, name")
+    return [dict(r) for r in rows]
+
+
+async def decide_authority(authority_id: str, status: MappingStatus) -> bool:
+    """Set an authority's status; False if there is no such authority."""
+    done = await pool().execute(
+        "update authority set status = $2, decided_at = now() where authority_id = $1",
+        authority_id, status,
+    )
+    return done != "UPDATE 0"
+
+
+async def approved_authority_domains() -> list[str]:
+    rows = await pool().fetch("select authority_id from authority where status = 'approved'")
+    return [r["authority_id"] for r in rows]
+
+
+async def add_source(source_id: str, url: str, title: str, authority_id: str | None) -> None:
+    """Create a tracked_source row for ``url`` unless one exists."""
+    await pool().execute(
+        """insert into tracked_source (source_id, url, title, authority_id)
+           values ($1, $2, $3, (select authority_id from authority where authority_id = $4))
+           on conflict do nothing""",
+        source_id, url, title, authority_id,
+    )
+
+
+async def propose_mapping(
+    source_id: str, policy_document_id: str, rationale: str, origin: MappingOrigin,
+    status: MappingStatus = MappingStatus.PROPOSED,
+) -> bool:
+    """Record a (source, policy) mapping; False if the pair already exists."""
+    row = await pool().fetchval(
+        """insert into source_mapping (source_id, policy_document_id, rationale, origin, status,
+               decided_at)
+           values ($1, $2, $3, $4, $5, case when $5 = 'proposed' then null else now() end)
+           on conflict do nothing returning source_id""",
+        source_id, policy_document_id, rationale, origin, status,
+    )
+    return row is not None
+
+
+async def list_mappings(
+    status: MappingStatus | None = None, policy_document_id: str | None = None
+) -> list[dict]:
+    rows = await pool().fetch(
+        f"""{_MAPPING_SELECT}
+            where ($1::text is null or m.status = $1)
+              and ($2::text is null or m.policy_document_id = $2)
+            order by m.proposed_at desc""",
+        status, policy_document_id,
+    )
+    return [dict(r) for r in rows]
+
+
+async def get_mapping(source_id: str, policy_document_id: str) -> dict | None:
+    row = await pool().fetchrow(
+        f"{_MAPPING_SELECT} where m.source_id = $1 and m.policy_document_id = $2",
+        source_id, policy_document_id,
+    )
+    return dict(row) if row else None
+
+
+async def decide_mapping(source_id: str, policy_document_id: str, status: MappingStatus) -> None:
+    await pool().execute(
+        """update source_mapping set status = $3, decided_at = now()
+           where source_id = $1 and policy_document_id = $2""",
+        source_id, policy_document_id, status,
+    )
+
+
+async def get_source(source_id: str) -> dict | None:
+    row = await pool().fetchrow("select * from tracked_source where source_id = $1", source_id)
+    return dict(row) if row else None
+
+
+async def tracked_sources(include_paused: bool = True) -> list[dict]:
+    """Sources with at least one approved mapping, with the policies they map to."""
+    rows = await pool().fetch(
+        """select s.*, a.name as authority_name,
+                  array_agg(m.policy_document_id order by m.policy_document_id)
+                      as policy_document_ids
+           from tracked_source s join source_mapping m using (source_id)
+           left join authority a using (authority_id)
+           where m.status = 'approved' and ($1 or not s.paused)
+           group by s.source_id, a.name order by s.title""",
+        include_paused,
+    )
+    return [dict(r) for r in rows]
+
+
+async def set_snapshot(source_id: str, sha: str, document_id: str, changed: bool) -> None:
+    """Make ``document_id`` the source's current snapshot and mark it checked."""
+    await pool().execute(
+        """update tracked_source set content_sha256 = $2, document_id = $3,
+               last_checked_at = now(),
+               last_changed_at = case when $4 then now() else last_changed_at end
+           where source_id = $1""",
+        source_id, sha, document_id, changed,
+    )
+
+
+async def mark_checked(source_id: str) -> None:
+    await pool().execute(
+        "update tracked_source set last_checked_at = now() where source_id = $1", source_id
+    )
+
+
+async def set_paused(source_id: str, paused: bool) -> bool:
+    done = await pool().execute(
+        "update tracked_source set paused = $2 where source_id = $1", source_id, paused
+    )
+    return done != "UPDATE 0"
+
+
+async def untrack(source_id: str) -> int:
+    """Reject every open or approved mapping of a source, so it is neither tracked nor
+    proposed again. Returns how many mappings changed."""
+    done = await pool().execute(
+        """update source_mapping set status = 'rejected', decided_at = now()
+           where source_id = $1 and status <> 'rejected'""",
+        source_id,
+    )
+    return int(done.split()[-1])
+
+
+async def record_change(
+    source_id: str, previous_document_id: str | None, document_id: str, summary: str
+) -> int:
+    return await pool().fetchval(
+        """insert into guideline_change (source_id, previous_document_id, document_id, summary)
+           values ($1, $2, $3, $4) returning change_id""",
+        source_id, previous_document_id, document_id, summary,
+    )
+
+
+async def list_changes(unread_only: bool = False) -> list[dict]:
+    rows = await pool().fetch(
+        """select c.*, s.url, s.title from guideline_change c join tracked_source s using (source_id)
+           where not $1 or c.read_at is null order by c.detected_at desc""",
+        unread_only,
+    )
+    return [dict(r) for r in rows]
+
+
+async def mark_change_read(change_id: int) -> bool:
+    done = await pool().execute(
+        "update guideline_change set read_at = coalesce(read_at, now()) where change_id = $1",
+        change_id,
+    )
+    return done != "UPDATE 0"
+
+
+async def discovered_policies() -> list[str]:
+    """Policies that have been through discovery (have any mapping row)."""
+    rows = await pool().fetch(
+        "select distinct policy_document_id from source_mapping order by 1"
+    )
+    return [r["policy_document_id"] for r in rows]
+
+
+async def get_schedule() -> dict:
+    return dict(await pool().fetchrow("select * from discovery_schedule"))
+
+
+async def set_schedule(enabled: bool, interval_hours: int) -> dict:
+    """Save the schedule; the next run is one interval from now when enabled."""
+    row = await pool().fetchrow(
+        """update discovery_schedule set enabled = $1, interval_hours = $2,
+               next_run_at = case when $1 then now() + make_interval(hours => $2) end
+           returning *""",
+        enabled, interval_hours,
+    )
+    return dict(row)
+
+
+async def claim_scheduled_run() -> bool:
+    """Atomically claim a due scheduled run, so concurrent schedulers run it once."""
+    row = await pool().fetchrow(
+        """update discovery_schedule set last_run_at = now(),
+               next_run_at = now() + make_interval(hours => interval_hours)
+           where enabled and next_run_at <= now() returning id"""
+    )
+    return row is not None
+
+
+async def mark_manual_run() -> None:
+    await pool().execute("update discovery_schedule set last_run_at = now()")
 
 
 # --- jobs ----------------------------------------------------------------------
