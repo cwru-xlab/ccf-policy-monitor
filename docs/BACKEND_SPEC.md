@@ -313,7 +313,8 @@ parsing per page, so the mapping engine downloads `.pdf` URLs directly when it c
 ## Code layout
 
 ```
-frontend/                  Vite + React review UI (separate from the backend; see FRONTEND_SPEC.md)
+frontend/                  Vite + React review UI (separate from the backend; see FRONTEND_SPEC.md;
+                           mapping-engine pages: MAPPING_ENGINE_SPEC.md § Frontend)
 db/schema.sql              tables, keys, indexes
 scripts/create_schema.py   applies schema.sql to DATABASE_URL
 policy_radar/

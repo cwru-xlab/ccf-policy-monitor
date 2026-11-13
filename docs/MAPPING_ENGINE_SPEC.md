@@ -105,14 +105,21 @@ Jobs report through the existing `job` table (`kind` = `discover`, `check_update
 
 ## Frontend
 
-- **Document Mappings** page gets a `Manual | Automated` switch (from the dynamic-mapping
-  prototype). Manual is unchanged. Automated: pick an uploaded policy, run discovery, then
-  approve or reject each proposed authority and guideline. An approved guideline is added to
-  the Guideline Database and linked to the policy exactly as a manual mapping would be, so
-  review sessions and the conflict engine see it.
-- A sub-page **Mapping Automation** (`/mappings/automation`) holds the schedule, the queue of
-  pending proposals from scheduled runs, the tracked sources (pause, remove, add a URL), the
-  authorities, and the update notifications. The mappings page shows the unread count.
+- **Document Mappings** keeps the dynamic-mapping prototype's `Manual Mapping | Dynamic Mapping`
+  switch, restyled with the brand palette (`--brand-blue`, `--brand-green`, `--brand-gray` in
+  `App.css`). Manual is unchanged. Dynamic (`components/AutomatedMapping.jsx`) keeps the
+  prototype's steps: pick an uploaded policy (demo records without a `documentId` are
+  disabled), start the search (job polled until done), review proposed authorities
+  (approve/reject) and guidelines (select, view rationale and link), then map. An approved
+  guideline becomes a Guideline Database record of the same shape an upload creates, with the
+  snapshot's `documentId`, and is linked to the policy (`data/discoveredGuidelines.js`), so
+  review sessions and the conflict engine see it. Manual guideline upload is unchanged.
+- **Mapping Automation** (`/mappings/automation`, linked from Document Mappings with the unread
+  update count) holds the schedule (on/off, daily to monthly, run now), update notifications
+  (mark read, check now), proposals waiting for approval from any run, the tracked guidelines
+  (pause, remove, add a URL for a policy), and the authorities.
+- All backend calls are in `api.js`. Like the rest of the app, these pages are laid out for
+  desktop widths.
 
 ## Not covered
 

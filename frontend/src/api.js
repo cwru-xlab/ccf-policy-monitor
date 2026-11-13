@@ -29,7 +29,7 @@ async function waitForJob(jobId, documentId) {
     const job = await call(`/jobs/${jobId}`)
     if (job.status === 'failed') throw new Error(job.error)
     if (job.status === 'succeeded') {
-      const failure = job.detail.failed?.find((f) => f.document_id === documentId)
+      const failure = documentId && job.detail.failed?.find((f) => f.document_id === documentId)
       if (failure) throw new Error(failure.error)
       return job
     }
@@ -88,4 +88,64 @@ export function checkConflicts(guidelineDocumentId, policyDocumentIds) {
       policy_document_ids: policyDocumentIds,
     }),
   })
+}
+
+// --- Mapping engine (docs/MAPPING_ENGINE_SPEC.md) -----------------------------------
+
+const json = (method, body) => ({
+  method,
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
+// Run the discovery agent for one uploaded policy and wait for it (a few minutes).
+// Resolves to the job detail: { guidelines_proposed, authorities_proposed, ... }.
+export async function discoverGuidelines(policyDocumentId) {
+  const { job_id } = await call('/mapping/discover', json('POST', { policy_document_id: policyDocumentId }))
+  return (await waitForJob(job_id)).detail
+}
+
+export function listProposals({ status, policyDocumentId } = {}) {
+  const params = new URLSearchParams()
+  if (status) params.set('status', status)
+  if (policyDocumentId) params.set('policy_document_id', policyDocumentId)
+  return call(`/mapping/proposals?${params}`)
+}
+
+// status: 'approved' | 'rejected'. Approving returns the mapping with the guideline's
+// snapshot document_id, which the conflict engine accepts like an uploaded guideline.
+export function decideProposal(sourceId, policyDocumentId, status) {
+  return call('/mapping/proposals/decide', json('POST', {
+    source_id: sourceId, policy_document_id: policyDocumentId, status,
+  }))
+}
+
+export const listAuthorities = () => call('/mapping/authorities')
+export const decideAuthority = (authorityId, status) =>
+  call(`/mapping/authorities/${encodeURIComponent(authorityId)}/decide`, json('POST', { status }))
+
+export const listTrackedSources = () => call('/mapping/sources')
+export const addTrackedSource = (url, policyDocumentId) =>
+  call('/mapping/sources', json('POST', { url, policy_document_id: policyDocumentId }))
+export const pauseTrackedSource = (sourceId, paused) =>
+  call(`/mapping/sources/${sourceId}`, json('PATCH', { paused }))
+export const untrackSource = (sourceId) => call(`/mapping/sources/${sourceId}`, { method: 'DELETE' })
+
+export const listGuidelineChanges = (unreadOnly = false) =>
+  call(`/mapping/changes?unread_only=${unreadOnly}`)
+export const markGuidelineChangeRead = (changeId) =>
+  call(`/mapping/changes/${changeId}/read`, { method: 'POST' })
+
+export async function checkGuidelineUpdates() {
+  const { job_id } = await call('/mapping/check-updates', { method: 'POST' })
+  return (await waitForJob(job_id)).detail
+}
+
+export const getMappingSchedule = () => call('/mapping/schedule')
+export const saveMappingSchedule = (enabled, intervalHours) =>
+  call('/mapping/schedule', json('PUT', { enabled, interval_hours: intervalHours }))
+
+export async function runMappingScheduleNow() {
+  const { job_id } = await call('/mapping/schedule/run', { method: 'POST' })
+  return (await waitForJob(job_id)).detail
 }

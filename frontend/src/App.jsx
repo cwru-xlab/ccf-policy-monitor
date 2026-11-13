@@ -26,6 +26,7 @@ import AuditLogPage from './pages/AuditLogPage'
 
 // New policy-to-guideline mapping page
 import DocumentMappingsPage from './pages/DocumentMappingsPage'
+import MappingAutomationPage from './pages/MappingAutomationPage'
 
 function App() {
   return (
@@ -101,6 +102,12 @@ function App() {
         <Route
           path="/mappings"
           element={<DocumentMappingsPage />}
+        />
+
+        {/* Mapping engine setup: schedule, approvals, tracked guidelines */}
+        <Route
+          path="/mappings/automation"
+          element={<MappingAutomationPage />}
         />
 
         <Route

@@ -1,0 +1,142 @@
+/* Mapping engine UI: the Dynamic Mapping steps and the Mapping Automation page.
+   Colors come from the brand palette in App.css (--brand-blue/green/gray). */
+
+.auto-card {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: var(--brand-gray);
+}
+
+.auto-card h2 { margin: 0 0 6px; font-size: 20px; }
+.auto-card h3 { margin: 22px 0 10px; font-size: 16px; }
+.auto-muted { color: #6b7280; font-size: 13px; }
+.auto-center { padding: 36px 20px; text-align: center; }
+
+.auto-button,
+.auto-button-secondary {
+  min-height: 40px;
+  padding: 10px 18px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auto-button {
+  background: var(--brand-green);
+  border: 1px solid var(--brand-green);
+  color: #ffffff;
+}
+
+.auto-button-secondary {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: var(--brand-gray);
+}
+
+.auto-button:hover { filter: brightness(0.92); }
+.auto-button-secondary:hover { background: #f0f7fa; border-color: var(--brand-blue); }
+.auto-button:disabled,
+.auto-button-secondary:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
+
+.auto-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auto-actions > div { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.auto-list { display: grid; gap: 10px; margin-top: 14px; }
+
+.auto-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+button.auto-item { width: 100%; font: inherit; color: inherit; cursor: pointer; }
+button.auto-item:hover:not(:disabled) { border-color: var(--brand-blue); background: #f0f7fa; }
+button.auto-item:disabled { cursor: not-allowed; opacity: 0.6; }
+.auto-item.selected { border: 2px solid var(--brand-blue); background: #e8f4fa; }
+.auto-item-main { flex: 1 1 320px; min-width: 0; }
+.auto-item-main label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.auto-item input[type="checkbox"] { margin-top: 3px; accent-color: var(--brand-blue); }
+.auto-item small { display: block; margin-top: 4px; color: #6b7280; }
+.auto-item a { color: var(--brand-blue); }
+.auto-item-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.auto-details {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: #f7f8fa;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.auto-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auto-badge.proposed { background: #fff2cc; color: #7a5b00; }
+.auto-badge.approved { background: #e5f4ec; color: var(--brand-green); }
+.auto-badge.rejected { background: #f3f4f6; color: #6b7280; }
+.auto-badge.unread { background: var(--brand-blue); color: #ffffff; }
+
+.auto-status { margin-top: 14px; padding: 12px 14px; border-radius: 6px; background: #e8f4fa; }
+.auto-error { margin-top: 14px; padding: 12px 14px; border-radius: 6px; background: #fff0f0; color: #9e2020; overflow-wrap: anywhere; }
+
+/* Mode switch and header link on Document Mappings */
+.mapping-mode-switch { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 28px; }
+.mapping-mode-switch button {
+  min-height: 42px;
+  padding: 10px 20px;
+  border: 1px solid var(--brand-blue);
+  border-radius: 7px;
+  background: #ffffff;
+  color: var(--brand-blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+.mapping-mode-switch button.selected { background: var(--brand-blue); color: #ffffff; }
+.mapping-automation-link { margin-left: auto; align-self: center; color: var(--brand-blue); font-weight: 600; text-decoration: none; }
+.mapping-automation-link:hover { text-decoration: underline; }
+
+/* Mapping Automation page */
+.automation-content { flex: 1; min-width: 0; padding: 32px; display: grid; gap: 20px; align-content: start; }
+.automation-content .back-link { color: var(--brand-blue); text-decoration: none; font-weight: 600; }
+.automation-form { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; }
+.automation-form input[type="number"],
+.automation-form input[type="url"],
+.automation-form select {
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font: inherit;
+  max-width: 100%;
+}
+.automation-form input[type="url"] { flex: 1 1 280px; }
+.automation-form input:focus,
+.automation-form select:focus { outline: none; border-color: var(--brand-blue); }
+
+@media (max-width: 640px) {
+  .automation-content { padding: 16px; }
+  .auto-card { padding: 16px; }
+}
