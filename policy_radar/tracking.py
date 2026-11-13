@@ -79,6 +79,8 @@ async def _download_pdf(url: str) -> bytes | None:
 async def take_snapshot(url: str) -> Snapshot:
     """Fetch ``url`` fresh. PDFs keep their bytes when the site allows a direct download."""
     page = await firecrawl.scrape(url)
+    if page.status_code >= 400:
+        raise firecrawl.FirecrawlError(f"{url} answered HTTP {page.status_code}")
     if page.content_type == PDF or urlsplit(url).path.lower().endswith(".pdf"):
         raw = await _download_pdf(url)
         if raw:
@@ -137,22 +139,24 @@ def unified_diff(old: str, new: str) -> str:
 
 
 async def check_source(source: dict) -> bool | None:
-    """Re-fetch one source. Returns None if unchanged, else whether the change was
-    material (and so recorded as a guideline_change)."""
+    """Re-fetch one source. Returns None if unchanged since the last fetch, else whether the
+    change from the current snapshot is material. Only a material change stores a new
+    snapshot (and a guideline_change); a minor one only records the fetch's hash, so the
+    same page noise is not judged again."""
     snap = await take_snapshot(source["url"])
     if snap.sha256 == source["content_sha256"]:
         await db.mark_checked(source["source_id"])
         return None
-    document_id = await _store(source["url"], snap)
     old = await _document_text(source["document_id"])
     new = parser.extract_markdown(snap.content, snap.media_type)
     verdict = await llm.judge_change(source["title"], unified_diff(old, new))
-    await db.set_snapshot(source["source_id"], snap.sha256, document_id, verdict.material)
-    if verdict.material:
-        await db.record_change(
-            source["source_id"], source["document_id"], document_id, verdict.summary
-        )
-    return verdict.material
+    if not verdict.material:
+        await db.set_snapshot(source["source_id"], snap.sha256, source["document_id"], False)
+        return False
+    document_id = await _store(source["url"], snap)
+    await db.set_snapshot(source["source_id"], snap.sha256, document_id, True)
+    await db.record_change(source["source_id"], source["document_id"], document_id, verdict.summary)
+    return True
 
 
 async def check_updates() -> dict:

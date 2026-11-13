@@ -31,7 +31,7 @@ manual linking stay; this spec adds an automated path next to them.
 | Table | One row is | Key columns |
 |---|---|---|
 | `authority` | a publishing body, keyed by its web domain | `authority_id` (domain), `name`, `homepage_url`, `rationale`, `status` (`proposed`/`approved`/`rejected`) |
-| `tracked_source` | one guideline URL | `source_id` (`sha256(url)[:16]`), `url`, `title`, `authority_id`, `paused`, `content_sha256` and `document_id` of the last snapshot, `last_checked_at`, `last_changed_at` |
+| `tracked_source` | one guideline URL | `source_id` (`sha256(url)[:16]`), `url`, `title`, `authority_id`, `paused`, `document_id` (current snapshot), `content_sha256` (of the last fetch), `last_checked_at`, `last_changed_at` |
 | `source_mapping` | a guideline URL proposed for, or mapped to, one policy | (`source_id`, `policy_document_id`), `rationale`, `origin` (`discovery`/`scheduled`/`manual`), `status` (`proposed`/`approved`/`rejected`) |
 | `guideline_change` | one detected material change of a tracked source | `source_id`, `previous_document_id`, `document_id`, `summary`, `detected_at`, `read_at` |
 | `discovery_schedule` | the single schedule row | `enabled`, `interval_hours`, `last_run_at`, `next_run_at` |
@@ -71,9 +71,14 @@ the id of their uploaded CPB document, the id the frontend already keeps.
   any other page is stored as Firecrawl's main-content Markdown (`text/markdown`).
 - The content hash is over the stored bytes after collapsing whitespace for Markdown.
   Fetches use `maxAge=0` so Firecrawl's cache never hides a change.
-- Same hash: only `last_checked_at` moves. Different hash: the LLM gets a unified diff of the
-  two texts and returns `{material, summary}`. Material changes create a `guideline_change`;
-  either way the new snapshot becomes the source's current one.
+- Same hash as the last fetch: only `last_checked_at` moves. Different hash: the LLM gets a
+  unified diff of the current snapshot's text and the new text and returns
+  `{material, summary}`.
+- Material: the new snapshot is stored and becomes current, and a `guideline_change` is
+  recorded. Not material (e.g. CMS re-rendering link text between fetches): nothing is stored;
+  only the fetch's hash is kept, so the same noise is not sent to the LLM again, while later
+  real edits are still diffed against the current snapshot. Storing every noisy fetch would
+  also make `POST /guidelines/atomize` re-extract each one.
 
 ## API
 

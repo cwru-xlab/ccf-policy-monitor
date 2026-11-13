@@ -33,6 +33,7 @@ class Page:
     title: str
     markdown: str
     content_type: str
+    status_code: int = 200
 
 
 def configured() -> bool:
@@ -91,4 +92,5 @@ async def scrape(url: str, *, transport: httpx.AsyncBaseTransport | None = None)
         title=title[0] if isinstance(title, list) and title else str(title),
         markdown=data.get("markdown") or "",
         content_type=(meta.get("contentType") or "").split(";")[0].strip().lower(),
+        status_code=int(meta.get("statusCode") or 200),
     )

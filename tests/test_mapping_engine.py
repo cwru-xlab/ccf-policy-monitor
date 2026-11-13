@@ -194,3 +194,12 @@ def test_brief_lists_known_urls_and_scheduled_scope():
     text = discovery.brief(policy, {"https://a.org/g"}, ["a.org"])
     assert "CPT 45378" in text and "Colonoscopy q10y" in text
     assert "- https://a.org/g" in text and "limited to a.org" in text
+
+
+async def test_snapshot_refuses_error_pages(monkeypatch):
+    async def scrape(url):
+        return firecrawl.Page(url, "404 | Not Found", "Page not found", "text/html", 404)
+
+    monkeypatch.setattr(firecrawl, "scrape", scrape)
+    with pytest.raises(firecrawl.FirecrawlError, match="HTTP 404"):
+        await tracking.take_snapshot("https://a.org/gone")

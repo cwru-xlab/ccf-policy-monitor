@@ -242,7 +242,7 @@ create table if not exists tracked_source (
     title            text not null,
     authority_id     text references authority on delete set null,
     paused           boolean not null default false,
-    content_sha256   char(64),                       -- of the current snapshot
+    content_sha256   char(64),                       -- of the last fetch (see tracking.check_source)
     document_id      text references source_document,  -- current snapshot
     created_at       timestamptz not null default now(),
     last_checked_at  timestamptz,

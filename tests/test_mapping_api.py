@@ -143,16 +143,25 @@ async def test_discover_approve_track_and_notify(client, web, monkeypatch):
     # unchanged page: no notification and no LLM call
     async def judge(title, diff):
         judge.diffs.append(diff)
-        return llm.ChangeVerdict(material=True, summary="Start age lowered to 40.")
+        material = "40 to 75" in diff
+        return llm.ChangeVerdict(material=material, summary="Start age lowered to 40.")
     judge.diffs = []
     monkeypatch.setattr(llm, "judge_change", judge)
     detail = await _job(client, await client.post("/mapping/check-updates"))
     assert detail == {"checked": 1, "changed": 0, "minor_changes": 0, "failed": []}
     assert judge.diffs == []
 
+    # page noise: judged once, stores nothing, and the same noise is not judged again
+    web.pages["https://www.uspstf.org/crc"] = "# CRC \nScreen adults aged 45 to 75.\n[0](x)\n"
+    for expected_minor in (1, 0):
+        detail = await _job(client, await client.post("/mapping/check-updates"))
+        assert detail["minor_changes"] == expected_minor and detail["changed"] == 0
+    assert len(judge.diffs) == 1
+    assert (await db.get_source(uspstf["source_id"]))["document_id"] == approved["document_id"]
+
     web.pages["https://www.uspstf.org/crc"] = "# CRC\nScreen adults aged 40 to 75.\n"
     detail = await _job(client, await client.post("/mapping/check-updates"))
-    assert detail["changed"] == 1 and "+Screen adults aged 40 to 75." in judge.diffs[0]
+    assert detail["changed"] == 1 and "+Screen adults aged 40 to 75." in judge.diffs[-1]
     changes = (await client.get("/mapping/changes", params={"unread_only": True})).json()
     assert [c["summary"] for c in changes] == ["Start age lowered to 40."]
     assert changes[0]["previous_document_id"] == approved["document_id"]

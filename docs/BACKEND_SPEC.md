@@ -54,6 +54,11 @@ Stack: Python 3.12, FastAPI, Postgres + pgvector (Supabase later), asyncpg with 
 
 ## Tables
 
+The mapping engine's tables (`authority`, `tracked_source`, `source_mapping`,
+`guideline_change`, `discovery_schedule`) and the `web_discovery` source row that holds
+snapshots of tracked guideline URLs are specified in
+[MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md#data-model-dbschemasql).
+
 ### `source`
 
 One row per endpoint or page we fetch from, seeded by `db/schema.sql` (re-applying the
