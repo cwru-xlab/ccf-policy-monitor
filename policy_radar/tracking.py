@@ -7,6 +7,7 @@ bytes, so an unchanged page always hashes the same.
 
 import difflib
 import hashlib
+import ipaddress
 import logging
 import re
 from dataclasses import dataclass
@@ -47,6 +48,21 @@ def domain(url: str) -> str:
     return host.removeprefix("www.")
 
 
+def check_public(url: str) -> None:
+    """Refuse URLs the server should never fetch: non-http(s), localhost, private IPs."""
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    if parts.scheme not in ("http", "https") or not host or host == "localhost" \
+            or host.endswith((".localhost", ".local", ".internal")):
+        raise firecrawl.FirecrawlError(f"refusing to fetch non-public URL {url}")
+    try:
+        ip = ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        return
+    if not ip.is_global:
+        raise firecrawl.FirecrawlError(f"refusing to fetch non-public URL {url}")
+
+
 def source_id(url: str) -> str:
     return hashlib.sha256(normalize_url(url).encode()).hexdigest()[:16]
 
@@ -78,6 +94,7 @@ async def _download_pdf(url: str) -> bytes | None:
 
 async def take_snapshot(url: str) -> Snapshot:
     """Fetch ``url`` fresh. PDFs keep their bytes when the site allows a direct download."""
+    check_public(url)
     page = await firecrawl.scrape(url)
     if page.status_code >= 400:
         raise firecrawl.FirecrawlError(f"{url} answered HTTP {page.status_code}")

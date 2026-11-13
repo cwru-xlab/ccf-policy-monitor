@@ -44,8 +44,11 @@ async def _post(path: str, body: dict, transport: httpx.AsyncBaseTransport | Non
     if not configured():
         raise FirecrawlError("FIRECRAWL_API_KEY is not set")
     headers = {"Authorization": f"Bearer {settings.firecrawl_api_key}"}
-    async with httpx.AsyncClient(transport=transport, timeout=120) as client:
-        response = await client.post(f"{API_URL}{path}", json=body, headers=headers)
+    try:
+        async with httpx.AsyncClient(transport=transport, timeout=120) as client:
+            response = await client.post(f"{API_URL}{path}", json=body, headers=headers)
+    except httpx.HTTPError as e:
+        raise FirecrawlError(f"Firecrawl {path} unreachable: {type(e).__name__}: {e}") from e
     try:
         payload = response.json()
     except ValueError:

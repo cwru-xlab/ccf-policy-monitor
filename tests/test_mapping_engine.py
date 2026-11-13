@@ -203,3 +203,25 @@ async def test_snapshot_refuses_error_pages(monkeypatch):
     monkeypatch.setattr(firecrawl, "scrape", scrape)
     with pytest.raises(firecrawl.FirecrawlError, match="HTTP 404"):
         await tracking.take_snapshot("https://a.org/gone")
+
+
+@pytest.mark.parametrize("url", [
+    "http://localhost:8000/x.pdf", "http://127.0.0.1/a", "http://169.254.169.254/latest",
+    "http://10.0.0.5/g.pdf", "http://[::1]/x", "file:///etc/passwd", "http://db.internal/x",
+])
+def test_check_public_refuses_internal_urls(url):
+    with pytest.raises(firecrawl.FirecrawlError, match="non-public"):
+        tracking.check_public(url)
+
+
+def test_check_public_allows_public_hosts():
+    tracking.check_public("https://www.uspreventiveservicestaskforce.org/uspstf/x")
+    tracking.check_public("https://8.8.8.8/x")
+
+
+async def test_network_errors_become_firecrawl_errors(firecrawl_key):
+    def handler(request):
+        raise httpx.ConnectTimeout("timed out", request=request)
+
+    with pytest.raises(firecrawl.FirecrawlError, match="unreachable"):
+        await firecrawl.search("q", transport=httpx.MockTransport(handler))

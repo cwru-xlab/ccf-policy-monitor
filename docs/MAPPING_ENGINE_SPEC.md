@@ -67,6 +67,8 @@ the id of their uploaded CPB document, the id the frontend already keeps.
 
 ### Snapshots and change detection
 
+- Only public http(s) URLs are fetched: localhost, `.local`/`.internal` names and non-global
+  IP addresses are refused before Firecrawl or the direct PDF download sees them.
 - A PDF URL is stored as the PDF bytes (so the in-app viewer and the existing extraction work);
   any other page is stored as Firecrawl's main-content Markdown (`text/markdown`).
 - The content hash is over the stored bytes after collapsing whitespace for Markdown.

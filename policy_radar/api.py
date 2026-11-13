@@ -6,7 +6,7 @@ Pipelines run as FastAPI background tasks inside this process and report through
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
@@ -36,6 +36,8 @@ async def lifespan(_: FastAPI):
     schedule = asyncio.create_task(scheduler.loop())
     yield
     schedule.cancel()
+    with suppress(asyncio.CancelledError):
+        await schedule
     await db.close_pool()
 
 
