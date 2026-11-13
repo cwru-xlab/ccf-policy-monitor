@@ -70,7 +70,9 @@ the id of their uploaded CPB document, the id the frontend already keeps.
 - Only public http(s) URLs are fetched: localhost, `.local`/`.internal` names and non-global
   IP addresses are refused before Firecrawl or the direct PDF download sees them.
 - A PDF URL is stored as the PDF bytes (so the in-app viewer and the existing extraction work);
-  any other page is stored as Firecrawl's main-content Markdown (`text/markdown`).
+  any other page is stored as Firecrawl's main-content Markdown, as `text/plain` (which
+  parser.py reads). A `.pdf` URL is downloaded directly first, because Firecrawl bills PDF
+  parsing per page; Firecrawl is the fallback when the site refuses a direct download.
 - The content hash is over the stored bytes after collapsing whitespace for Markdown.
   Fetches use `maxAge=0` so Firecrawl's cache never hides a change.
 - Same hash as the last fetch: only `last_checked_at` moves. Different hash: the LLM gets a

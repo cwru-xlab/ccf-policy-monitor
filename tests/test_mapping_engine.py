@@ -225,3 +225,17 @@ async def test_network_errors_become_firecrawl_errors(firecrawl_key):
 
     with pytest.raises(firecrawl.FirecrawlError, match="unreachable"):
         await firecrawl.search("q", transport=httpx.MockTransport(handler))
+
+
+async def test_pdf_urls_skip_firecrawl_when_directly_downloadable(monkeypatch):
+    async def download(url):
+        return b"%PDF-1.4 fake"
+
+    async def scrape(url):
+        raise AssertionError("Firecrawl must not be billed for a downloadable PDF")
+
+    monkeypatch.setattr(tracking, "_download_pdf", download)
+    monkeypatch.setattr(tracking, "_pdf_title", lambda raw: "T")
+    monkeypatch.setattr(firecrawl, "scrape", scrape)
+    snap = await tracking.take_snapshot("https://a.org/guide.pdf")
+    assert (snap.media_type, snap.content, snap.title) == ("application/pdf", b"%PDF-1.4 fake", "T")

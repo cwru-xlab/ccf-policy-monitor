@@ -92,16 +92,25 @@ async def _download_pdf(url: str) -> bytes | None:
     return response.content if ok else None
 
 
+def _pdf_title(raw: bytes) -> str:
+    """The PDF's own title metadata, or "" when it has none."""
+    import pymupdf
+
+    with pymupdf.open(stream=raw, filetype="pdf") as pdf:
+        return (pdf.metadata or {}).get("title") or ""
+
+
 async def take_snapshot(url: str) -> Snapshot:
     """Fetch ``url`` fresh. PDFs keep their bytes when the site allows a direct download."""
     check_public(url)
+    # A .pdf is downloaded directly first: Firecrawl bills PDF parsing per page.
+    if urlsplit(url).path.lower().endswith(".pdf") and (raw := await _download_pdf(url)):
+        return Snapshot(raw, PDF, hashlib.sha256(raw).hexdigest(), _pdf_title(raw))
     page = await firecrawl.scrape(url)
     if page.status_code >= 400:
         raise firecrawl.FirecrawlError(f"{url} answered HTTP {page.status_code}")
-    if page.content_type == PDF or urlsplit(url).path.lower().endswith(".pdf"):
-        raw = await _download_pdf(url)
-        if raw:
-            return Snapshot(raw, PDF, hashlib.sha256(raw).hexdigest(), page.title)
+    if page.content_type == PDF and (raw := await _download_pdf(url)):
+        return Snapshot(raw, PDF, hashlib.sha256(raw).hexdigest(), page.title or _pdf_title(raw))
     if not page.markdown.strip():
         raise firecrawl.FirecrawlError(f"{url} returned no readable content")
     content = _normalize_markdown(page.markdown).encode()

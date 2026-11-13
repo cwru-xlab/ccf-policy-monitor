@@ -307,7 +307,8 @@ A placeholder route (`POST ""`, "ingest all guidelines") exists in `api.py` with
 Every setting comes from `.env`; `example.env` lists them. `DATABASE_URL` and
 `OPENAI_API_KEY` are required and the app does not start without them.
 `FIRECRAWL_API_KEY` is optional: without it the mapping engine's `/mapping` routes that
-search or fetch answer 503 and the rest of the app is unaffected.
+search or fetch answer 503 and the rest of the app is unaffected. Firecrawl bills PDF
+parsing per page, so the mapping engine downloads `.pdf` URLs directly when it can.
 
 ## Code layout
 
