@@ -1,5 +1,8 @@
 
 import './App.css'
+import { useEffect } from 'react'
+import { listTrackedSources } from './api'
+import { syncTrackedGuidelines } from './data/discoveredGuidelines'
 
 import {
   BrowserRouter,
@@ -29,6 +32,11 @@ import DocumentMappingsPage from './pages/DocumentMappingsPage'
 import MappingAutomationPage from './pages/MappingAutomationPage'
 
 function App() {
+  // Guidelines found by the mapping engine follow their latest snapshot.
+  useEffect(() => {
+    listTrackedSources().then(syncTrackedGuidelines).catch(() => {})
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>

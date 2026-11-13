@@ -99,3 +99,26 @@ function recordAudit(action, policy, guideline) {
     ])
   )
 }
+
+// Point each mapping-engine guideline at its source's current snapshot, so review
+// sessions and the conflict engine use the updated text after a detected change.
+// ``sources`` is GET /mapping/sources. Returns how many records changed.
+export function syncTrackedGuidelines(sources) {
+  const current = new Map(sources.map((s) => [s.source_id, s.document_id]))
+  const today = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  let changed = 0
+
+  const guidelines = getSavedArray('addedGuidelines').map((guideline) => {
+    const documentId = guideline.sourceId && current.get(guideline.sourceId)
+    if (!documentId || documentId === guideline.documentId) return guideline
+    changed++
+    return { ...guideline, documentId, updated: today, updatedAge: 'Just now' }
+  })
+
+  if (changed) localStorage.setItem('addedGuidelines', JSON.stringify(guidelines))
+  return changed
+}

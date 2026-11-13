@@ -95,6 +95,9 @@ export default function GuidelineDetailsPage() {
                 <div className="policy-information-grid">
                   <div><span className="policy-detail-label">GUIDELINE FILE</span><strong>{guideline.fileName || 'No document uploaded'}</strong></div>
                   <div><span className="policy-detail-label">DATE CREATED</span><strong>{guideline.created || guideline.date}</strong></div>
+                  {guideline.url && (
+                    <div><span className="policy-detail-label">SOURCE</span><a className="guideline-details-link" href={guideline.url} target="_blank" rel="noopener noreferrer">Open the published guideline</a></div>
+                  )}
                 </div>
               </section>
               <PolicyDocumentViewer key={guideline.id} documentId={guideline.documentId} fileName={guideline.fileName} collection="guidelines" />

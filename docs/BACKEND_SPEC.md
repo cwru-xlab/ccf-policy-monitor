@@ -296,7 +296,7 @@ Prompts and extraction schemas are in `policy_radar/llm.py`.
 | GET | `/policies` | list policies |
 | GET | `/policies/{policy_number}` | one policy with criteria, codes, watched triggers |
 | GET | `/jobs/{job_id}` | job status and result |
-| * | `/mapping/...` | the mapping engine: guideline discovery, approvals, tracking, schedule — see [MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md) |
+| * | `/mapping/...` | the mapping engine: guideline discovery, approvals, tracking, schedule — see [MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md). The frontend relies on `GET /mapping/sources` returning each source's current snapshot as `document_id` |
 
 No authentication yet.
 

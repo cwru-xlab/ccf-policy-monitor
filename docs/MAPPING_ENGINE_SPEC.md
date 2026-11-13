@@ -113,7 +113,10 @@ Jobs report through the existing `job` table (`kind` = `discover`, `check_update
   (approve/reject) and guidelines (select, view rationale and link), then map. An approved
   guideline becomes a Guideline Database record of the same shape an upload creates, with the
   snapshot's `documentId`, and is linked to the policy (`data/discoveredGuidelines.js`), so
-  review sessions and the conflict engine see it. Manual guideline upload is unchanged.
+  review sessions and the conflict engine see it. After a material change, the record is
+  moved to the source's new snapshot (`syncTrackedGuidelines`, run at app load and on every
+  Mapping Automation refresh), so reviews use the updated text. A record from a web page links
+  to the published guideline on its detail page. Manual guideline upload is unchanged.
 - **Mapping Automation** (`/mappings/automation`, linked from Document Mappings with the unread
   update count) holds the schedule (on/off, daily to monthly, run now), update notifications
   (mark read, check now), proposals waiting for approval from any run, the tracked guidelines

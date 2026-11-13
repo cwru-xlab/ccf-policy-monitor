@@ -27,6 +27,7 @@ import {
 import {
   findPolicyByDocumentId,
   saveApprovedGuideline,
+  syncTrackedGuidelines,
 } from '../data/discoveredGuidelines'
 import '../components/AutomatedMapping.css'
 
@@ -83,6 +84,7 @@ function MappingAutomationPage() {
       setChanges(c)
       setProposals(p)
       setSources(t)
+      syncTrackedGuidelines(t)
       setAuthorities(a)
     } catch (e) {
       setError(`Could not load the mapping engine: ${e.message}`)
