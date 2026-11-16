@@ -13,6 +13,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 
 from policy_radar import db, firecrawl, llm, pipelines
@@ -37,10 +38,13 @@ Work like a careful researcher:
 1. Identify the services, drugs, tests or conditions the policy decides coverage for.
 2. Search for the authorities that publish recommendations on them, and for each authority's \
 current guideline or recommendation page on that topic. Prefer the authority's own site over \
-news, summaries, or vendors. Prefer the current version over archived ones.
-3. Read a page when you need to confirm it is a guideline (a recommendation statement, \
-practice guideline, coverage determination or label) and that it addresses the policy's topic.
-4. Call submit_proposals once, with every authority and guideline you are confident about, \
+news, summaries, or vendors. Prefer the current version over archived ones. When the brief \
+lists approved authorities, prefer their sites when relevant, but still search elsewhere when needed.
+3. Use search result titles and descriptions when they already show a clear guideline page. \
+Call read_page only to confirm a page is a guideline (recommendation statement, practice \
+guideline, coverage determination or label) and that it addresses the policy's topic.
+4. When several searches or reads are independent, issue them in the same turn.
+5. Call submit_proposals once, with every authority and guideline you are confident about, \
 each with a one-sentence rationale tying it to the policy. Propose only URLs you saw in search \
 results or on pages you read; never construct a URL. Quality over quantity: 3-10 guidelines \
 is typical. If nothing qualifies, submit empty lists.
@@ -105,25 +109,35 @@ class DiscoveryError(RuntimeError):
 
 @dataclass
 class _Run:
-    """Tool state for one agent run: budgets and every URL the agent has seen."""
+    """Tool state for one agent run: budgets, caches, and every URL the agent has seen."""
 
     domains: list[str] | None
     seen: set[str] = field(default_factory=set)
     calls: dict[str, int] = field(default_factory=dict)
+    search_cache: dict[tuple, list] = field(default_factory=dict)
+    scrape_cache: dict[str, firecrawl.Page] = field(default_factory=dict)
 
     async def call(self, name: str, args: dict) -> object:
         self.calls[name] = self.calls.get(name, 0) + 1
         if self.calls[name] > MAX_CALLS_PER_TOOL:
             raise RuntimeError(f"{name} budget spent; call submit_proposals now")
         if name == "search_web":
-            results = await firecrawl.search(
-                args["query"], recent=bool(args.get("recent_only")) or self.domains is not None,
-                domains=self.domains,
-            )
+            recent = bool(args.get("recent_only")) or self.domains is not None
+            key = (args["query"], recent, tuple(self.domains or ()))
+            if key not in self.search_cache:
+                self.search_cache[key] = await firecrawl.search(
+                    args["query"], recent=recent, domains=self.domains,
+                )
+            results = self.search_cache[key]
             self.seen.update(normalize_url(r.url) for r in results)
             return [r.__dict__ for r in results]
         if name == "read_page":
-            page = await firecrawl.scrape(args["url"])
+            cache_key = normalize_url(args["url"])
+            if cache_key not in self.scrape_cache:
+                self.scrape_cache[cache_key] = await firecrawl.scrape(
+                    args["url"], max_age_ms=settings.firecrawl_discovery_max_age_ms,
+                )
+            page = self.scrape_cache[cache_key]
             self.seen.update(normalize_url(u) for u in (args["url"], page.url))
             self.seen.update(normalize_url(u) for u in _URL.findall(page.markdown))
             return {"url": page.url, "title": page.title, "markdown": page.markdown[:PAGE_CHARS]}
@@ -157,12 +171,22 @@ async def run_agent(
     run = _Run(domains)
     messages: list[dict] = [{"role": "user", "content": [{"text": brief}]}]
     nudged = False
+    started = time.perf_counter()
+    turns = 0
     for _ in range(MAX_TURNS):
+        turns += 1
         message = (await asyncio.to_thread(converse, messages))["output"]["message"]
         messages.append(message)  # unchanged: reasoning blocks must be replayed as returned
         uses = [c["toolUse"] for c in message["content"] if "toolUse" in c]
         submit = next((u for u in uses if u["name"] == "submit_proposals"), None)
         if submit:
+            log.info(
+                "discovery agent finished in %.1fs turns=%d search_web=%d read_page=%d",
+                time.perf_counter() - started,
+                turns,
+                run.calls.get("search_web", 0),
+                run.calls.get("read_page", 0),
+            )
             return submit["input"], run.seen
         if not uses:
             if nudged:
@@ -170,11 +194,25 @@ async def run_agent(
             nudged = True
             messages.append({"role": "user", "content": [{"text": "Call submit_proposals now."}]})
             continue
-        messages.append({"role": "user", "content": [await _result(run, u) for u in uses]})
+        # Independent tool calls in one turn run concurrently (Firecrawl latency dominates).
+        results = await asyncio.gather(*(_result(run, u) for u in uses))
+        messages.append({"role": "user", "content": list(results)})
+    log.info(
+        "discovery agent aborted after %.1fs turns=%d search_web=%d read_page=%d",
+        time.perf_counter() - started,
+        turns,
+        run.calls.get("search_web", 0),
+        run.calls.get("read_page", 0),
+    )
     raise DiscoveryError(f"the agent did not submit proposals within {MAX_TURNS} turns")
 
 
-def brief(policy: Policy, known: set[str], domains: list[str] | None) -> str:
+def brief(
+    policy: Policy,
+    known: set[str],
+    domains: list[str] | None,
+    authority_hints: list[dict] | None = None,
+) -> str:
     """The user message: the policy, and what not to propose again."""
     lines = [
         (f"Policy: {policy.title} (number {policy.policy_number}, {policy.doc_type}, "
@@ -190,6 +228,12 @@ def brief(policy: Policy, known: set[str], domains: list[str] | None) -> str:
             "This is a scheduled check for NEW or UPDATED guidance from approved authorities. "
             f"Searches are limited to {', '.join(domains)} and the past month. Propose only "
             "guidance on this policy's topic published or revised recently."
+        )
+    elif authority_hints:
+        named = ", ".join(f"{a['name']} ({a['authority_id']})" for a in authority_hints)
+        lines.append(
+            "Approved authorities already in use (prefer their sites when relevant; still "
+            f"search elsewhere when needed): {named}."
         )
     return "\n".join(lines)
 
@@ -227,12 +271,17 @@ async def discover(policy_document_id: str, scheduled: bool = False) -> dict:
     if policy is None:
         raise ValueError(f"{policy_document_id!r} is not an uploaded policy document")
     domains = None
+    authority_hints = None
     if scheduled:
         domains = await db.approved_authority_domains()
         if not domains:
             return {"policy_document_id": policy_document_id, "skipped": "no approved authorities"}
+    else:
+        authority_hints = await db.approved_authorities() or None
     known = await db.known_urls(policy_document_id)
-    proposals, seen = await run_agent(brief(policy, known, domains), domains)
+    proposals, seen = await run_agent(
+        brief(policy, known, domains, authority_hints), domains
+    )
     log.info("discovery for %s: %s", policy_document_id, json.dumps(proposals)[:2000])
     origin = MappingOrigin.SCHEDULED if scheduled else MappingOrigin.DISCOVERY
     result = await store_proposals(policy_document_id, proposals, seen, origin)

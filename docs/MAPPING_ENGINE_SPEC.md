@@ -44,7 +44,7 @@ the id of their uploaded CPB document, the id the frontend already keeps.
 
 | Module | Responsibility |
 |---|---|
-| `firecrawl.py` | `search(query, recent, domains)` and `scrape(url)` over Firecrawl's v2 REST API (`FIRECRAWL_API_KEY`) |
+| `firecrawl.py` | `search(query, recent, domains)` and `scrape(url, max_age_ms)` over Firecrawl's v2 REST API (`FIRECRAWL_API_KEY`); shared HTTP client |
 | `discovery.py` | The agent: a Bedrock Converse tool loop with tools `search_web`, `read_page`, `submit_proposals`; validates and stores proposals |
 | `tracking.py` | Snapshot a URL into `source_document`, check tracked sources for changes, judge materiality with the LLM |
 | `scheduler.py` | A background asyncio loop started at API startup that runs the scheduled job when `next_run_at` has passed |
@@ -53,11 +53,15 @@ the id of their uploaded CPB document, the id the frontend already keeps.
 ### Discovery agent
 
 - Input: the policy's title, coverage effect, codes and criteria; the URLs already proposed,
-  mapped or rejected for it (not to be proposed again); in scheduled mode, the approved
-  authority domains.
+  mapped or rejected for it (not to be proposed again); in interactive mode, names/domains of
+  already-approved authorities as soft hints; in scheduled mode, the approved authority domains
+  as hard search limits.
 - Tools: `search_web(query, recent_only)` returns up to 8 results (url, title, description);
   `read_page(url)` returns the first 6,000 characters of the page as Markdown;
   `submit_proposals(authorities, guidelines)` ends the run.
+- Latency: independent tool calls in one model turn run concurrently; identical
+  search/scrape args within a run are memoized; discovery scrapes may use Firecrawl's cache
+  up to `FIRECRAWL_DISCOVERY_MAX_AGE_MS` (default 24h).
 - Bounds: at most 12 model turns and 8 tool calls of each kind per run.
 - Guards: a proposed guideline URL must have appeared in a search result or a read page in
   this run (no invented URLs); already known URLs are dropped; authorities are keyed by
@@ -74,7 +78,8 @@ the id of their uploaded CPB document, the id the frontend already keeps.
   parser.py reads). A `.pdf` URL is downloaded directly first, because Firecrawl bills PDF
   parsing per page; Firecrawl is the fallback when the site refuses a direct download.
 - The content hash is over the stored bytes after collapsing whitespace for Markdown.
-  Fetches use `maxAge=0` so Firecrawl's cache never hides a change.
+  Update-detection fetches use `maxAge=0` so Firecrawl's cache never hides a change.
+  Discovery confirmation reads may reuse a short-lived Firecrawl cache (see above).
 - Same hash as the last fetch: only `last_checked_at` moves. Different hash: the LLM gets a
   unified diff of the current snapshot's text and the new text and returns
   `{material, summary}`.

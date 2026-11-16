@@ -1,7 +1,7 @@
 """Firecrawl v2 REST client: web search and single-page scrape for the mapping engine.
 
 Only the two endpoints the mapping engine needs. ``transport`` lets tests swap in an
-``httpx.MockTransport``; production uses the network.
+``httpx.MockTransport``; production reuses one shared ``AsyncClient``.
 """
 
 from dataclasses import dataclass
@@ -12,6 +12,8 @@ from policy_radar.config import settings
 
 API_URL = "https://api.firecrawl.dev/v2"
 RECENT = "qdr:m"  # Google-style time filter: the past month
+_TIMEOUT = 120.0
+_client: httpx.AsyncClient | None = None
 
 
 class FirecrawlError(RuntimeError):
@@ -40,13 +42,23 @@ def configured() -> bool:
     return bool(settings.firecrawl_api_key)
 
 
+def _shared_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(timeout=_TIMEOUT)
+    return _client
+
+
 async def _post(path: str, body: dict, transport: httpx.AsyncBaseTransport | None) -> dict:
     if not configured():
         raise FirecrawlError("FIRECRAWL_API_KEY is not set")
     headers = {"Authorization": f"Bearer {settings.firecrawl_api_key}"}
     try:
-        async with httpx.AsyncClient(transport=transport, timeout=120) as client:
-            response = await client.post(f"{API_URL}{path}", json=body, headers=headers)
+        if transport is not None:
+            async with httpx.AsyncClient(transport=transport, timeout=_TIMEOUT) as client:
+                response = await client.post(f"{API_URL}{path}", json=body, headers=headers)
+        else:
+            response = await _shared_client().post(f"{API_URL}{path}", json=body, headers=headers)
     except httpx.HTTPError as e:
         raise FirecrawlError(f"Firecrawl {path} unreachable: {type(e).__name__}: {e}") from e
     try:
@@ -81,11 +93,20 @@ async def search(
     ]
 
 
-async def scrape(url: str, *, transport: httpx.AsyncBaseTransport | None = None) -> Page:
-    """Fresh main-content Markdown of ``url`` (``maxAge=0`` bypasses Firecrawl's cache)."""
+async def scrape(
+    url: str,
+    *,
+    max_age_ms: int = 0,
+    transport: httpx.AsyncBaseTransport | None = None,
+) -> Page:
+    """Main-content Markdown of ``url``.
+
+    ``max_age_ms=0`` (default) bypasses Firecrawl's cache — required for update detection.
+    Discovery may pass a positive TTL so confirmation reads can reuse recent crawls.
+    """
     data = await _post(
         "/scrape",
-        {"url": url, "formats": ["markdown"], "onlyMainContent": True, "maxAge": 0},
+        {"url": url, "formats": ["markdown"], "onlyMainContent": True, "maxAge": max_age_ms},
         transport,
     )
     meta = data.get("metadata") or {}

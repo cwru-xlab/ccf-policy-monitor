@@ -297,6 +297,14 @@ async def approved_authority_domains() -> list[str]:
     return [r["authority_id"] for r in rows]
 
 
+async def approved_authorities() -> list[dict]:
+    """Approved authorities as ``{authority_id, name}`` for discovery brief hints."""
+    rows = await pool().fetch(
+        "select authority_id, name from authority where status = 'approved' order by name"
+    )
+    return [dict(r) for r in rows]
+
+
 async def add_source(source_id: str, url: str, title: str, authority_id: str | None) -> None:
     """Create a tracked_source row for ``url`` unless one exists."""
     await pool().execute(

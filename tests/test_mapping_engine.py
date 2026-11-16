@@ -1,5 +1,6 @@
 """Mapping engine units that need neither a database nor the network."""
 
+import asyncio
 import json
 
 import httpx
@@ -85,6 +86,22 @@ async def test_scrape_bypasses_cache_and_reads_metadata(firecrawl_key):
     assert page == firecrawl.Page("https://a.org/g", "T", "# Hi", "application/pdf")
 
 
+async def test_scrape_passes_discovery_max_age(firecrawl_key):
+    seen = {}
+
+    def handler(path, body):
+        seen.update(path=path, body=body)
+        return httpx.Response(200, json={"success": True, "data": {
+            "markdown": "# Hi", "metadata": {"title": "T", "sourceURL": "https://a.org/g",
+                                             "contentType": "text/html"}}})
+
+    page = await firecrawl.scrape(
+        "https://a.org/g", max_age_ms=86_400_000, transport=_transport(handler)
+    )
+    assert seen["body"]["maxAge"] == 86_400_000
+    assert page.title == "T"
+
+
 async def test_errors_raise_firecrawl_error(firecrawl_key):
     def handler(path, body):
         return httpx.Response(402, json={"success": False, "error": "Payment required"})
@@ -123,12 +140,12 @@ class ScriptedModel:
 
 @pytest.fixture
 def fake_web(monkeypatch):
-    async def search(query, recent=False, domains=None):
+    async def search(query, recent=False, domains=None, **_kwargs):
         fake_web.calls.append(("search", query, recent, domains))
         return [firecrawl.SearchResult("https://a.org/guide/", "Guide", "about it")]
 
-    async def scrape(url):
-        fake_web.calls.append(("scrape", url))
+    async def scrape(url, max_age_ms=0, **_kwargs):
+        fake_web.calls.append(("scrape", url, max_age_ms))
         return firecrawl.Page(url, "Guide", "See [pdf](https://a.org/guide.pdf) here.", "text/html")
 
     fake_web.calls = []
@@ -155,6 +172,54 @@ async def test_agent_runs_tools_and_returns_submission(fake_web):
     results = second[2]["content"]  # both tool results in one user message
     assert [r["toolResult"]["toolUseId"] for r in results] == ["1", "2"]
     assert all(r["toolResult"]["status"] == "success" for r in results)
+    assert fake_web.calls[1] == ("scrape", "https://a.org/guide", settings.firecrawl_discovery_max_age_ms)
+
+
+async def test_agent_runs_independent_tools_concurrently(fake_web, monkeypatch):
+    """Multiple tool uses in one turn overlap instead of awaiting serially."""
+    order: list[str] = []
+
+    async def search(query, recent=False, domains=None, **_kwargs):
+        order.append(f"search-start:{query}")
+        await asyncio.sleep(0.05)
+        order.append(f"search-end:{query}")
+        return [firecrawl.SearchResult(f"https://a.org/{query}", query, "")]
+
+    async def scrape(url, max_age_ms=0, **_kwargs):
+        order.append(f"scrape-start:{url}")
+        await asyncio.sleep(0.05)
+        order.append(f"scrape-end:{url}")
+        return firecrawl.Page(url, "T", "body", "text/html")
+
+    monkeypatch.setattr(firecrawl, "search", search)
+    monkeypatch.setattr(firecrawl, "scrape", scrape)
+    model = ScriptedModel(
+        _reply(_use("1", "search_web", query="q1"), _use("2", "read_page", url="https://a.org/g")),
+        _reply(_use("3", "submit_proposals", authorities=[], guidelines=[])),
+    )
+    await discovery.run_agent("brief", None, converse=model)
+    # Both started before either finished → concurrent, not serial.
+    assert order.index("search-start:q1") < order.index("scrape-end:https://a.org/g")
+    assert order.index("scrape-start:https://a.org/g") < order.index("search-end:q1")
+
+
+async def test_agent_memoizes_duplicate_search_and_scrape(fake_web):
+    model = ScriptedModel(
+        _reply(
+            _use("1", "search_web", query="q"),
+            _use("2", "read_page", url="https://a.org/guide/"),
+        ),
+        _reply(
+            _use("3", "search_web", query="q"),
+            _use("4", "read_page", url="https://a.org/guide"),
+        ),
+        _reply(_use("5", "submit_proposals", authorities=[], guidelines=[])),
+    )
+    await discovery.run_agent("brief", None, converse=model)
+    assert fake_web.calls == [
+        ("search", "q", False, None),
+        ("scrape", "https://a.org/guide/", settings.firecrawl_discovery_max_age_ms),
+    ]
 
 
 async def test_agent_scheduled_mode_limits_search(fake_web):
@@ -164,6 +229,20 @@ async def test_agent_scheduled_mode_limits_search(fake_web):
     )
     await discovery.run_agent("brief", ["a.org"], converse=model)
     assert fake_web.calls == [("search", "q", True, ["a.org"])]
+
+
+async def test_tracking_snapshot_still_scrapes_uncached(monkeypatch):
+    """Update detection must keep maxAge=0 even though discovery may cache."""
+    seen = {}
+
+    async def scrape(url, max_age_ms=0, **_kwargs):
+        seen["max_age_ms"] = max_age_ms
+        return firecrawl.Page(url, "Guide", "content about screening", "text/html")
+
+    monkeypatch.setattr(firecrawl, "scrape", scrape)
+    snap = await tracking.take_snapshot("https://a.org/guide")
+    assert seen["max_age_ms"] == 0
+    assert snap.content.startswith(b"content")
 
 
 async def test_agent_nudges_once_then_fails():
@@ -194,6 +273,21 @@ def test_brief_lists_known_urls_and_scheduled_scope():
     text = discovery.brief(policy, {"https://a.org/g"}, ["a.org"])
     assert "CPT 45378" in text and "Colonoscopy q10y" in text
     assert "- https://a.org/g" in text and "limited to a.org" in text
+
+
+def test_brief_lists_approved_authority_hints_for_interactive():
+    policy = Policy(
+        policy_number="0516", doc_type="medical_clinical_policy_bulletin", title="CRC screening",
+        coverage_effect="covered", effective_date="2026-01-01", document_id="cpb_upload-x",
+        codes=(), criteria=(),
+    )
+    text = discovery.brief(
+        policy, set(), None,
+        authority_hints=[{"authority_id": "uspstf.org", "name": "USPSTF"}],
+    )
+    assert "Approved authorities already in use" in text
+    assert "USPSTF (uspstf.org)" in text
+    assert "limited to" not in text
 
 
 async def test_snapshot_refuses_error_pages(monkeypatch):
