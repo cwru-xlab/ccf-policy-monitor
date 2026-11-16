@@ -126,7 +126,8 @@
 
 /* DEMONSTRATION NOTICE */
 
-.ccf-findings-demo-notice {
+.ccf-findings-demo-notice,
+.ccf-findings-check {
   padding: 16px 20px;
   border: 1px solid #dce7df;
   border-left: 4px solid #688575;
@@ -135,6 +136,44 @@
   color: #526358;
   font-size: 13px;
   line-height: 1.8;
+}
+
+.ccf-findings-check {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ccf-findings-check p {
+  margin: 8px 0 0;
+}
+
+.ccf-findings-check-error {
+  color: #9f2424;
+  white-space: pre-wrap;
+}
+
+.ccf-findings-primary-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.ccf-findings-quotes {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ccf-findings-quotes blockquote {
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 3px solid #c9d8cf;
+  background: #f7faf8;
+  color: #3d4f45;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* SUMMARY STATISTICS */

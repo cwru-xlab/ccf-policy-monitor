@@ -72,6 +72,24 @@
   color: #ffffff;
 }
 
+.ccf-mappings-automation-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: 1px solid #bfd2c5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #286445;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ccf-mappings-automation-link:hover {
+  background: #eef6f0;
+}
+
 /* =========================================
    STATISTICS
    ========================================= */

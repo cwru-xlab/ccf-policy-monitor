@@ -1,6 +1,6 @@
-
 import { useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { uploadGuidelineDocument } from '../api'
 import './DashboardPage.css'
 import './GuidelinesPage.css'
 
@@ -28,6 +28,7 @@ function NewGuidelinePage() {
 
   const [guidelineName, setGuidelineName] = useState('')
   const [selectedFile, setSelectedFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [helpOpen, setHelpOpen] = useState(false)
 
@@ -38,14 +39,15 @@ function NewGuidelinePage() {
 
     const extension = file.name.split('.').pop().toLowerCase()
 
-    if (!['pdf', 'doc', 'docx'].includes(extension)) {
-      setError('Please select a PDF, DOC, or DOCX file.')
+    if (!['pdf', 'docx'].includes(extension)) {
+      setError('Please select a PDF or DOCX file.')
       event.target.value = ''
       setSelectedFile(null)
       return
     }
 
     setSelectedFile({
+      file,
       name: file.name,
       size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
       type: extension.toUpperCase(),
@@ -62,7 +64,7 @@ function NewGuidelinePage() {
     }
   }
 
-  function uploadGuideline(event) {
+  async function uploadGuideline(event) {
     event.preventDefault()
 
     const name = guidelineName.trim()
@@ -77,30 +79,35 @@ function NewGuidelinePage() {
       return
     }
 
-    const now = new Date()
-    const today = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-
-    const newGuideline = {
-      id: Date.now(),
-      name,
-      description: `Guideline document: ${selectedFile.name}`,
-      created: today,
-      createdAge: 'Just now',
-      updated: today,
-      updatedAge: 'Just now',
-      createdAt: now.toISOString(),
-      status: 'In Review',
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size,
-      fileType: selectedFile.type,
-      policyIds: [],
-    }
+    setUploading(true)
+    setError('')
 
     try {
+      const documentId = await uploadGuidelineDocument(selectedFile.file)
+      const now = new Date()
+      const today = now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+
+      const newGuideline = {
+        id: Date.now(),
+        name,
+        description: `Guideline document: ${selectedFile.name}`,
+        created: today,
+        createdAge: 'Just now',
+        updated: today,
+        updatedAge: 'Just now',
+        createdAt: now.toISOString(),
+        status: 'In Review',
+        fileName: selectedFile.name,
+        documentId,
+        fileSize: selectedFile.size,
+        fileType: selectedFile.type,
+        policyIds: [],
+      }
+
       const savedGuidelines = getSavedArray('addedGuidelines')
 
       localStorage.setItem(
@@ -125,11 +132,14 @@ function NewGuidelinePage() {
         JSON.stringify(auditEvents)
       )
 
-      navigate('/guidelines')
-    } catch {
+      navigate(`/guidelines/${newGuideline.id}`)
+    } catch (uploadError) {
       setError(
-        'The guideline could not be saved in this browser. Please try again.'
+        'Unable to upload or save the guideline. ' +
+          (uploadError instanceof Error ? uploadError.message : '')
       )
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -210,6 +220,7 @@ function NewGuidelinePage() {
                 type="text"
                 placeholder="Enter a name for this guideline"
                 value={guidelineName}
+                disabled={uploading}
                 onChange={(event) => {
                   setGuidelineName(event.target.value)
                   setError('')
@@ -220,14 +231,15 @@ function NewGuidelinePage() {
             <section className="ccf-guidelines-form-card">
               <h2>Guideline Document</h2>
               <p>
-                Select a PDF, DOC, or DOCX document from your computer.
+                Select a PDF or DOCX document from your computer.
               </p>
 
               <label className="ccf-guidelines-upload-area">
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf,.docx"
+                  disabled={uploading}
                   onChange={handleFileChange}
                 />
 
@@ -239,7 +251,7 @@ function NewGuidelinePage() {
                 </span>
 
                 <strong>Click to choose a document</strong>
-                <span>PDF, DOC, or DOCX</span>
+                <span>PDF or DOCX</span>
               </label>
 
               {selectedFile && (
@@ -254,6 +266,7 @@ function NewGuidelinePage() {
                   <button
                     type="button"
                     onClick={removeFile}
+                    disabled={uploading}
                   >
                     Remove
                   </button>
@@ -262,10 +275,9 @@ function NewGuidelinePage() {
             </section>
 
             <p className="ccf-guidelines-upload-note">
-              This prototype saves the guideline record in your browser.
-              The actual document is not uploaded to a server.
-              You can associate the guideline with policies later
-              in Document Mappings.
+              The document is uploaded and stored, then the guideline
+              is added to the Guideline Database. You can associate it
+              with policies later in Document Mappings.
             </p>
 
             {error && (
@@ -279,6 +291,7 @@ function NewGuidelinePage() {
                 type="button"
                 className="ccf-guidelines-secondary-button"
                 onClick={() => navigate('/guidelines')}
+                disabled={uploading}
               >
                 Cancel
               </button>
@@ -286,8 +299,9 @@ function NewGuidelinePage() {
               <button
                 type="submit"
                 className="ccf-guidelines-primary-button"
+                disabled={uploading}
               >
-                Upload Guideline
+                {uploading ? 'Uploading…' : 'Upload Guideline'}
               </button>
             </div>
           </form>
@@ -323,14 +337,13 @@ function NewGuidelinePage() {
             </div>
 
             <p>
-              Enter a guideline name and choose a PDF, DOC,
-              or DOCX document.
+              Enter a guideline name and choose a PDF or DOCX document.
             </p>
 
             <p>
-              The guideline will appear in the Guideline Database
-              after you click Upload Guideline. This prototype
-              stores document metadata locally, not the file itself.
+              Upload Guideline stores the file and adds the guideline
+              to the Guideline Database. You can open it from the list
+              and map it to policies afterward.
             </p>
 
             <button

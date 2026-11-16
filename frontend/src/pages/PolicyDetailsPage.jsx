@@ -1,6 +1,8 @@
 
 import { useState } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
+import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
+import { originalGuidelines } from '../data/guidelines'
 import { getGuidelinesForPolicy } from '../data/guidelineMappings'
 import './DashboardPage.css'
 import './PolicyDetailsPage.css'
@@ -54,39 +56,6 @@ const originalPolicies = [
     description: 'Policy review for mental health services and treatment.',
     created: 'Aug 28, 2026',
     status: 'Completed',
-  },
-]
-
-const originalGuidelines = [
-  {
-    id: 1,
-    name: 'Cardiac Coverage Guideline',
-    description: 'Policy review for cardiac procedures and treatments.',
-    created: 'Sep 23, 2026',
-  },
-  {
-    id: 2,
-    name: 'Diabetes Treatment Guideline',
-    description: 'Policy review for diabetes management and treatment.',
-    created: 'Sep 18, 2026',
-  },
-  {
-    id: 3,
-    name: 'Oncology Coverage Guideline',
-    description: 'Policy review for oncology services and treatments.',
-    created: 'Sep 10, 2026',
-  },
-  {
-    id: 4,
-    name: 'Orthopedic Surgery Guideline',
-    description: 'Policy review for orthopedic procedures and rehab.',
-    created: 'Sep 5, 2026',
-  },
-  {
-    id: 5,
-    name: 'Mental Health Guideline',
-    description: 'Policy review for mental health services and treatment.',
-    created: 'Aug 28, 2026',
   },
 ]
 
@@ -408,11 +377,11 @@ function PolicyDetailsPage() {
           </div>
         </div>
 
-        <p className="ccf-policy-details-file-note">
-          The filename is shown for reference. The original
-          document can only be opened when its file is
-          available through the application.
-        </p>
+        <PolicyDocumentViewer
+          key={policy.id}
+          documentId={policy.documentId}
+          fileName={policy.fileName}
+        />
       </section>
 
       {/* ASSOCIATED GUIDELINES */}

@@ -15,6 +15,7 @@ yet.
   [docs/BACKEND_SPEC.pdf](docs/BACKEND_SPEC.pdf)) — tables, keys, object storage, pipelines, API.
 - **Ingestion spec:** [docs/INGESTION_SPEC.md](docs/INGESTION_SPEC.md) — what each provider returns and the pydantic model that validates it.
 - **Frontend spec:** [docs/FRONTEND_SPEC.md](docs/FRONTEND_SPEC.md) — proposed review UI.
+- **Mapping engine spec:** [docs/MAPPING_ENGINE_SPEC.md](docs/MAPPING_ENGINE_SPEC.md) — agentic guideline discovery (Firecrawl), approvals, update tracking and the schedule.
 
 ## Setup
 
@@ -33,12 +34,19 @@ curl -X POST localhost:8000/guidelines/atomize
 curl -F files=@cpb_0584.pdf localhost:8000/policies/documents
 curl -X POST localhost:8000/policies/parse
 curl localhost:8000/jobs/<job_id>
+
+# mapping engine (needs FIRECRAWL_API_KEY)
+curl -X POST localhost:8000/mapping/discover -H 'Content-Type: application/json' \
+     -d '{"policy_document_id": "cpb_upload-<sha16>"}'
+curl 'localhost:8000/mapping/proposals?status=proposed'
 ```
 
 ## Development
 
 ```bash
 uv run pytest                  # offline: models, connectors against captured fixtures
+# mapping-engine API tests also run against a disposable Postgres+pgvector database:
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/policy_radar uv run pytest
 uv run pytest -m live          # real requests to the keyless endpoints, 3 records each
 uv run python scripts/capture_fixtures.py   # re-capture tests/fixtures from the live APIs
 uv run ruff check .

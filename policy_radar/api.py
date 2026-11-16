@@ -4,14 +4,18 @@ Pipelines run as FastAPI background tasks inside this process and report through
 ``job`` table; a job still running when the process stops is left in ``running``.
 """
 
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
+from fastapi.responses import Response
+from pydantic import BaseModel, Field
 
-from policy_radar import db, pipelines
-from policy_radar.enums import JobKind, JobStatus
+from policy_radar import conflicts, db, mapping_api, pipelines, scheduler, storage
+from policy_radar.enums import JobKind
+from policy_radar.jobs import start as _start
 from policy_radar.models import Source
 from policy_radar.sources import SOURCES
 
@@ -29,27 +33,16 @@ CPB_MEDIA_TYPES = UPLOAD_MEDIA_TYPES
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     await db.open_pool()
+    schedule = asyncio.create_task(scheduler.loop())
     yield
+    schedule.cancel()
+    with suppress(asyncio.CancelledError):
+        await schedule
     await db.close_pool()
 
 
 app = FastAPI(title="Policy Radar", lifespan=lifespan)
-
-
-async def _run(job_id: str, work) -> None:
-    """Run one pipeline coroutine and record its outcome on the job row."""
-    await db.set_job(job_id, JobStatus.RUNNING)
-    try:
-        await db.set_job(job_id, JobStatus.SUCCEEDED, await work)
-    except Exception as e:
-        log.exception("job %s failed", job_id)
-        await db.set_job(job_id, JobStatus.FAILED, error=f"{type(e).__name__}: {e}")
-
-
-async def _start(tasks: BackgroundTasks, kind: JobKind, detail: dict, work) -> dict:
-    job_id = await db.create_job(kind, detail)
-    tasks.add_task(_run, job_id, work)
-    return {"job_id": job_id}
+app.include_router(mapping_api.router)
 
 
 @app.get("/health")
@@ -95,8 +88,18 @@ async def upload_guidelines(
         media_type = (f.content_type or "").split(";")[0]
         if media_type not in UPLOAD_MEDIA_TYPES:
             raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
-        doc = await pipelines.store_document(source_key, await f.read(), media_type, origin_url=None)
-        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+        content = await f.read()
+        doc = await pipelines.store_document(source_key, content, media_type, origin_url=None)
+        if doc:
+            stored.append(doc.document_id)
+        else:
+            _, sha = storage.object_key(source_key, content, media_type)
+            duplicates.append(f"{source_key}-{sha[:16]}")
+        print(
+            f"Guideline stored: {f.filename}. Upload does not run LLM extraction; "
+            "POST /guidelines/atomize starts extraction and prints its structured output.",
+            flush=True,
+        )
     return {"stored": stored, "duplicates": duplicates}
 
 
@@ -109,6 +112,24 @@ async def atomize(tasks: BackgroundTasks) -> dict:
 @app.get("/guidelines")
 async def list_guidelines() -> list[dict]:
     return await db.list_guidelines()
+
+
+@app.get("/guidelines/documents/{document_id}")
+async def view_guideline_document(document_id: str):
+    """Return the stored guideline PDF, without requiring atomization."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key == db.CPB_SOURCE_KEY:
+        raise HTTPException(404, "guideline document not found")
+    if doc.media_type != "application/pdf":
+        raise HTTPException(415, "In-app preview is available for PDF documents only.")
+    try:
+        content = storage.get(doc.storage_uri)
+    except FileNotFoundError:
+        raise HTTPException(404, "guideline document file not found") from None
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": 'inline; filename="guideline.pdf"',
+        "X-Content-Type-Options": "nosniff",
+    })
 
 
 @app.get("/guidelines/{guideline_id}")
@@ -124,16 +145,36 @@ async def get_guideline(guideline_id: str):
 
 @app.post("/policies/documents", status_code=201)
 async def upload_policies(files: list[UploadFile]) -> dict:
-    """Store uploaded CPB files as source documents. Parse them with POST /policies/parse."""
+    """Store uploaded CPB files as source documents. Parse them with POST /policies/parse.
+
+    Both lists hold document ids, so a re-uploaded file can be found and re-parsed."""
     stored, duplicates = [], []
     for f in files:
         media_type = (f.content_type or "").split(";")[0]
         if media_type not in UPLOAD_MEDIA_TYPES:
             raise HTTPException(415, f"{f.filename}: expected one of {sorted(UPLOAD_MEDIA_TYPES)}")
-        doc = await pipelines.store_document(
-            db.CPB_SOURCE_KEY, await f.read(), media_type, origin_url=None
-        )
-        (stored if doc else duplicates).append(doc.document_id if doc else f.filename)
+        content = await f.read()
+        doc = await pipelines.store_document(db.CPB_SOURCE_KEY, content, media_type, origin_url=None)
+        if doc:
+            stored.append(doc.document_id)
+            print(f"Policy uploaded: {doc.document_id}; awaiting LLM parsing.", flush=True)
+        else:
+            _, sha = storage.object_key(db.CPB_SOURCE_KEY, content, media_type)
+            document_id = f"{db.CPB_SOURCE_KEY}-{sha[:16]}"
+            duplicates.append(document_id)
+            existing = next(
+                (p for p in await db.list_policies() if p["document_id"] == document_id),
+                None,
+            )
+            if existing:
+                policy = await db.get_policy(existing["policy_number"])
+                if policy is not None:
+                    print(
+                        f"\n--- Cached structured policy output: {document_id} ---\n"
+                        f"{policy.model_dump_json(indent=2)}\n"
+                        "--- End cached output (no new LLM call) ---",
+                        flush=True,
+                    )
     return {"stored": stored, "duplicates": duplicates}
 
 
@@ -141,6 +182,24 @@ async def upload_policies(files: list[UploadFile]) -> dict:
 async def parse(tasks: BackgroundTasks) -> dict:
     """Parse every uploaded CPB not yet parsed into a Policy."""
     return await _start(tasks, JobKind.PARSE_CPB, {}, pipelines.parse_pending_cpbs())
+
+
+@app.get("/policies/documents/{document_id}")
+async def view_policy_document(document_id: str):
+    """Return an uploaded policy PDF, independently of its parse status."""
+    doc = await db.get_source_document(document_id)
+    if doc is None or doc.source_key != db.CPB_SOURCE_KEY:
+        raise HTTPException(404, "policy document not found")
+    if doc.media_type != "application/pdf":
+        raise HTTPException(415, "In-app preview is available for PDF documents only.")
+    try:
+        content = storage.get(doc.storage_uri)
+    except FileNotFoundError:
+        raise HTTPException(404, "policy document file not found") from None
+    return Response(content, media_type="application/pdf", headers={
+        "Content-Disposition": 'inline; filename="policy.pdf"',
+        "X-Content-Type-Options": "nosniff",
+    })
 
 
 @app.get("/policies")
@@ -154,6 +213,41 @@ async def get_policy(policy_number: str):
     if p is None:
         raise HTTPException(404, "policy not found")
     return p
+
+
+# --- conflicts ------------------------------------------------------------------
+
+
+class ConflictCheck(BaseModel):
+    """One guideline and the policies the user linked to it, by stored document id (the id
+    both upload endpoints return, and the one the frontend keeps)."""
+
+    guideline_document_id: str = Field(min_length=1)
+    policy_document_ids: list[str] = Field(min_length=1)
+
+
+@app.post("/conflicts")
+async def check_conflicts(req: ConflictCheck) -> list[conflicts.ConflictReport]:
+    """Check each linked policy against the guideline and return (and store) its conflicts.
+
+    Runs synchronously: one LLM call per policy, in parallel. A document not yet atomized or
+    parsed is extracted first. Only the policies named here are ever compared."""
+    try:
+        guideline = await pipelines.guideline_for_document(req.guideline_document_id)
+        if guideline is None:
+            raise HTTPException(404, f"guideline document {req.guideline_document_id!r} not found")
+        policies = []
+        for document_id in dict.fromkeys(req.policy_document_ids):
+            policy = await pipelines.policy_for_document(document_id)
+            if policy is None:
+                raise HTTPException(404, f"policy document {document_id!r} not found")
+            policies.append(policy)
+        return await asyncio.gather(*(conflicts.check(guideline, p) for p in policies))
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.exception("conflict check failed")
+        raise HTTPException(502, f"conflict check failed: {type(e).__name__}: {e}") from e
 
 
 # --- jobs -------------------------------------------------------------------------

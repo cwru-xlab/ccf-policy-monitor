@@ -38,7 +38,8 @@ values
     ('cdc_acip_child', 'CDC ACIP child and adolescent immunization schedule', 'CDC Advisory Committee on Immunization Practices', 'federal_recommendation', 'preventive_recommendation_change', 'https://www.cdc.gov/vaccines/hcp/imz-schedules/child-adolescent-age.html'),
     ('pubmed', 'PubMed practice guidelines', 'Medical societies and expert panels, indexed by the National Library of Medicine', 'medical_society', 'specialty_guideline_update', 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'),
     ('cpb_upload', 'Uploaded payer CPBs', 'Payer (uploaded by a user)', 'payer_policy', null, null),
-    ('guideline_upload', 'Uploaded Guideline', 'Manual Upload', 'medical_society', 'specialty_guideline_update', null)
+    ('guideline_upload', 'Uploaded Guideline', 'Manual Upload', 'medical_society', 'specialty_guideline_update', null),
+    ('web_discovery', 'Guidelines found by the mapping engine', 'Publishing body named on each tracked_source', 'medical_society', 'specialty_guideline_update', 'https://api.firecrawl.dev/v2')
 on conflict (source_key) do update set
     name = excluded.name, authority = excluded.authority,
     authority_kind = excluded.authority_kind, trigger_type = excluded.trigger_type,
@@ -54,6 +55,7 @@ create table if not exists source_document (
     content_sha256  char(64) not null,
     media_type      text not null,                  -- e.g. 'application/pdf'
     origin_url      text,
+    file_name       text,
     unique (source_key, content_sha256)
 );
 
@@ -179,10 +181,32 @@ create table if not exists criterion_match (
     unique nulls not distinct (guideline_criterion_id, policy_number, policy_criterion_id)
 );
 
+-- One guideline criterion that a user-linked policy covers more narrowly than recommended,
+-- or not at all (category 'coverage_gap', the only one with a null policy_criterion_id).
+-- Written by POST /conflicts; re-checking a (guideline, policy) pair replaces its rows.
+create table if not exists criterion_conflict (
+    conflict_id             bigint generated always as identity primary key,
+    guideline_criterion_id  text not null references guideline_criterion on delete cascade,
+    policy_number           text not null references policy on delete cascade,
+    policy_criterion_id     text references policy_criterion on delete cascade,
+    category                text not null check (category in (
+        'coverage_gap', 'opposite_stance', 'excluded_service', 'narrower_population',
+        'frequency_limit', 'prior_authorization', 'other_restriction')),
+    explanation             text not null,
+    guideline_quote         text not null,
+    policy_quote            text,
+    model                   text not null,                -- Bedrock model id that judged it
+    checked_at              timestamptz not null default now(),
+    check ((category = 'coverage_gap') = (policy_criterion_id is null)),
+    check ((policy_quote is null) = (policy_criterion_id is null))
+);
+create index if not exists criterion_conflict_policy_idx on criterion_conflict (policy_number);
+
 -- Status of one background pipeline run. Jobs run in the API process.
 create table if not exists job (
     job_id       text primary key,
-    kind         text not null check (kind in ('ingest', 'atomize', 'parse_cpb')),
+    kind         text not null check (kind in (
+        'ingest', 'atomize', 'parse_cpb', 'discover', 'check_updates', 'scheduled_run')),
     status       text not null default 'queued' check (status in (
         'queued', 'running', 'succeeded', 'failed')),
     detail       jsonb not null default '{}',       -- inputs and result counts
@@ -190,3 +214,71 @@ create table if not exists job (
     created_at   timestamptz not null default now(),
     finished_at  timestamptz
 );
+
+-- A table created before the mapping engine keeps its old inline kind check; replace it.
+alter table job drop constraint if exists job_kind_check;
+alter table job add constraint job_kind_check check (kind in (
+    'ingest', 'atomize', 'parse_cpb', 'discover', 'check_updates', 'scheduled_run'));
+
+-- ---- Mapping engine (docs/MAPPING_ENGINE_SPEC.md) ------------------------------------
+
+-- A body that publishes guidelines, keyed by its web domain. Proposed by discovery;
+-- approved authorities scope scheduled discovery.
+create table if not exists authority (
+    authority_id  text primary key,                 -- domain, e.g. 'uspreventiveservicestaskforce.org'
+    name          text not null,
+    homepage_url  text not null,
+    rationale     text not null,
+    status        text not null default 'proposed' check (status in (
+        'proposed', 'approved', 'rejected')),
+    proposed_at   timestamptz not null default now(),
+    decided_at    timestamptz
+);
+
+-- One guideline URL. Tracked when it has an approved mapping and is not paused.
+create table if not exists tracked_source (
+    source_id        text primary key,               -- sha256(normalized url)[:16]
+    url              text not null unique,           -- normalized (mapping.normalize_url)
+    title            text not null,
+    authority_id     text references authority on delete set null,
+    paused           boolean not null default false,
+    content_sha256   char(64),                       -- of the last fetch (see tracking.check_source)
+    document_id      text references source_document,  -- current snapshot
+    created_at       timestamptz not null default now(),
+    last_checked_at  timestamptz,
+    last_changed_at  timestamptz
+);
+
+-- A guideline URL proposed for, or mapped to, one policy (its uploaded CPB document).
+create table if not exists source_mapping (
+    source_id           text not null references tracked_source on delete cascade,
+    policy_document_id  text not null references source_document on delete cascade,
+    rationale           text not null,
+    origin              text not null check (origin in ('discovery', 'scheduled', 'manual')),
+    status              text not null default 'proposed' check (status in (
+        'proposed', 'approved', 'rejected')),
+    proposed_at         timestamptz not null default now(),
+    decided_at          timestamptz,
+    primary key (source_id, policy_document_id)
+);
+
+-- One material change detected on a tracked source; a notification until read.
+create table if not exists guideline_change (
+    change_id             bigint generated always as identity primary key,
+    source_id             text not null references tracked_source on delete cascade,
+    previous_document_id  text references source_document,
+    document_id           text not null references source_document,
+    summary               text not null,
+    detected_at           timestamptz not null default now(),
+    read_at               timestamptz
+);
+
+-- The single schedule for discovery and update detection.
+create table if not exists discovery_schedule (
+    id              boolean primary key default true check (id),
+    enabled         boolean not null default false,
+    interval_hours  int not null default 168 check (interval_hours between 1 and 8760),
+    last_run_at     timestamptz,
+    next_run_at     timestamptz
+);
+insert into discovery_schedule (id) values (true) on conflict do nothing;
