@@ -1,6 +1,9 @@
 
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, NavLink, useParams } from 'react-router-dom'
 import { getGuidelinesForPolicy } from '../data/guidelineMappings'
+import './DashboardPage.css'
+import './PolicyDetailsPage.css'
 
 function getSavedArray(key) {
   try {
@@ -11,114 +14,257 @@ function getSavedArray(key) {
   }
 }
 
+const originalPolicies = [
+  {
+    id: 1,
+    name: 'Cardiac Coverage Policy',
+    fileName: 'Cardiac_Coverage_Policy_v4.pdf',
+    description: 'Policy review for cardiac procedures and treatments.',
+    created: 'Sep 23, 2026',
+    status: 'In Review',
+  },
+  {
+    id: 2,
+    name: 'Diabetes Treatment Policy',
+    fileName: 'Diabetes_Treatment_Policy_v3.pdf',
+    description: 'Policy review for diabetes management and treatment.',
+    created: 'Sep 18, 2026',
+    status: 'Completed',
+  },
+  {
+    id: 3,
+    name: 'Oncology Coverage Policy',
+    fileName: 'Oncology_Policy_v2.pdf',
+    description: 'Policy review for oncology services and treatments.',
+    created: 'Sep 10, 2026',
+    status: 'Completed',
+  },
+  {
+    id: 4,
+    name: 'Orthopedic Surgery Policy',
+    fileName: 'Ortho_Surgery_Policy_v5.pdf',
+    description: 'Policy review for orthopedic procedures and rehab.',
+    created: 'Sep 5, 2026',
+    status: 'In Review',
+  },
+  {
+    id: 5,
+    name: 'Mental Health Coverage Policy',
+    fileName: 'Mental_Health_Policy_v3.pdf',
+    description: 'Policy review for mental health services and treatment.',
+    created: 'Aug 28, 2026',
+    status: 'Completed',
+  },
+]
+
+const originalGuidelines = [
+  {
+    id: 1,
+    name: 'Cardiac Coverage Guideline',
+    description: 'Policy review for cardiac procedures and treatments.',
+    created: 'Sep 23, 2026',
+  },
+  {
+    id: 2,
+    name: 'Diabetes Treatment Guideline',
+    description: 'Policy review for diabetes management and treatment.',
+    created: 'Sep 18, 2026',
+  },
+  {
+    id: 3,
+    name: 'Oncology Coverage Guideline',
+    description: 'Policy review for oncology services and treatments.',
+    created: 'Sep 10, 2026',
+  },
+  {
+    id: 4,
+    name: 'Orthopedic Surgery Guideline',
+    description: 'Policy review for orthopedic procedures and rehab.',
+    created: 'Sep 5, 2026',
+  },
+  {
+    id: 5,
+    name: 'Mental Health Guideline',
+    description: 'Policy review for mental health services and treatment.',
+    created: 'Aug 28, 2026',
+  },
+]
+
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
+function formatDate(value) {
+  if (!value) return 'Date unavailable'
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+function getDecisionRationale(version) {
+  const possibleFields = [
+    version.decisionRationale,
+    version.rationale,
+    version.reason,
+    version.reasoning,
+    version.explanation,
+    version.justification,
+  ]
+
+  return possibleFields.find(
+    (value) => typeof value === 'string' && value.trim()
+  ) || null
+}
+
+function WorkspaceLayout({ children }) {
+  const [helpOpen, setHelpOpen] = useState(false)
+
+  return (
+    <div className="app-page ccf-dashboard ccf-policy-details-page">
+      <header className="top-bar">
+        <div className="brand-area">
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
+          <span className="workspace-name">
+            Insurance Policy Review Workspace
+          </span>
+        </div>
+
+        <div className="top-right">
+          <button
+            type="button"
+            className="ccf-help-button"
+            aria-label="Help with policy details"
+            title="Help with policy details"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
+
+          <div className="user-area">
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
+          </div>
+        </div>
+      </header>
+
+      <div className="app-body">
+        <aside className="sidebar" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </aside>
+
+        <main className="ccf-policy-details-content">
+          {children}
+        </main>
+      </div>
+
+      {helpOpen && (
+        <div
+          className="ccf-policy-details-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-policy-details-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="policy-details-help-title"
+          >
+            <div className="ccf-policy-details-dialog-header">
+              <h2 id="policy-details-help-title">
+                Understanding Policy Details
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              This page displays information about an insurance
+              policy, its associated guidelines, and its saved
+              edited versions.
+            </p>
+
+            <ol>
+              <li>
+                <strong>Policy Information:</strong> View the
+                original file name, creation date, and number
+                of saved versions.
+              </li>
+              <li>
+                <strong>Associated Guidelines:</strong> See
+                the guidelines currently mapped to this policy.
+              </li>
+              <li>
+                <strong>Version History:</strong> View policy
+                edits saved during review sessions.
+              </li>
+              <li>
+                <strong>Decision Rationale:</strong> Read the
+                reason for a change when it was recorded.
+              </li>
+            </ol>
+
+            <p>
+              To change guideline associations, visit{' '}
+              <Link
+                to="/mappings"
+                onClick={() => setHelpOpen(false)}
+              >
+                Document Mappings
+              </Link>.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-policy-details-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PolicyDetailsPage() {
   const { policyId } = useParams()
-
-  // ==========================================
-  // ORIGINAL POLICIES
-  // ==========================================
-
-  const originalPolicies = [
-    {
-      id: 1,
-      name: 'Cardiac Coverage Policy',
-      fileName: 'Cardiac_Coverage_Policy_v4.pdf',
-      description:
-        'Policy review for cardiac procedures and treatments.',
-      created: 'Sep 23, 2026',
-      status: 'In Review',
-    },
-    {
-      id: 2,
-      name: 'Diabetes Treatment Policy',
-      fileName: 'Diabetes_Treatment_Policy_v3.pdf',
-      description:
-        'Policy review for diabetes management and treatment.',
-      created: 'Sep 18, 2026',
-      status: 'Completed',
-    },
-    {
-      id: 3,
-      name: 'Oncology Coverage Policy',
-      fileName: 'Oncology_Policy_v2.pdf',
-      description:
-        'Policy review for oncology services and treatments.',
-      created: 'Sep 10, 2026',
-      status: 'Completed',
-    },
-    {
-      id: 4,
-      name: 'Orthopedic Surgery Policy',
-      fileName: 'Ortho_Surgery_Policy_v5.pdf',
-      description:
-        'Policy review for orthopedic procedures and rehab.',
-      created: 'Sep 5, 2026',
-      status: 'In Review',
-    },
-    {
-      id: 5,
-      name: 'Mental Health Coverage Policy',
-      fileName: 'Mental_Health_Policy_v3.pdf',
-      description:
-        'Policy review for mental health services and treatment.',
-      created: 'Aug 28, 2026',
-      status: 'Completed',
-    },
-  ]
-
-  // ==========================================
-  // ORIGINAL GUIDELINES
-  // ==========================================
-
-  // These match the original guideline records
-  // used by GuidelinesPage.jsx.
-
-  const originalGuidelines = [
-    {
-      id: 1,
-      name: 'Cardiac Coverage Guideline',
-      description:
-        'Policy review for cardiac procedures and treatments.',
-      created: 'Sep 23, 2026',
-      status: 'In Review',
-    },
-    {
-      id: 2,
-      name: 'Diabetes Treatment Guideline',
-      description:
-        'Policy review for diabetes management and treatment.',
-      created: 'Sep 18, 2026',
-      status: 'Completed',
-    },
-    {
-      id: 3,
-      name: 'Oncology Coverage Guideline',
-      description:
-        'Policy review for oncology services and treatments.',
-      created: 'Sep 10, 2026',
-      status: 'Completed',
-    },
-    {
-      id: 4,
-      name: 'Orthopedic Surgery Guideline',
-      description:
-        'Policy review for orthopedic procedures and rehab.',
-      created: 'Sep 5, 2026',
-      status: 'In Review',
-    },
-    {
-      id: 5,
-      name: 'Mental Health Guideline',
-      description:
-        'Policy review for mental health services and treatment.',
-      created: 'Aug 28, 2026',
-      status: 'Completed',
-    },
-  ]
-
-  // ==========================================
-  // LOAD POLICIES
-  // ==========================================
 
   const uploadedPolicies = getSavedArray('addedPolicies').map(
     (policy) => ({
@@ -145,17 +291,10 @@ function PolicyDetailsPage() {
     (item) => String(item.id) === String(policyId)
   )
 
-  // ==========================================
-  // LOAD GUIDELINES
-  // ==========================================
-
-  const addedGuidelines = getSavedArray('addedGuidelines')
-  const deletedGuidelineIds = getSavedArray(
-    'deletedGuidelineIds'
-  )
+  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
 
   const allGuidelines = [
-    ...addedGuidelines,
+    ...getSavedArray('addedGuidelines'),
     ...originalGuidelines,
   ].filter(
     (guideline) =>
@@ -164,22 +303,12 @@ function PolicyDetailsPage() {
       )
   )
 
-  // ==========================================
-  // FIND ASSOCIATED GUIDELINES
-  // ==========================================
-
   const associatedGuidelines = policy
     ? getGuidelinesForPolicy(policy, allGuidelines)
     : []
 
-  // ==========================================
-  // GET SAVED POLICY VERSIONS
-  // ==========================================
-
-  const policyVersions = getSavedArray('policyVersions')
-
   const versions = policy
-    ? policyVersions
+    ? getSavedArray('policyVersions')
         .filter(
           (version) =>
             version.originalPolicy === policy.fileName ||
@@ -187,456 +316,277 @@ function PolicyDetailsPage() {
         )
         .sort(
           (a, b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
+            (new Date(b.createdAt).getTime() || 0) -
+            (new Date(a.createdAt).getTime() || 0)
         )
     : []
 
-  // ==========================================
-  // POLICY NOT FOUND
-  // ==========================================
-
   if (!policy) {
     return (
-      <div className="app-page">
-        <header className="top-bar">
-          <div className="brand-area">
-            <span className="brand-name">
-              Policy Review
-            </span>
-            <span className="brand-divider"></span>
-            <span className="workspace-name">
-              Policy Review Workspace
-            </span>
-          </div>
-        </header>
+      <WorkspaceLayout>
+        <Link to="/policies" className="ccf-policy-details-back">
+          ← Back to Policy Database
+        </Link>
 
-        <div className="app-body">
-          <aside className="sidebar">
-            <Link to="/dashboard" className="nav-item">
-              Dashboard
-            </Link>
-            <Link to="/reviews" className="nav-item">
-              Review Sessions
-            </Link>
-            <Link
-              to="/policies"
-              className="nav-item active"
-            >
-              Policy Database
-            </Link>
-            <Link to="/guidelines" className="nav-item">
-              Guideline Database
-            </Link>
+        <section className="ccf-policy-details-card">
+          <h1>Policy Not Found</h1>
+          <p>
+            This policy could not be found. It may have been
+            deleted or its link may be incorrect.
+          </p>
 
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
+          <Link to="/policies" className="ccf-policy-details-link">
+            Return to Policy Database
           </Link>
-            <Link to="/audit-log" className="nav-item">
-              Audit Log
-            </Link>
-          </aside>
-
-          <main className="policy-details-content">
-            <Link
-              to="/policies"
-              className="back-link"
-            >
-              ← Back to Policies
-            </Link>
-
-            <h1>Policy Not Found</h1>
-            <p>This policy could not be found.</p>
-          </main>
-        </div>
-      </div>
+        </section>
+      </WorkspaceLayout>
     )
   }
 
-  // ==========================================
-  // PAGE
-  // ==========================================
-
   return (
-    <div className="app-page">
-      {/* TOP BAR */}
+    <WorkspaceLayout>
+      <Link to="/policies" className="ccf-policy-details-back">
+        ← Back to Policy Database
+      </Link>
 
-      <header className="top-bar">
-        <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-          <span className="brand-divider"></span>
-          <span className="workspace-name">
-            Policy Review Workspace
-          </span>
+      <div className="ccf-policy-details-heading">
+        <div>
+          <h1>{policy.name}</h1>
+          <p>
+            {policy.description ||
+              'Insurance policy information and review history.'}
+          </p>
         </div>
 
-        <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-            <input
-              type="text"
-              placeholder="Search policies, codes..."
-            />
-          </div>
-
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
-
-          <div className="user-area">
-            <div className="user-avatar">SC</div>
-            <span>Sarah Chen</span>
-          </div>
-        </div>
-      </header>
-
-      <div className="app-body">
-        {/* SIDEBAR */}
-
-        <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-          <Link to="/reviews" className="nav-item">
-            Review Sessions
-          </Link>
-          <Link
-            to="/policies"
-            className="nav-item active"
-          >
-            Policy Database
-          </Link>
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-          <Link to="/audit-log" className="nav-item">
-            Audit Log
-          </Link>
-        </aside>
-
-        {/* MAIN CONTENT */}
-
-        <main className="policy-details-content">
-          <Link
-            to="/policies"
-            className="back-link"
-          >
-            ← Back to Policies
-          </Link>
-
-          <div className="policy-details-heading">
-            <div>
-              <h1>{policy.name}</h1>
-              <p>{policy.description}</p>
-            </div>
-
-            <span
-              className={
-                policy.status === 'Completed'
-                  ? 'status completed'
-                  : 'status in-review'
-              }
-            >
-              {policy.status}
-            </span>
-          </div>
-
-          {/* ==================================
-              POLICY INFORMATION
-          ================================== */}
-
-          <section className="policy-details-card">
-            <h2>Policy Information</h2>
-
-            <div className="policy-information-grid">
-              <div>
-                <span className="policy-detail-label">
-                  POLICY FILE
-                </span>
-                <strong>{policy.fileName}</strong>
-              </div>
-
-              <div>
-                <span className="policy-detail-label">
-                  DATE CREATED
-                </span>
-                <strong>{policy.created}</strong>
-              </div>
-
-              <div>
-                <span className="policy-detail-label">
-                  SAVED VERSIONS
-                </span>
-                <strong>{versions.length}</strong>
-              </div>
-            </div>
-          </section>
-
-          {/* ==================================
-              NEW: ASSOCIATED GUIDELINES
-          ================================== */}
-
-          <section className="policy-details-card">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '16px',
-                flexWrap: 'wrap',
-                marginBottom: '10px',
-              }}
-            >
-              <h2 style={{ margin: 0 }}>
-                Associated Guidelines
-              </h2>
-
-              <span
-                style={{
-                  background: '#eaf4fb',
-                  color: '#0078bf',
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                }}
-              >
-                {associatedGuidelines.length}{' '}
-                {associatedGuidelines.length === 1
-                  ? 'Guideline'
-                  : 'Guidelines'}
-              </span>
-            </div>
-
-            <p
-              style={{
-                fontSize: '13px',
-                color: '#64748b',
-                lineHeight: '1.6',
-                marginBottom: '18px',
-              }}
-            >
-              These reference guidelines are associated
-              with this policy and are automatically
-              included when the policy is selected for
-              a review session.
-            </p>
-
-            {associatedGuidelines.length === 0 ? (
-              <div
-                style={{
-                  padding: '22px',
-                  border: '1px dashed #cbd5e1',
-                  borderRadius: '6px',
-                  color: '#64748b',
-                  fontSize: '13px',
-                }}
-              >
-                No guidelines are currently mapped to
-                this policy.
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px',
-                }}
-              >
-                {associatedGuidelines.map((guideline) => (
-                  <div
-                    key={guideline.id}
-                    style={{
-                      padding: '16px 18px',
-                      border: '1px solid #d9e3eb',
-                      borderLeft: '4px solid #0078bf',
-                      borderRadius: '6px',
-                      background: '#f8fbfd',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: '15px',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <strong
-                          style={{
-                            display: 'block',
-                            fontSize: '14px',
-                            marginBottom: '6px',
-                            color: '#1f2937',
-                          }}
-                        >
-                          {guideline.name}
-                        </strong>
-
-                        <p
-                          style={{
-                            margin: '0 0 8px',
-                            fontSize: '13px',
-                            color: '#64748b',
-                            lineHeight: '1.6',
-                          }}
-                        >
-                          {guideline.description ||
-                            'Reference guideline associated with this policy.'}
-                        </p>
-
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: '#64748b',
-                          }}
-                        >
-                          Added:{' '}
-                          {guideline.created ||
-                            guideline.date ||
-                            'Date unavailable'}
-                        </span>
-                      </div>
-
-                      <span
-                        style={{
-                          padding: '5px 10px',
-                          borderRadius: '15px',
-                          background: '#e5f4ea',
-                          color: '#287447',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Associated
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Manual mapping is the next feature.
-                We will add a working Manage Guideline
-                Mappings button in the next step. */}
-          </section>
-
-          {/* ==================================
-              VERSION HISTORY
-          ================================== */}
-
-          <section className="policy-details-card">
-            <h2>Version History</h2>
-
-            <p className="policy-version-description">
-              View edited versions of this policy that
-              were saved during policy review.
-            </p>
-
-            {versions.length === 0 ? (
-              <div className="no-policy-versions">
-                <strong>
-                  No edited versions yet
-                </strong>
-
-                <p>
-                  Edited versions will appear here after
-                  changes are saved from a policy review.
-                </p>
-              </div>
-            ) : (
-              <div className="policy-version-list">
-                {versions.map((version, index) => {
-                  const versionNumber =
-                    versions.length - index
-
-                  const savedDate = new Date(
-                    version.createdAt
-                  ).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })
-
-                  return (
-                    <div
-                      className="policy-version-card"
-                      key={version.id}
-                    >
-                      <div className="policy-version-header">
-                        <div>
-                          <strong>
-                            Version {versionNumber}
-                          </strong>
-
-                          <span>
-                            Saved {savedDate}
-                          </span>
-                        </div>
-
-                        {index === 0 && (
-                          <span className="latest-version-badge">
-                            Latest
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="policy-version-meta">
-                        {version.guideline && (
-                          <div>
-                            <span>GUIDELINE</span>
-                            <strong>
-                              {version.guideline}
-                            </strong>
-                          </div>
-                        )}
-
-                        {version.criterion && (
-                          <div>
-                            <span>POLICY CRITERION</span>
-                            <strong>
-                              {version.criterion}
-                            </strong>
-                          </div>
-                        )}
-
-                        {version.priority && (
-                          <div>
-                            <span>PRIORITY</span>
-                            <strong>
-                              {version.priority}
-                            </strong>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="policy-version-content">
-                        <span>
-                          SAVED POLICY CONTENT
-                        </span>
-
-                        <pre>
-                          {version.content}
-                        </pre>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-        </main>
+        <span
+          className={`ccf-policy-details-status ${
+            policy.status === 'Completed'
+              ? 'completed'
+              : 'in-review'
+          }`}
+        >
+          {policy.status}
+        </span>
       </div>
-    </div>
+
+      {/* POLICY INFORMATION */}
+
+      <section className="ccf-policy-details-card">
+        <div className="ccf-policy-details-section-heading">
+          <div>
+            <h2>Policy Information</h2>
+            <p>
+              General information about this policy record.
+            </p>
+          </div>
+        </div>
+
+        <div className="ccf-policy-details-info-grid">
+          <div>
+            <span>POLICY FILE</span>
+            <strong>
+              {policy.fileName || 'Not available'}
+            </strong>
+            <small>
+              Original document filename
+            </small>
+          </div>
+
+          <div>
+            <span>DATE CREATED</span>
+            <strong>
+              {policy.created || 'Not available'}
+            </strong>
+          </div>
+
+          <div>
+            <span>SAVED VERSIONS</span>
+            <strong>{versions.length}</strong>
+            <small>
+              Edited versions saved during reviews
+            </small>
+          </div>
+        </div>
+
+        <p className="ccf-policy-details-file-note">
+          The filename is shown for reference. The original
+          document can only be opened when its file is
+          available through the application.
+        </p>
+      </section>
+
+      {/* ASSOCIATED GUIDELINES */}
+
+      <section className="ccf-policy-details-card">
+        <div className="ccf-policy-details-section-heading">
+          <div>
+            <h2>Associated Guidelines</h2>
+            <p>
+              These guidelines are mapped to this policy
+              and can be used during review sessions.
+            </p>
+          </div>
+
+          <span className="ccf-policy-details-count">
+            {associatedGuidelines.length}{' '}
+            {associatedGuidelines.length === 1
+              ? 'guideline'
+              : 'guidelines'}
+          </span>
+        </div>
+
+        {associatedGuidelines.length === 0 ? (
+          <div className="ccf-policy-details-empty">
+            <strong>No associated guidelines</strong>
+            <p>
+              No guidelines are currently mapped to this policy.
+              Use Document Mappings to add an association.
+            </p>
+          </div>
+        ) : (
+          <div className="ccf-policy-details-guidelines">
+            {associatedGuidelines.map((guideline) => (
+              <div
+                key={guideline.id}
+                className="ccf-policy-details-guideline"
+              >
+                <div>
+                  <h3>{guideline.name}</h3>
+
+                  <p>
+                    {guideline.description ||
+                      'Reference guideline associated with this policy.'}
+                  </p>
+
+                  <small>
+                    Added:{' '}
+                    {guideline.created ||
+                      guideline.date ||
+                      'Date unavailable'}
+                  </small>
+                </div>
+
+                <span className="ccf-policy-details-associated">
+                  Associated
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="ccf-policy-details-card-footer">
+          <Link
+            to="/mappings"
+            className="ccf-policy-details-secondary-button"
+          >
+            Manage Guideline Mappings
+          </Link>
+        </div>
+      </section>
+
+      {/* VERSION HISTORY */}
+
+      <section className="ccf-policy-details-card">
+        <div className="ccf-policy-details-section-heading">
+          <div>
+            <h2>Version History</h2>
+            <p>
+              View policy edits saved during review sessions,
+              including the associated guideline and recorded
+              decision rationale.
+            </p>
+          </div>
+
+          <span className="ccf-policy-details-count">
+            {versions.length}{' '}
+            {versions.length === 1 ? 'version' : 'versions'}
+          </span>
+        </div>
+
+        {versions.length === 0 ? (
+          <div className="ccf-policy-details-empty">
+            <strong>No edited versions yet</strong>
+            <p>
+              Edited versions will appear here after changes
+              are saved during a policy review.
+            </p>
+          </div>
+        ) : (
+          <div className="ccf-policy-details-versions">
+            {versions.map((version, index) => {
+              const versionNumber = versions.length - index
+              const rationale = getDecisionRationale(version)
+
+              return (
+                <article
+                  className="ccf-policy-details-version"
+                  key={version.id || index}
+                >
+                  <div className="ccf-policy-details-version-heading">
+                    <div>
+                      <h3>Version {versionNumber}</h3>
+                      <p>
+                        Saved {formatDate(version.createdAt)}
+                      </p>
+                    </div>
+
+                    {index === 0 && (
+                      <span className="ccf-policy-details-latest">
+                        Latest
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="ccf-policy-details-version-meta">
+                    {version.guideline && (
+                      <div>
+                        <span>REFERENCE GUIDELINE</span>
+                        <strong>{version.guideline}</strong>
+                      </div>
+                    )}
+
+                    {version.criterion && (
+                      <div>
+                        <span>POLICY CRITERION</span>
+                        <strong>{version.criterion}</strong>
+                      </div>
+                    )}
+
+                    {version.priority && (
+                      <div>
+                        <span>PRIORITY</span>
+                        <strong>{version.priority}</strong>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="ccf-policy-details-rationale">
+                    <h4>Decision Rationale</h4>
+
+                    {rationale ? (
+                      <p>{rationale}</p>
+                    ) : (
+                      <p className="ccf-policy-details-muted">
+                        No decision rationale was recorded
+                        for this version.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="ccf-policy-details-version-content">
+                    <h4>Saved Policy Content</h4>
+                    <pre>
+                      {version.content ||
+                        'No saved content available.'}
+                    </pre>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </section>
+    </WorkspaceLayout>
   )
 }
 

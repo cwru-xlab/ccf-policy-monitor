@@ -1,0 +1,407 @@
+
+/* =====================================
+   CCF NEW POLICY PAGE
+   ===================================== */
+
+.ccf-new-policy-page {
+  min-height: 100vh;
+  background: #f5f7f6;
+}
+
+/* FORCE THE CCF GREEN HEADER */
+
+.ccf-new-policy-page .top-bar {
+  background: #24764b !important;
+  background-color: #24764b !important;
+}
+
+.ccf-new-policy-page .top-bar .brand-name,
+.ccf-new-policy-page .top-bar .workspace-name,
+.ccf-new-policy-page .top-bar .user-area {
+  color: #ffffff;
+}
+
+.ccf-new-policy-page .top-bar .brand-divider {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.ccf-new-policy-page .app-body {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+/* CONTENT */
+
+.ccf-new-policy-content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 36px 56px;
+  box-sizing: border-box;
+  color: #263a2e;
+}
+
+.ccf-new-policy-back {
+  display: inline-block;
+  color: #24764b;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ccf-new-policy-back:hover {
+  text-decoration: underline;
+}
+
+.ccf-new-policy-heading {
+  margin: 24px 0 28px;
+}
+
+.ccf-new-policy-heading h1 {
+  margin: 0 0 8px;
+  color: #183f2d;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.ccf-new-policy-heading p {
+  margin: 0;
+  color: #68776e;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* CARDS */
+
+.ccf-new-policy-card {
+  margin-bottom: 22px;
+  padding: 26px;
+  border: 1px solid #e1e9e3;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(20, 54, 34, 0.03);
+}
+
+.ccf-new-policy-card-heading {
+  margin-bottom: 22px;
+}
+
+.ccf-new-policy-card-heading h2 {
+  margin: 0 0 7px;
+  color: #234c35;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.ccf-new-policy-card-heading p {
+  margin: 0;
+  color: #718076;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* POLICY NAME */
+
+.ccf-new-policy-field label {
+  display: block;
+  margin-bottom: 9px;
+  color: #34473a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ccf-new-policy-field input {
+  width: 100%;
+  max-width: 550px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #d6e1d9;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #24342c;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ccf-new-policy-field input:focus {
+  outline: none;
+  border-color: #298354;
+  box-shadow: 0 0 0 3px rgba(41, 131, 84, 0.1);
+}
+
+/* UPLOAD AREA */
+
+.ccf-new-policy-upload-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  min-height: 210px;
+  padding: 25px;
+  border: 2px dashed #cbded0;
+  border-radius: 10px;
+  background: #f9fcfa;
+  color: #718076;
+  text-align: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.ccf-new-policy-upload-area:hover:not(.disabled) {
+  border-color: #24764b;
+  background: #f1f8f3;
+}
+
+.ccf-new-policy-upload-area.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ccf-new-policy-upload-icon {
+  color: #24764b;
+}
+
+.ccf-new-policy-upload-area strong {
+  color: #24764b;
+  font-size: 14px;
+}
+
+.ccf-new-policy-upload-area > span:last-child {
+  color: #7b887e;
+  font-size: 12px;
+}
+
+/* SELECTED FILE */
+
+.ccf-new-policy-selected-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 17px 20px;
+  border: 1px solid #dce7df;
+  border-radius: 9px;
+  background: #f9fcfa;
+}
+
+.ccf-new-policy-file-info {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.ccf-new-policy-file-icon {
+  color: #24764b;
+}
+
+.ccf-new-policy-file-info strong {
+  display: block;
+  color: #234c35;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.ccf-new-policy-file-info small {
+  display: block;
+  margin-top: 5px;
+  color: #718076;
+  font-size: 12px;
+}
+
+.ccf-new-policy-remove-button {
+  padding: 8px 14px;
+  border: 1px solid #d5e1d8;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #a12622;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ACTION BUTTONS */
+
+.ccf-new-policy-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 28px 0 30px;
+}
+
+.ccf-new-policy-primary-button,
+.ccf-new-policy-secondary-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 43px;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ccf-new-policy-primary-button {
+  border: 1px solid #24764b;
+  background: #24764b;
+  color: #ffffff;
+}
+
+.ccf-new-policy-primary-button:hover:not(:disabled) {
+  background: #195c39;
+}
+
+.ccf-new-policy-secondary-button {
+  border: 1px solid #24764b;
+  background: #ffffff;
+  color: #24764b;
+}
+
+.ccf-new-policy-secondary-button:hover:not(:disabled) {
+  background: #f0f8f2;
+}
+
+.ccf-new-policy-primary-button:disabled,
+.ccf-new-policy-secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* MESSAGES */
+
+.ccf-new-policy-error,
+.ccf-new-policy-success {
+  margin-bottom: 20px;
+  padding: 16px 19px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ccf-new-policy-error {
+  border: 1px solid #f0b5af;
+  background: #fff3f2;
+  color: #a12622;
+}
+
+.ccf-new-policy-success {
+  border: 1px solid #c5dec9;
+  background: #f1f9f3;
+  color: #276c45;
+}
+
+.ccf-new-policy-success p {
+  margin: 6px 0 15px;
+}
+
+/* PARSED BACKEND RESULT */
+
+.ccf-new-policy-result {
+  max-height: 350px;
+  padding: 18px;
+  overflow: auto;
+  border: 1px solid #dce7df;
+  border-radius: 8px;
+  background: #f7faf8;
+  color: #34473a;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* HELP */
+
+.ccf-new-policy-help-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ccf-new-policy-help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgba(12, 31, 19, 0.5);
+}
+
+.ccf-new-policy-help-dialog {
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 26px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15);
+}
+
+.ccf-new-policy-help-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ccf-new-policy-help-heading h2 {
+  margin: 0;
+  color: #234c35;
+  font-size: 19px;
+}
+
+.ccf-new-policy-help-heading > button {
+  border: none;
+  background: transparent;
+  color: #5e6d62;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.ccf-new-policy-help-dialog p {
+  color: #526358;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+  .ccf-new-policy-content {
+    padding: 24px 18px 42px;
+  }
+
+  .ccf-new-policy-card {
+    padding: 20px;
+  }
+
+  .ccf-new-policy-heading h1 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 520px) {
+  .ccf-new-policy-actions {
+    flex-direction: column;
+  }
+
+  .ccf-new-policy-actions button {
+    width: 100%;
+  }
+}

@@ -6,21 +6,100 @@ import {
   getPoliciesForGuideline,
 } from '../data/guidelineMappings'
 
+import './DashboardPage.css'
+import './GuidelineSelectionPage.css'
+
+// ==========================================
+// READ SAVED DATA SAFELY
+// ==========================================
+
+function getSavedArray(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key))
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
+
+// ==========================================
+// ORIGINAL POLICY DATABASE
+// ==========================================
+
+const originalPolicies = [
+  { id: 1, name: 'Cardiac Coverage Policy' },
+  { id: 2, name: 'Diabetes Treatment Policy' },
+  { id: 3, name: 'Oncology Coverage Policy' },
+  { id: 4, name: 'Orthopedic Surgery Policy' },
+  { id: 5, name: 'Mental Health Coverage Policy' },
+]
+
+// ==========================================
+// ORIGINAL GUIDELINE DATABASE
+// ==========================================
+
+const originalGuidelines = [
+  {
+    id: 1,
+    name: 'Cardiac Coverage Guideline',
+    description:
+      'Clinical guidance for cardiac procedures, diagnostic testing, and treatment.',
+    source: 'Clinical Reference',
+    updated: 'Sep 23, 2026',
+    updatedAge: '2 days ago',
+    status: 'Active',
+    version: '2026',
+  },
+  {
+    id: 2,
+    name: 'Diabetes Treatment Guideline',
+    description:
+      'Clinical guidance for diabetes management, medications, and treatment.',
+    source: 'Clinical Reference',
+    updated: 'Sep 18, 2026',
+    updatedAge: '6 days ago',
+    status: 'Active',
+    version: '2026',
+  },
+  {
+    id: 3,
+    name: 'Oncology Coverage Guideline',
+    description:
+      'Clinical guidance for oncology services, testing, and treatments.',
+    source: 'Clinical Reference',
+    updated: 'Sep 10, 2026',
+    updatedAge: '14 days ago',
+    status: 'Active',
+    version: '2026',
+  },
+  {
+    id: 4,
+    name: 'Orthopedic Surgery Guideline',
+    description:
+      'Clinical guidance for orthopedic procedures and rehabilitation.',
+    source: 'Clinical Reference',
+    updated: 'Sep 5, 2026',
+    updatedAge: '19 days ago',
+    status: 'Active',
+    version: '2026',
+  },
+  {
+    id: 5,
+    name: 'Mental Health Guideline',
+    description:
+      'Clinical guidance for mental health services and treatment.',
+    source: 'Clinical Reference',
+    updated: 'Aug 28, 2026',
+    updatedAge: '27 days ago',
+    status: 'Active',
+    version: '2026',
+  },
+]
+
 function GuidelineSelectionPage() {
   const navigate = useNavigate()
 
-  // ==========================================
-  // READ SAVED DATA SAFELY
-  // ==========================================
-
-  function getSavedArray(key) {
-    try {
-      const data = JSON.parse(localStorage.getItem(key))
-      return Array.isArray(data) ? data : []
-    } catch {
-      return []
-    }
-  }
+  const [search, setSearch] = useState('')
 
   // ==========================================
   // REVIEW SESSION INFORMATION
@@ -40,26 +119,25 @@ function GuidelineSelectionPage() {
   // POLICY DATABASE
   // ==========================================
 
-  const originalPolicies = [
-    { id: 1, name: 'Cardiac Coverage Policy' },
-    { id: 2, name: 'Diabetes Treatment Policy' },
-    { id: 3, name: 'Oncology Coverage Policy' },
-    { id: 4, name: 'Orthopedic Surgery Policy' },
-    { id: 5, name: 'Mental Health Coverage Policy' },
-  ]
-
   const addedPolicies = getSavedArray('addedPolicies')
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
 
   const databasePolicies = [
     ...addedPolicies,
     ...originalPolicies,
-  ].filter(
-    (policy) =>
-      !deletedPolicyIds.some(
-        (id) => String(id) === String(policy.id)
-      )
-  )
+  ]
+    .filter(
+      (policy) =>
+        !deletedPolicyIds.some(
+          (id) => String(id) === String(policy.id)
+        )
+    )
+    .filter(
+      (policy, index, array) =>
+        array.findIndex(
+          (item) => String(item.id) === String(policy.id)
+        ) === index
+    )
 
   // Only use policies still in the database.
   const selectedPolicies = databasePolicies.filter(
@@ -73,67 +151,6 @@ function GuidelineSelectionPage() {
   // ==========================================
   // GUIDELINE DATABASE
   // ==========================================
-
-  // The mappings are now handled entirely by
-  // guidelineMappings.js, not this page.
-
-  const originalGuidelines = [
-    {
-      id: 1,
-      name: 'Cardiac Coverage Guideline',
-      description:
-        'Clinical guidance for cardiac procedures, diagnostic testing, and treatment.',
-      source: 'Clinical Reference',
-      updated: 'Sep 23, 2026',
-      updatedAge: '2 days ago',
-      status: 'Active',
-      version: '2026',
-    },
-    {
-      id: 2,
-      name: 'Diabetes Treatment Guideline',
-      description:
-        'Clinical guidance for diabetes management, medications, and treatment.',
-      source: 'Clinical Reference',
-      updated: 'Sep 18, 2026',
-      updatedAge: '6 days ago',
-      status: 'Active',
-      version: '2026',
-    },
-    {
-      id: 3,
-      name: 'Oncology Coverage Guideline',
-      description:
-        'Clinical guidance for oncology services, testing, and treatments.',
-      source: 'Clinical Reference',
-      updated: 'Sep 10, 2026',
-      updatedAge: '14 days ago',
-      status: 'Active',
-      version: '2026',
-    },
-    {
-      id: 4,
-      name: 'Orthopedic Surgery Guideline',
-      description:
-        'Clinical guidance for orthopedic procedures and rehabilitation.',
-      source: 'Clinical Reference',
-      updated: 'Sep 5, 2026',
-      updatedAge: '19 days ago',
-      status: 'Active',
-      version: '2026',
-    },
-    {
-      id: 5,
-      name: 'Mental Health Guideline',
-      description:
-        'Clinical guidance for mental health services and treatment.',
-      source: 'Clinical Reference',
-      updated: 'Aug 28, 2026',
-      updatedAge: '27 days ago',
-      status: 'Active',
-      version: '2026',
-    },
-  ]
 
   const addedGuidelines = getSavedArray(
     'addedGuidelines'
@@ -150,18 +167,26 @@ function GuidelineSelectionPage() {
     source: guideline.source || 'Reference',
   }))
 
-  const deletedGuidelineIds =
-    getSavedArray('deletedGuidelineIds')
+  const deletedGuidelineIds = getSavedArray(
+    'deletedGuidelineIds'
+  )
 
   const allGuidelines = [
     ...addedGuidelines,
     ...originalGuidelines,
-  ].filter(
-    (guideline) =>
-      !deletedGuidelineIds.some(
-        (id) => String(id) === String(guideline.id)
-      )
-  )
+  ]
+    .filter(
+      (guideline) =>
+        !deletedGuidelineIds.some(
+          (id) => String(id) === String(guideline.id)
+        )
+    )
+    .filter(
+      (guideline, index, array) =>
+        array.findIndex(
+          (item) => String(item.id) === String(guideline.id)
+        ) === index
+    )
 
   // ==========================================
   // AUTOMATIC GUIDELINE MATCHING
@@ -179,19 +204,18 @@ function GuidelineSelectionPage() {
   const policiesWithoutGuidelines =
     selectedPolicies.filter(
       (policy) =>
-        !mappedGuidelines.some((guideline) =>
-          getPoliciesForGuideline(
-            guideline,
-            [policy]
-          ).length > 0
+        !mappedGuidelines.some(
+          (guideline) =>
+            getPoliciesForGuideline(
+              guideline,
+              [policy]
+            ).length > 0
         )
     )
 
   // ==========================================
   // SEARCH MAPPED GUIDELINES
   // ==========================================
-
-  const [search, setSearch] = useState('')
 
   const visibleGuidelines =
     mappedGuidelines.filter((guideline) => {
@@ -212,7 +236,7 @@ function GuidelineSelectionPage() {
         .toLowerCase()
 
       return searchableText.includes(
-        search.toLowerCase()
+        search.toLowerCase().trim()
       )
     })
 
@@ -290,14 +314,12 @@ function GuidelineSelectionPage() {
     const existingReviews =
       getSavedArray('createdReviews')
 
-    const updatedReviews = [
-      newReview,
-      ...existingReviews,
-    ]
-
     localStorage.setItem(
       'createdReviews',
-      JSON.stringify(updatedReviews)
+      JSON.stringify([
+        newReview,
+        ...existingReviews,
+      ])
     )
 
     localStorage.setItem(
@@ -305,7 +327,6 @@ function GuidelineSelectionPage() {
       JSON.stringify(newReview)
     )
 
-    // Open review results.
     navigate('/reviews/findings')
   }
 
@@ -322,514 +343,309 @@ function GuidelineSelectionPage() {
     navigate('/reviews/new')
   }
 
-  // ==========================================
-  // PAGE
-  // ==========================================
-
   return (
-    <div className="policy-selection-page">
-      {/* BACKGROUND PAGE */}
-
-      <div className="selection-background">
-        <header className="top-bar">
-          <div className="brand-area">
-            <span className="brand-name">
-              Policy Review
-            </span>
-
-            <span className="brand-divider"></span>
-
-            <span className="workspace-name">
-              Policy Review Workspace
-            </span>
-          </div>
-
-          <div className="top-right">
-            <div className="search-box">
-              <span>⌕</span>
-
-              <input
-                type="text"
-                placeholder="Search policies, guidelines..."
-              />
-            </div>
-
-            <span className="top-icon">?</span>
-            <span className="top-icon">⚙</span>
-
-            <div className="user-area">
-              <div className="user-avatar">
-                SC
-              </div>
-              <span>Sarah Chen</span>
-            </div>
-          </div>
-        </header>
-
-        <div className="app-body">
-          {/* SIDEBAR */}
-
-          <aside className="sidebar">
-            <Link
-              to="/dashboard"
-              className="nav-item"
-            >
-              Dashboard
-            </Link>
-
-            <Link
-              to="/reviews"
-              className="nav-item active"
-            >
-              Review Sessions
-            </Link>
-
-            <Link
-              to="/policies"
-              className="nav-item"
-            >
-              Policy Database
-            </Link>
-
-            <Link
-              to="/guidelines"
-              className="nav-item"
-            >
-              Guideline Database
-            </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-            <Link
-              to="/audit-log"
-              className="nav-item"
-            >
-              Audit Log
-            </Link>
-          </aside>
-
-          <main className="selection-background-content">
-            <span>
-              ← Back to Review Session
-            </span>
-
-            <h1>{reviewName}</h1>
-
-            <p>
-              Review the guidelines automatically
-              associated with your selected policies.
-            </p>
-
-            <div className="background-card">
-              <h2>Session Details</h2>
-              <p>{reviewDescription}</p>
-            </div>
-
-            <div className="background-card">
-              <h2>Policies</h2>
-
-              <p>
-                {selectedPolicies.length}{' '}
-                {selectedPolicies.length === 1
-                  ? 'policy selected'
-                  : 'policies selected'}
-              </p>
-            </div>
-
-            <div className="background-card">
-              <h2>Reference Guidelines</h2>
-
-              <p>
-                {mappedGuidelines.length}{' '}
-                automatically associated
-              </p>
-            </div>
-          </main>
-        </div>
-      </div>
-
-      {/* OVERLAY */}
-
-      <div
-        className="selection-overlay"
-        onClick={goBack}
-      ></div>
-
-      {/* READ-ONLY GUIDELINE MODAL */}
-
-      <div className="policy-selection-modal">
-        {/* MODAL HEADER */}
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: '20px',
-            marginBottom: '8px',
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                color: '#0078bf',
-                marginBottom: '7px',
-              }}
-            >
-              STEP 2 OF 3
-            </div>
-
-            <h1 style={{ marginBottom: '7px' }}>
-              Reference Guidelines
-            </h1>
-
-            <p
-              className="selection-subtitle"
-              style={{ margin: 0 }}
-            >
-              These guidelines are automatically mapped
-              to your selected policies. Review the
-              associations before starting.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={goBack}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              fontSize: '22px',
-              cursor: 'pointer',
-              color: '#666',
-            }}
-            aria-label="Close guideline reference"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* SESSION SUMMARY */}
-
-        <div
-          style={{
-            display: 'flex',
-            gap: '24px',
-            padding: '14px 16px',
-            margin: '20px 0',
-            background: '#f5f7f8',
-            border: '1px solid #e1e4e6',
-            borderRadius: '5px',
-            fontSize: '13px',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div>
-            <span
-              style={{
-                color: '#777',
-                display: 'block',
-                marginBottom: '3px',
-              }}
-            >
-              REVIEW SESSION
-            </span>
-
-            <strong>{reviewName}</strong>
-          </div>
-
-          <div>
-            <span
-              style={{
-                color: '#777',
-                display: 'block',
-                marginBottom: '3px',
-              }}
-            >
-              POLICIES
-            </span>
-
-            <strong>
-              {selectedPolicies.length} selected
-            </strong>
-          </div>
-
-          <div>
-            <span
-              style={{
-                color: '#777',
-                display: 'block',
-                marginBottom: '3px',
-              }}
-            >
-              GUIDELINES
-            </span>
-
-            <strong>
-              {mappedGuidelines.length} automatically mapped
-            </strong>
-          </div>
-        </div>
-
-        {/* SEARCH + COUNT */}
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '18px',
-          }}
-        >
-          <input
-            type="text"
-            placeholder="⌕   Search mapped guidelines..."
-            value={search}
-            onChange={(event) =>
-              setSearch(event.target.value)
-            }
-            style={{
-              flex: 1,
-              minWidth: 0,
-              padding: '10px 12px',
-              border: '1px solid #cfcfcf',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-            }}
-          />
-
-          <span
-            style={{
-              fontSize: '13px',
-              fontWeight: '700',
-              color: '#0078bf',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {mappedGuidelines.length}{' '}
-            {mappedGuidelines.length === 1
-              ? 'guideline mapped'
-              : 'guidelines mapped'}
+    <div className="app-page ccf-guideline-selection-page">
+      {/* GREEN HEADER */}
+      <header className="top-bar">
+        <div className="brand-area">
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
+          <span className="workspace-name">
+            Insurance Policy Review Workspace
           </span>
         </div>
 
-        {/* GUIDELINE TABLE */}
-
-        <div className="selection-table">
-          <div className="selection-table-header">
-            <div></div>
-            <div>GUIDELINE NAME</div>
-            <div>VERSION</div>
-            <div>LAST UPDATED</div>
-            <div>STATUS</div>
+        <div className="top-right">
+          <div className="user-area">
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
-
-          {visibleGuidelines.map((guideline) => {
-            const matchingPolicies =
-              getPoliciesForGuideline(
-                guideline,
-                selectedPolicies
-              )
-
-            return (
-              <div
-                className="selection-table-row"
-                key={guideline.id}
-                style={{
-                  cursor: 'default',
-                }}
-              >
-                {/* AUTOMATICALLY INCLUDED */}
-
-                <div className="selection-checkbox-cell">
-                  <span
-                    title="Automatically included"
-                    style={{
-                      color: '#0078bf',
-                      fontWeight: 700,
-                      fontSize: '18px',
-                    }}
-                  >
-                    ✓
-                  </span>
-                </div>
-
-                {/* GUIDELINE NAME + POLICIES */}
-
-                <div className="selection-policy-name">
-                  <strong>{guideline.name}</strong>
-
-                  <p>{guideline.description}</p>
-
-                  <div
-                    style={{
-                      marginTop: '8px',
-                      fontSize: '12px',
-                      color: '#475569',
-                    }}
-                  >
-                    <strong>Applies to:</strong>{' '}
-                    {matchingPolicies
-                      .map((policy) => policy.name)
-                      .join(', ')}
-                  </div>
-                </div>
-
-                {/* VERSION */}
-
-                <div className="selection-date">
-                  <span>
-                    {guideline.version || 'Current'}
-                  </span>
-
-                  <small>
-                    {guideline.source || 'Reference'}
-                  </small>
-                </div>
-
-                {/* LAST UPDATED */}
-
-                <div className="selection-date">
-                  <span>
-                    {guideline.updated || 'Recently'}
-                  </span>
-
-                  <small>
-                    {guideline.updatedAge || ''}
-                  </small>
-                </div>
-
-                {/* STATUS */}
-
-                <div>
-                  <span className="status completed">
-                    {guideline.status || 'Active'}
-                  </span>
-                </div>
-              </div>
-            )
-          })}
-
-          {visibleGuidelines.length === 0 && (
-            <div
-              style={{
-                padding: '30px',
-                textAlign: 'center',
-                color: '#777',
-              }}
-            >
-              {mappedGuidelines.length === 0
-                ? 'No guidelines are mapped to the selected policies.'
-                : 'No mapped guidelines match your search.'}
-            </div>
-          )}
         </div>
+      </header>
 
-        {/* UNMAPPED POLICY WARNING */}
+      <div className="app-body">
+        {/* SIDEBAR */}
+        <aside className="sidebar">
+          <Link to="/dashboard" className="nav-item">
+            Dashboard
+          </Link>
 
-        {policiesWithoutGuidelines.length > 0 && (
-          <div
-            style={{
-              marginTop: '18px',
-              padding: '12px 14px',
-              background: '#fff8e7',
-              borderLeft: '3px solid #d97706',
-              fontSize: '13px',
-              lineHeight: '1.6',
-              color: '#854d0e',
-            }}
-          >
-            <strong>
-              Policies without associated guidelines:
-            </strong>
+          <Link to="/reviews" className="nav-item active">
+            Review Sessions
+          </Link>
 
-            <div style={{ marginTop: '6px' }}>
-              {policiesWithoutGuidelines
-                .map((policy) => policy.name)
-                .join(', ')}
-            </div>
+          <Link to="/policies" className="nav-item">
+            Policy Database
+          </Link>
 
-            <div style={{ marginTop: '6px' }}>
-              These policies currently have no mapped
-              reference guideline.
-            </div>
-          </div>
-        )}
+          <Link to="/guidelines" className="nav-item">
+            Guideline Database
+          </Link>
 
-        {/* EXPLANATION */}
+          <Link to="/mappings" className="nav-item">
+            Document Mappings
+          </Link>
 
-        <div
-          style={{
-            marginTop: '18px',
-            padding: '12px 14px',
-            background: '#f8f8f8',
-            borderLeft: '3px solid #0078bf',
-            fontSize: '13px',
-            lineHeight: '1.5',
-            color: '#555',
-          }}
-        >
-          <strong>
-            How reference guidelines are used:
-          </strong>{' '}
-          The guidelines shown above are automatically
-          associated with the selected policies.
-          They will serve as reference material when
-          the system screens the policies for potential
-          changes. Guidelines cannot be manually
-          changed during a review session.
-        </div>
+          <Link to="/audit-log" className="nav-item">
+            Audit Log
+          </Link>
+        </aside>
 
-        {/* BOTTOM ACTIONS */}
-
-        <div
-          className="selection-confirm-row"
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        {/* MAIN CONTENT */}
+        <main className="ccf-guideline-selection-content">
           <button
             type="button"
-            className="cancel-review-button"
+            className="ccf-guideline-selection-back-link"
             onClick={goBack}
           >
-            ← Back
+            ← Back to Review Session
           </button>
 
-          <button
-            type="button"
-            className="confirm-selection-button"
-            onClick={startReview}
-            disabled={
-              selectedPolicies.length === 0 ||
-              mappedGuidelines.length === 0
-            }
-            style={{
-              opacity:
-                selectedPolicies.length === 0 ||
-                mappedGuidelines.length === 0
-                  ? 0.5
-                  : 1,
-              cursor:
-                selectedPolicies.length === 0 ||
-                mappedGuidelines.length === 0
-                  ? 'not-allowed'
-                  : 'pointer',
-            }}
-          >
-            Start Review →
-          </button>
-        </div>
+          {/* PAGE TITLE */}
+          <div className="ccf-guideline-selection-heading">
+            <span className="ccf-guideline-selection-eyebrow">
+              STEP 2 OF 3
+            </span>
+
+            <h1>Reference Guidelines</h1>
+
+            <p>
+              These guidelines are automatically mapped
+              to your selected policies. Review the
+              associations before starting your review.
+            </p>
+          </div>
+
+          {/* SESSION SUMMARY */}
+          <section className="ccf-guideline-selection-summary">
+            <div>
+              <span>REVIEW SESSION</span>
+              <strong>{reviewName}</strong>
+            </div>
+
+            <div>
+              <span>POLICIES</span>
+              <strong>
+                {selectedPolicies.length} selected
+              </strong>
+            </div>
+
+            <div>
+              <span>GUIDELINES</span>
+              <strong>
+                {mappedGuidelines.length} automatically mapped
+              </strong>
+            </div>
+          </section>
+
+          {/* REVIEW DESCRIPTION */}
+          {reviewDescription && (
+            <section className="ccf-guideline-selection-description">
+              <strong>Session Description</strong>
+              <p>{reviewDescription}</p>
+            </section>
+          )}
+
+          {/* GUIDELINE TABLE CARD */}
+          <section className="ccf-guideline-selection-card">
+            <div className="ccf-guideline-selection-card-heading">
+              <div>
+                <h2>Automatically Mapped Guidelines</h2>
+
+                <p>
+                  Guidelines are associated using your
+                  existing Document Mappings.
+                </p>
+              </div>
+
+              <span className="ccf-guideline-selection-count">
+                {mappedGuidelines.length}{' '}
+                {mappedGuidelines.length === 1
+                  ? 'guideline mapped'
+                  : 'guidelines mapped'}
+              </span>
+            </div>
+
+            {/* SEARCH */}
+            <div className="ccf-guideline-selection-toolbar">
+              <div className="ccf-guideline-selection-search">
+                <span aria-hidden="true">⌕</span>
+
+                <input
+                  type="search"
+                  placeholder="Search mapped guidelines..."
+                  aria-label="Search mapped guidelines"
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                />
+              </div>
+
+              <span className="ccf-guideline-selection-readonly">
+                <span aria-hidden="true">✓</span>
+                Automatically selected
+              </span>
+            </div>
+
+            {/* GUIDELINE TABLE */}
+            <div className="ccf-guideline-selection-table-wrapper">
+              <table className="ccf-guideline-selection-table">
+                <thead>
+                  <tr>
+                    <th aria-label="Automatically included" />
+                    <th>GUIDELINE NAME</th>
+                    <th>VERSION</th>
+                    <th>LAST UPDATED</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {visibleGuidelines.map((guideline) => {
+                    const matchingPolicies =
+                      getPoliciesForGuideline(
+                        guideline,
+                        selectedPolicies
+                      )
+
+                    return (
+                      <tr key={guideline.id}>
+                        <td>
+                          <span
+                            className="ccf-guideline-selection-check"
+                            title="Automatically included"
+                            aria-label="Automatically included"
+                          >
+                            ✓
+                          </span>
+                        </td>
+
+                        <td>
+                          <strong>
+                            {guideline.name}
+                          </strong>
+
+                          <p>
+                            {guideline.description || ''}
+                          </p>
+
+                          <div className="ccf-guideline-selection-applies">
+                            <strong>Applies to:</strong>{' '}
+                            {matchingPolicies
+                              .map(
+                                (policy) => policy.name
+                              )
+                              .join(', ')}
+                          </div>
+                        </td>
+
+                        <td>
+                          <strong className="ccf-guideline-selection-table-value">
+                            {guideline.version || 'Current'}
+                          </strong>
+
+                          <small>
+                            {guideline.source || 'Reference'}
+                          </small>
+                        </td>
+
+                        <td>
+                          <span>
+                            {guideline.updated || 'Recently'}
+                          </span>
+
+                          {guideline.updatedAge && (
+                            <small>
+                              {guideline.updatedAge}
+                            </small>
+                          )}
+                        </td>
+
+                        <td>
+                          <span className="ccf-guideline-selection-status">
+                            {guideline.status || 'Active'}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+
+              {visibleGuidelines.length === 0 && (
+                <div className="ccf-guideline-selection-empty">
+                  <strong>
+                    {mappedGuidelines.length === 0
+                      ? 'No mapped guidelines found'
+                      : 'No matching guidelines'}
+                  </strong>
+
+                  <p>
+                    {mappedGuidelines.length === 0
+                      ? 'No guidelines are mapped to the selected policies. Check Document Mappings before starting the review.'
+                      : 'Try searching for a different guideline or policy name.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* UNMAPPED POLICY WARNING */}
+            {policiesWithoutGuidelines.length > 0 && (
+              <div className="ccf-guideline-selection-warning">
+                <strong>
+                  Policies without associated guidelines:
+                </strong>
+
+                <p>
+                  {policiesWithoutGuidelines
+                    .map((policy) => policy.name)
+                    .join(', ')}
+                </p>
+
+                <p>
+                  These policies currently have no
+                  mapped reference guideline.
+                </p>
+              </div>
+            )}
+
+            {/* EXPLANATION */}
+            <div className="ccf-guideline-selection-info">
+              <strong>
+                How reference guidelines are used:
+              </strong>{' '}
+              The guidelines shown above are automatically
+              associated with the selected policies.
+              They will serve as reference material for
+              the policy review workflow. Guidelines cannot
+              be manually changed during a review session.
+            </div>
+
+            {/* BOTTOM ACTIONS */}
+            <div className="ccf-guideline-selection-actions">
+              <button
+                type="button"
+                className="ccf-guideline-selection-cancel"
+                onClick={goBack}
+              >
+                ← Back
+              </button>
+
+              <button
+                type="button"
+                className="ccf-guideline-selection-confirm"
+                onClick={startReview}
+                disabled={
+                  selectedPolicies.length === 0 ||
+                  mappedGuidelines.length === 0
+                }
+              >
+                Start Review →
+              </button>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   )

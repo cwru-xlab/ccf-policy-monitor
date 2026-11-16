@@ -1,5 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom'
+
 import { useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+
+import './DashboardPage.css'
+import './PolicyReviewEditingPage.css'
 
 function getSavedArray(key) {
   try {
@@ -12,18 +16,26 @@ function getSavedArray(key) {
 
 function getSavedObject(key) {
   try {
-    return JSON.parse(localStorage.getItem(key)) || null
+    const value = JSON.parse(localStorage.getItem(key))
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? value
+      : null
   } catch {
     return null
   }
 }
 
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
 function PolicyReviewEditingPage() {
   const navigate = useNavigate()
-
-  // ==========================================
-  // CURRENT FINDING
-  // ==========================================
 
   const currentFinding = getSavedObject('currentFinding') || {
     id: 1,
@@ -46,18 +58,8 @@ function PolicyReviewEditingPage() {
       'Coverage is permitted for patients with symptomatic coronary artery disease who meet criteria A, B, or C, including documented ischemia or significant anatomical findings.',
   }
 
-  // ==========================================
-  // REVIEW SESSION
-  // ==========================================
-
   const currentReview = getSavedObject('currentReview')
-
-  const reviewName =
-    currentReview?.name || 'Policy Review Session'
-
-  // ==========================================
-  // EXISTING DECISION
-  // ==========================================
+  const reviewName = currentReview?.name || 'Policy Review Session'
 
   const existingDecision = getSavedArray(
     'recommendationDecisions'
@@ -65,13 +67,8 @@ function PolicyReviewEditingPage() {
     (item) =>
       String(item.reviewId) ===
         String(currentReview?.id || null) &&
-      String(item.findingId) ===
-        String(currentFinding.id)
+      String(item.findingId) === String(currentFinding.id)
   )
-
-  // ==========================================
-  // PAGE STATE
-  // ==========================================
 
   const [isEditing, setIsEditing] = useState(false)
 
@@ -89,19 +86,14 @@ function PolicyReviewEditingPage() {
   )
 
   const [rationaleError, setRationaleError] = useState(false)
-
-  // ==========================================
-  // VALIDATE RATIONALE
-  // ==========================================
+  const [helpOpen, setHelpOpen] = useState(false)
 
   function validateRationale() {
     if (!decisionRationale.trim()) {
       setRationaleError(true)
-
       alert(
         'Please enter a decision rationale before saving your decision.'
       )
-
       return false
     }
 
@@ -109,10 +101,7 @@ function PolicyReviewEditingPage() {
     return true
   }
 
-  // ==========================================
-  // SAVE RECOMMENDATION DECISION
-  // ==========================================
-
+  // Save the latest reviewer decision
   function saveDecision(decision, finalText = '') {
     const existingDecisions = getSavedArray(
       'recommendationDecisions'
@@ -136,16 +125,12 @@ function PolicyReviewEditingPage() {
       reviewer: 'Sarah Chen',
     }
 
-    // Keep only the latest decision for this
-    // recommendation in the review results.
-
     const otherDecisions = existingDecisions.filter(
       (item) =>
         !(
           String(item.reviewId) ===
             String(currentReview?.id || null) &&
-          String(item.findingId) ===
-            String(currentFinding.id)
+          String(item.findingId) === String(currentFinding.id)
         )
     )
 
@@ -154,10 +139,7 @@ function PolicyReviewEditingPage() {
       JSON.stringify([...otherDecisions, newDecision])
     )
 
-    // ==========================================
-    // RECORD DECISION IN AUDIT LOG
-    // ==========================================
-
+    // Record decision in the Audit Log
     const existingEvents = getSavedArray('auditEvents')
 
     const auditEvent = {
@@ -185,10 +167,7 @@ function PolicyReviewEditingPage() {
     )
   }
 
-  // ==========================================
-  // CREATE POLICY VERSION
-  // ==========================================
-
+  // Create a new policy version after accepting a change
   function createPolicyVersion(content, decision) {
     const oldVersions = getSavedArray('policyVersions')
 
@@ -209,11 +188,9 @@ function PolicyReviewEditingPage() {
       reviewer: 'Sarah Chen',
     }
 
-    const updatedVersions = [...oldVersions, newVersion]
-
     localStorage.setItem(
       'policyVersions',
-      JSON.stringify(updatedVersions)
+      JSON.stringify([...oldVersions, newVersion])
     )
 
     localStorage.setItem(
@@ -221,10 +198,6 @@ function PolicyReviewEditingPage() {
       JSON.stringify(newVersion)
     )
   }
-
-  // ==========================================
-  // ACCEPT SUGGESTED CHANGE
-  // ==========================================
 
   function acceptRecommendation() {
     if (!validateRationale()) return
@@ -241,15 +214,9 @@ function PolicyReviewEditingPage() {
     if (!confirmed) return
 
     saveDecision('Accepted', acceptedText)
-
     createPolicyVersion(acceptedText, 'Accepted')
-
     navigate('/reviews/findings')
   }
-
-  // ==========================================
-  // SAVE EDITED CHANGE
-  // ==========================================
 
   function saveEditedRecommendation() {
     if (!editedText.trim()) {
@@ -275,10 +242,6 @@ function PolicyReviewEditingPage() {
     navigate('/reviews/findings')
   }
 
-  // ==========================================
-  // REJECT RECOMMENDATION
-  // ==========================================
-
   function rejectRecommendation() {
     if (!validateRationale()) return
 
@@ -296,80 +259,37 @@ function PolicyReviewEditingPage() {
     navigate('/reviews/findings')
   }
 
-  // ==========================================
-  // SHARED STYLES
-  // ==========================================
-
-  const cardStyle = {
-    background: '#ffffff',
-    border: '1px solid #dddddd',
-    borderRadius: '6px',
-    marginBottom: '20px',
-    overflow: 'hidden',
+  function cancelEdit() {
+    setEditedText(
+      currentFinding.suggestedText ||
+        currentFinding.guidelineText ||
+        currentFinding.policyText ||
+        ''
+    )
+    setIsEditing(false)
   }
-
-  const labelStyle = {
-    fontSize: '11px',
-    color: '#777',
-    fontWeight: '700',
-    marginBottom: '5px',
-  }
-
-  const textareaStyle = {
-    width: '100%',
-    minHeight: '145px',
-    boxSizing: 'border-box',
-    padding: '14px',
-    border: '1px solid #aaaaaa',
-    borderRadius: '4px',
-    fontFamily: 'inherit',
-    fontSize: '14px',
-    lineHeight: '1.6',
-    resize: 'vertical',
-  }
-
-  const secondaryButtonStyle = {
-    padding: '10px 16px',
-    border: '1px solid #777',
-    borderRadius: '4px',
-    background: '#ffffff',
-    color: '#333',
-    cursor: 'pointer',
-    fontWeight: '700',
-  }
-
-  // ==========================================
-  // PAGE
-  // ==========================================
 
   return (
-    <div className="app-page">
-      {/* TOP BAR */}
-
+    <div className="app-page ccf-policy-editor-page">
+      {/* GREEN CCF HEADER */}
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
-          <span className="brand-divider"></span>
-
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-            <input
-              type="text"
-              placeholder="Search policies, guidelines..."
-            />
-          </div>
-
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
+          <button
+            type="button"
+            className="ccf-policy-editor-help-button"
+            aria-label="Help with reviewing recommendations"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
 
           <div className="user-area">
             <div className="user-avatar">SC</div>
@@ -380,120 +300,75 @@ function PolicyReviewEditingPage() {
 
       <div className="app-body">
         {/* SIDEBAR */}
-
         <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-
-          <Link to="/reviews" className="nav-item active">
-            Review Sessions
-          </Link>
-
-          <Link to="/policies" className="nav-item">
-            Policy Database
-          </Link>
-
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-          <Link to="/audit-log" className="nav-item">
-            Audit Log
-          </Link>
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={() =>
+                `nav-item${
+                  item.path === '/reviews' ? ' active' : ''
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
         {/* MAIN CONTENT */}
-
-        <main className="policy-editor-content">
+        <main className="ccf-policy-editor-content">
           <Link
             to="/reviews/findings"
-            className="back-link"
+            className="ccf-policy-editor-back"
           >
             ← Back to Review Results
           </Link>
 
-          {/* PAGE TITLE */}
-
-          <div style={{ marginBottom: '24px' }}>
-            <div
-              style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                color: '#0078bf',
-                marginBottom: '6px',
-              }}
-            >
+          {/* TITLE */}
+          <div className="ccf-policy-editor-heading">
+            <span className="ccf-policy-editor-eyebrow">
               REVIEW RECOMMENDATION
-            </div>
+            </span>
 
-            <h1 style={{ marginBottom: '7px' }}>
-              Inspect Suggested Policy Change
-            </h1>
+            <h1>Inspect Suggested Policy Change</h1>
 
-            <p className="policy-editor-subtitle">
+            <p>
               Review why this change was recommended,
-              compare the policy with the reference
-              guideline, and decide whether to accept,
-              edit, or reject the recommendation.
+              compare the policy with the reference guideline,
+              and decide whether to accept, edit, or reject
+              the recommendation.
             </p>
           </div>
 
-          {/* SESSION / POLICY SUMMARY */}
-
-          <section
-            style={{
-              ...cardStyle,
-              padding: '18px 20px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: '25px',
-                alignItems: 'flex-start',
-                flexWrap: 'wrap',
-              }}
-            >
+          {/* SESSION SUMMARY */}
+          <section className="ccf-policy-editor-card">
+            <div className="ccf-policy-editor-summary-grid">
               <div>
-                <div style={labelStyle}>
+                <span className="ccf-policy-editor-label">
                   REVIEW SESSION
-                </div>
+                </span>
                 <strong>{reviewName}</strong>
               </div>
 
-              <div style={{ flex: 1 }}>
-                <div style={labelStyle}>POLICY</div>
+              <div>
+                <span className="ccf-policy-editor-label">
+                  POLICY
+                </span>
                 <strong>{currentFinding.policy}</strong>
               </div>
 
               <div>
-                <div style={labelStyle}>PRIORITY</div>
+                <span className="ccf-policy-editor-label">
+                  PRIORITY
+                </span>
 
                 <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '4px 9px',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    background:
-                      currentFinding.priority === 'High'
-                        ? '#f9e5e5'
-                        : '#fff2d5',
-                    color:
-                      currentFinding.priority === 'High'
-                        ? '#9f2424'
-                        : '#8a6418',
-                  }}
+                  className={`ccf-policy-editor-priority ${
+                    currentFinding.priority === 'High'
+                      ? 'high'
+                      : 'low'
+                  }`}
                 >
                   {(currentFinding.priority || 'Low').toUpperCase()}{' '}
                   PRIORITY
@@ -503,271 +378,120 @@ function PolicyReviewEditingPage() {
           </section>
 
           {/* WHY THIS WAS FLAGGED */}
-
           <section
-            style={{
-              background:
-                currentFinding.priority === 'High'
-                  ? '#fff7f7'
-                  : '#fffaf0',
-              border:
-                currentFinding.priority === 'High'
-                  ? '1px solid #e4b8b8'
-                  : '1px solid #e5d2a6',
-              borderLeft:
-                currentFinding.priority === 'High'
-                  ? '5px solid #b53939'
-                  : '5px solid #c18a20',
-              borderRadius: '5px',
-              padding: '18px 20px',
-              marginBottom: '20px',
-            }}
+            className={`ccf-policy-editor-flagged ${
+              currentFinding.priority === 'High'
+                ? 'high'
+                : 'low'
+            }`}
           >
-            <div
-              style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                color:
-                  currentFinding.priority === 'High'
-                    ? '#9f2424'
-                    : '#8a6418',
-                marginBottom: '7px',
-              }}
-            >
+            <span className="ccf-policy-editor-flagged-label">
               WHY THIS WAS FLAGGED
-            </div>
+            </span>
 
-            <h2
-              style={{
-                fontSize: '17px',
-                margin: '0 0 8px',
-              }}
-            >
+            <h2>
               {currentFinding.summary ||
                 'Suggested policy change'}
             </h2>
 
-            <p
-              style={{
-                margin: 0,
-                lineHeight: '1.6',
-                color: '#444',
-              }}
-            >
+            <p>
               {currentFinding.rationale ||
                 'The selected reference guideline contains language that may require an update to the current policy.'}
             </p>
           </section>
 
           {/* POLICY VS GUIDELINE */}
-
-          <section
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '16px',
-              marginBottom: '20px',
-            }}
-          >
-            {/* CURRENT POLICY */}
-
-            <div style={cardStyle}>
-              <div
-                style={{
-                  padding: '13px 16px',
-                  background: '#f5f6f7',
-                  borderBottom: '1px solid #dddddd',
-                }}
-              >
-                <div style={labelStyle}>
+          <div className="ccf-policy-editor-comparison">
+            <section className="ccf-policy-editor-card ccf-policy-editor-comparison-card">
+              <div className="ccf-policy-editor-comparison-heading">
+                <span className="ccf-policy-editor-label">
                   CURRENT POLICY LANGUAGE
-                </div>
-
+                </span>
                 <strong>{currentFinding.policy}</strong>
               </div>
 
-              <div style={{ padding: '18px' }}>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: '#777',
-                    marginBottom: '10px',
-                  }}
-                >
+              <div className="ccf-policy-editor-comparison-body">
+                <span>
                   {currentFinding.policyCriterion ||
                     'Policy criterion'}
-                </div>
+                </span>
 
-                <p
-                  style={{
-                    margin: 0,
-                    lineHeight: '1.7',
-                    color: '#333',
-                  }}
-                >
-                  {currentFinding.policyText}
-                </p>
+                <p>{currentFinding.policyText}</p>
               </div>
-            </div>
+            </section>
 
-            {/* REFERENCE GUIDELINE */}
-
-            <div
-              style={{
-                ...cardStyle,
-                border: '1px solid #b8d3e3',
-              }}
-            >
-              <div
-                style={{
-                  padding: '13px 16px',
-                  background: '#f0f7fb',
-                  borderBottom: '1px solid #b8d3e3',
-                }}
-              >
-                <div
-                  style={{
-                    ...labelStyle,
-                    color: '#557b91',
-                  }}
-                >
+            <section className="ccf-policy-editor-card ccf-policy-editor-comparison-card">
+              <div className="ccf-policy-editor-comparison-heading guideline">
+                <span className="ccf-policy-editor-label">
                   REFERENCE GUIDELINE
-                </div>
-
+                </span>
                 <strong>{currentFinding.guideline}</strong>
               </div>
 
-              <div style={{ padding: '18px' }}>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    color: '#777',
-                    marginBottom: '10px',
-                  }}
-                >
+              <div className="ccf-policy-editor-comparison-body">
+                <span>
                   {currentFinding.guidelineCriterion ||
                     'Guideline criterion'}
-                </div>
+                </span>
 
-                <p
-                  style={{
-                    margin: 0,
-                    lineHeight: '1.7',
-                    color: '#333',
-                  }}
-                >
-                  {currentFinding.guidelineText}
-                </p>
+                <p>{currentFinding.guidelineText}</p>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
           {/* SUGGESTED POLICY LANGUAGE */}
-
-          <section style={cardStyle}>
-            <div
-              style={{
-                padding: '15px 18px',
-                borderBottom: '1px solid #dddddd',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '20px',
-                flexWrap: 'wrap',
-              }}
-            >
+          <section className="ccf-policy-editor-card">
+            <div className="ccf-policy-editor-section-heading">
               <div>
-                <h2
-                  style={{
-                    fontSize: '17px',
-                    margin: '0 0 4px',
-                  }}
-                >
-                  Suggested Policy Language
-                </h2>
-
-                <div
-                  style={{
-                    fontSize: '13px',
-                    color: '#666',
-                  }}
-                >
+                <h2>Suggested Policy Language</h2>
+                <p>
                   Review the proposed change before
                   accepting or editing it.
-                </div>
+                </p>
               </div>
 
               {!isEditing && (
                 <button
                   type="button"
+                  className="ccf-policy-editor-secondary-button"
                   onClick={() => setIsEditing(true)}
-                  style={secondaryButtonStyle}
                 >
                   Edit Suggested Change
                 </button>
               )}
             </div>
 
-            <div style={{ padding: '18px' }}>
+            <div className="ccf-policy-editor-section-body">
               {isEditing ? (
                 <>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      color: '#555',
-                      marginBottom: '8px',
-                    }}
+                  <label
+                    htmlFor="edited-policy-language"
+                    className="ccf-policy-editor-label"
                   >
                     EDIT POLICY LANGUAGE
-                  </div>
+                  </label>
 
                   <textarea
+                    id="edited-policy-language"
+                    className="ccf-policy-editor-textarea"
                     value={editedText}
                     onChange={(event) =>
                       setEditedText(event.target.value)
                     }
-                    style={textareaStyle}
                   />
 
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: '10px',
-                      marginTop: '12px',
-                    }}
-                  >
+                  <div className="ccf-policy-editor-edit-actions">
                     <button
                       type="button"
-                      onClick={() => {
-                        setEditedText(
-                          currentFinding.suggestedText ||
-                            currentFinding.guidelineText ||
-                            currentFinding.policyText ||
-                            ''
-                        )
-                        setIsEditing(false)
-                      }}
-                      style={secondaryButtonStyle}
+                      className="ccf-policy-editor-secondary-button"
+                      onClick={cancelEdit}
                     >
                       Cancel Edit
                     </button>
                   </div>
                 </>
               ) : (
-                <div
-                  style={{
-                    padding: '16px',
-                    background: '#f5faf6',
-                    border: '1px solid #c9dfcd',
-                    borderLeft: '4px solid #4e8b59',
-                    borderRadius: '4px',
-                    lineHeight: '1.7',
-                    color: '#333',
-                  }}
-                >
+                <div className="ccf-policy-editor-suggested-text">
                   {currentFinding.suggestedText ||
                     currentFinding.guidelineText}
                 </div>
@@ -775,228 +499,178 @@ function PolicyReviewEditingPage() {
             </div>
           </section>
 
-          {/* ==================================
-              NEW: DECISION RATIONALE
-          ================================== */}
-
-          <section
-            style={{
-              ...cardStyle,
-              padding: '20px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '8px',
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: '17px',
-                  margin: 0,
-                }}
-              >
-                Decision Rationale
-              </h2>
-
-              <span
-                style={{
-                  fontSize: '12px',
-                  color: '#a83b3b',
-                  fontWeight: '700',
-                }}
-              >
-                Required
-              </span>
+          {/* DECISION RATIONALE */}
+          <section className="ccf-policy-editor-card ccf-policy-editor-rationale-card">
+            <div className="ccf-policy-editor-rationale-heading">
+              <h2>Decision Rationale</h2>
+              <span>Required</span>
             </div>
 
-            <p
-              style={{
-                fontSize: '13px',
-                color: '#666',
-                lineHeight: '1.6',
-                margin: '0 0 14px',
-              }}
-            >
+            <p className="ccf-policy-editor-muted">
               Explain why you are accepting, rejecting,
-              or editing this recommendation. Your
-              explanation will be saved with your
-              decision and recorded in the Audit Log.
+              or editing this recommendation. Your explanation
+              will be saved with your decision and recorded
+              in the Audit Log.
             </p>
 
             <label
               htmlFor="decision-rationale"
-              style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '700',
-                color: '#555',
-                marginBottom: '8px',
-              }}
+              className="ccf-policy-editor-label"
             >
               REVIEWER'S EXPLANATION
             </label>
 
             <textarea
               id="decision-rationale"
+              className={`ccf-policy-editor-textarea ${
+                rationaleError ? 'error' : ''
+              }`}
               value={decisionRationale}
               onChange={(event) => {
                 setDecisionRationale(event.target.value)
                 setRationaleError(false)
               }}
               placeholder="Explain the reason for your decision. For example: The proposed change better aligns the policy with the selected clinical guideline..."
-              style={{
-                ...textareaStyle,
-                border: rationaleError
-                  ? '2px solid #b53939'
-                  : '1px solid #aaaaaa',
-              }}
             />
 
             {rationaleError && (
               <p
-                style={{
-                  color: '#b53939',
-                  fontSize: '12px',
-                  margin: '8px 0 0',
-                }}
+                className="ccf-policy-editor-error"
+                role="alert"
               >
                 Please provide a rationale before
                 saving your decision.
               </p>
             )}
 
-            <div
-              style={{
-                marginTop: '12px',
-                padding: '11px 13px',
-                background: '#f0f7fb',
-                border: '1px solid #c8dce9',
-                borderRadius: '4px',
-                fontSize: '12px',
-                color: '#45677d',
-                lineHeight: '1.6',
-              }}
-            >
-              <strong>Transparency:</strong> This
-              rationale will be associated with the
-              selected recommendation, your decision,
-              and the review session.
+            <div className="ccf-policy-editor-transparency">
+              <strong>Transparency:</strong> This rationale
+              will be associated with the selected
+              recommendation, your decision, and the
+              review session.
             </div>
           </section>
 
-          {/* ==================================
-              REVIEWER DECISION
-          ================================== */}
+          {/* REVIEWER DECISION */}
+          <section className="ccf-policy-editor-decision-card">
+            <div>
+              <h2>Reviewer Decision</h2>
 
-          <section
-            style={{
-              background: '#f7f8f8',
-              border: '1px solid #dddddd',
-              borderRadius: '6px',
-              padding: '18px 20px',
-              marginBottom: '30px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '25px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <h2
-                  style={{
-                    fontSize: '16px',
-                    margin: '0 0 5px',
-                  }}
-                >
-                  Reviewer Decision
-                </h2>
+              <p>
+                {isEditing
+                  ? 'Save your edited policy language and rationale.'
+                  : 'Accept the suggested change, edit it first, or reject the recommendation.'}
+              </p>
+            </div>
 
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '13px',
-                    color: '#666',
-                    lineHeight: '1.6',
-                  }}
-                >
-                  {isEditing
-                    ? 'Save your edited policy language and rationale.'
-                    : 'Accept the suggested change, edit it first, or reject the recommendation.'}
-                </p>
-              </div>
+            <div className="ccf-policy-editor-decision-actions">
+              {isEditing ? (
+                <>
+                  <button
+                    type="button"
+                    className="ccf-policy-editor-secondary-button"
+                    onClick={cancelEdit}
+                  >
+                    Cancel Edit
+                  </button>
 
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '10px',
-                  flexWrap: 'wrap',
-                  justifyContent: 'flex-end',
-                }}
-              >
-                {isEditing ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      style={secondaryButtonStyle}
-                    >
-                      Cancel Edit
-                    </button>
+                  <button
+                    type="button"
+                    className="ccf-policy-editor-primary-button"
+                    onClick={saveEditedRecommendation}
+                  >
+                    Save Edited Change
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="ccf-policy-editor-reject-button"
+                    onClick={rejectRecommendation}
+                  >
+                    Reject Recommendation
+                  </button>
 
-                    <button
-                      type="button"
-                      className="start-review-button"
-                      onClick={saveEditedRecommendation}
-                    >
-                      Save Edited Change
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={rejectRecommendation}
-                      style={{
-                        ...secondaryButtonStyle,
-                        border: '1px solid #a83b3b',
-                        color: '#9f2424',
-                      }}
-                    >
-                      Reject Recommendation
-                    </button>
+                  <button
+                    type="button"
+                    className="ccf-policy-editor-secondary-button"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit Suggested Change
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(true)}
-                      style={secondaryButtonStyle}
-                    >
-                      Edit Suggested Change
-                    </button>
-
-                    <button
-                      type="button"
-                      className="start-review-button"
-                      onClick={acceptRecommendation}
-                    >
-                      Accept Suggested Change
-                    </button>
-                  </>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    className="ccf-policy-editor-primary-button"
+                    onClick={acceptRecommendation}
+                  >
+                    Accept Suggested Change
+                  </button>
+                </>
+              )}
             </div>
           </section>
         </main>
       </div>
+
+      {/* HELP DIALOG */}
+      {helpOpen && (
+        <div
+          className="ccf-policy-editor-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-policy-editor-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="policy-editor-help-title"
+          >
+            <div className="ccf-policy-editor-help-heading">
+              <h2 id="policy-editor-help-title">
+                Reviewing a Recommendation
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              Compare the current policy language with
+              the reference guideline and proposed change.
+            </p>
+
+            <p>
+              Enter a required rationale explaining your
+              decision. You can accept the suggested
+              language, edit it, or reject the recommendation.
+            </p>
+
+            <p>
+              Accepted changes create a new policy version.
+              All reviewer decisions are recorded in the
+              Audit Log.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-policy-editor-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
