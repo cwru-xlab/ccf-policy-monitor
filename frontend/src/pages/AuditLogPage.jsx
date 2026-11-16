@@ -1,6 +1,8 @@
 
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import './DashboardPage.css'
+import './AuditLogPage.css'
 
 function getSavedArray(key) {
   try {
@@ -29,14 +31,22 @@ function formatDate(value) {
   })
 }
 
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
 function AuditLogPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
+  const [sort, setSort] = useState('Newest first')
+  const [helpOpen, setHelpOpen] = useState(false)
 
-  // ==========================================
-  // READ SAVED DATA
-  // ==========================================
-
+  // Load existing browser data
   const policyVersions = getSavedArray('policyVersions')
   const recommendationDecisions = getSavedArray(
     'recommendationDecisions'
@@ -46,10 +56,7 @@ function AuditLogPage() {
   const addedGuidelines = getSavedArray('addedGuidelines')
   const auditEvents = getSavedArray('auditEvents')
 
-  // ==========================================
-  // POLICY VERSION HISTORY
-  // ==========================================
-
+  // Policy version history
   const policyRecords = policyVersions.map((version, index) => ({
     id: `policy-${version.id || index}`,
     date: version.createdAt || '',
@@ -63,15 +70,7 @@ function AuditLogPage() {
     rationale: '',
   }))
 
-  // ==========================================
-  // RECOMMENDATION DECISION HISTORY
-  // ==========================================
-
-  // New decisions have dedicated audit events.
-  // Older decisions may only exist in recommendationDecisions.
-  // Only use those older records when there is no matching
-  // audit event, to avoid displaying duplicate decisions.
-
+  // Prevent duplicate recommendation decision records
   function hasDecisionAuditEvent(decision) {
     return auditEvents.some((event) => {
       const isDecisionEvent =
@@ -95,6 +94,7 @@ function AuditLogPage() {
     })
   }
 
+  // Recommendation decision history
   const decisionRecords = recommendationDecisions
     .filter((decision) => !hasDecisionAuditEvent(decision))
     .map((decision, index) => ({
@@ -110,10 +110,7 @@ function AuditLogPage() {
       rationale: decision.decisionRationale || '',
     }))
 
-  // ==========================================
-  // REVIEW SESSION HISTORY
-  // ==========================================
-
+  // Review session history
   const reviewRecords = createdReviews.map((review, index) => ({
     id: `review-${review.id || index}`,
     date: review.createdAt || review.date || '',
@@ -121,14 +118,12 @@ function AuditLogPage() {
     action: 'Review Session Created',
     category: 'Review Sessions',
     item: review.name || 'Untitled Review Session',
-    details: review.description || 'Created a new review session',
+    details:
+      review.description || 'Created a new review session',
     rationale: '',
   }))
 
-  // ==========================================
-  // EXPLICIT AUDIT EVENTS
-  // ==========================================
-
+  // Explicit audit events
   const eventRecords = auditEvents.map((event, index) => {
     const isDecision =
       event.type === 'Recommendation Decision' ||
@@ -152,21 +147,16 @@ function AuditLogPage() {
         'Unknown item',
       details:
         event.details ||
-        (
-          isDecision && event.guideline
-            ? `Reference guideline: ${event.guideline}`
-            : event.description || ''
-        ),
+        (isDecision && event.guideline
+          ? `Reference guideline: ${event.guideline}`
+          : event.description || ''),
       rationale: isDecision
         ? event.decisionRationale || event.rationale || ''
         : '',
     }
   })
 
-  // ==========================================
-  // UPLOADED POLICY / GUIDELINE HISTORY
-  // ==========================================
-
+  // Check for upload events already recorded
   function hasUploadEvent(category, name) {
     return eventRecords.some(
       (record) =>
@@ -176,6 +166,7 @@ function AuditLogPage() {
     )
   }
 
+  // Policy uploads without explicit audit events
   const uploadedPolicyRecords = addedPolicies
     .filter(
       (policy) =>
@@ -198,6 +189,7 @@ function AuditLogPage() {
       rationale: '',
     }))
 
+  // Guideline uploads without explicit audit events
   const uploadedGuidelineRecords = addedGuidelines
     .filter(
       (guideline) =>
@@ -220,10 +212,7 @@ function AuditLogPage() {
       rationale: '',
     }))
 
-  // ==========================================
-  // COMBINE AND SORT
-  // ==========================================
-
+  // Combine all audit records
   const allRecords = [
     ...policyRecords,
     ...decisionRecords,
@@ -231,39 +220,38 @@ function AuditLogPage() {
     ...uploadedPolicyRecords,
     ...uploadedGuidelineRecords,
     ...eventRecords,
-  ].sort((a, b) => {
-    const aTime = new Date(a.date).getTime() || 0
-    const bTime = new Date(b.date).getTime() || 0
+  ]
 
-    return bTime - aTime
-  })
+  // Search and filter
+  const visibleRecords = allRecords
+    .filter((record) => {
+      const matchesSearch = [
+        record.action,
+        record.category,
+        record.item,
+        record.user,
+        record.details,
+        record.rationale,
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(search.trim().toLowerCase())
 
-  // ==========================================
-  // SEARCH AND FILTER
-  // ==========================================
+      const matchesFilter =
+        filter === 'All' || record.category === filter
 
-  const visibleRecords = allRecords.filter((record) => {
-    const matchesSearch = [
-      record.action,
-      record.item,
-      record.user,
-      record.details,
-      record.rationale,
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(search.toLowerCase())
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.date).getTime() || 0
+      const bTime = new Date(b.date).getTime() || 0
 
-    const matchesFilter =
-      filter === 'All' || record.category === filter
+      return sort === 'Oldest first'
+        ? aTime - bTime
+        : bTime - aTime
+    })
 
-    return matchesSearch && matchesFilter
-  })
-
-  // ==========================================
-  // SUMMARY COUNTS
-  // ==========================================
-
+  // Summary counts
   const policyCount = allRecords.filter(
     (record) => record.category === 'Policy Changes'
   ).length
@@ -273,58 +261,42 @@ function AuditLogPage() {
   ).length
 
   const decisionCount = allRecords.filter(
-    (record) => record.category === 'Recommendation Decisions'
+    (record) =>
+      record.category === 'Recommendation Decisions'
   ).length
 
   const reviewCount = allRecords.filter(
     (record) => record.category === 'Review Sessions'
   ).length
 
-  const columnStyle = {
-    display: 'grid',
-    gridTemplateColumns:
-      '1.2fr 0.9fr 1.3fr 1.3fr 2fr',
-    gap: '16px',
-  }
-
-  // ==========================================
-  // PAGE
-  // ==========================================
+  const mappingCount = allRecords.filter(
+    (record) => record.category === 'Document Mappings'
+  ).length
 
   return (
-    <div className="app-page">
-      {/* TOP BAR */}
-
+    <div className="app-page ccf-dashboard ccf-audit-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
-          <span className="brand-divider"></span>
-
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-
-            <input
-              type="text"
-              placeholder="Search policies, guidelines..."
-            />
-          </div>
-
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
+          <button
+            type="button"
+            className="ccf-help-button"
+            aria-label="Help with Audit Log"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
+            <div className="user-avatar">SC</div>
             <span>Sarah Chen</span>
           </div>
         </div>
@@ -332,254 +304,283 @@ function AuditLogPage() {
 
       <div className="app-body">
         {/* SIDEBAR */}
-
-        <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-
-          <Link to="/reviews" className="nav-item">
-            Review Sessions
-          </Link>
-
-          <Link to="/policies" className="nav-item">
-            Policy Database
-          </Link>
-
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-          <Link
-            to="/audit-log"
-            className="nav-item active"
-          >
-            Audit Log
-          </Link>
+        <aside className="sidebar" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
         {/* MAIN CONTENT */}
-
-        <main
-          className="policy-reviews-content"
-          style={{ width: '100%' }}
-        >
-          <h1>Audit Log</h1>
-
-          <p className="page-subtitle">
-            View policy and guideline changes,
-            recommendation decisions, reviewer
-            rationales, and review sessions.
-          </p>
+        <main className="ccf-audit-content">
+          <div className="ccf-audit-heading">
+            <h1>Audit Log</h1>
+            <p>
+              Track policy and guideline changes, review
+              sessions, recommendation decisions, reviewer
+              rationales, and document mappings.
+            </p>
+          </div>
 
           {/* SUMMARY CARDS */}
-
-{/* SEARCH AND FILTER */}
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              marginBottom: '22px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <input
-              className="review-search"
-              type="text"
-              placeholder="Search audit history or rationale..."
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-            />
-
-            <select
-              value={filter}
-              onChange={(event) =>
-                setFilter(event.target.value)
-              }
-              style={{
-                padding: '11px 14px',
-                border: '1px solid #d1d5db',
-                borderRadius: '7px',
-                background: 'white',
-              }}
-            >
-              <option value="All">
-                All Actions
-              </option>
-
-              <option value="Policy Changes">
-                Policy Changes
-              </option>
-
-              <option value="Guideline Changes">
-                Guideline Changes
-              </option>
-
-              <option value="Recommendation Decisions">
-                Recommendation Decisions
-              </option>
-
-              <option value="Review Sessions">
-                Review Sessions
-              </option>
-            </select>
-          </div>
-
-          {/* AUDIT TABLE */}
-
-          <div
-            style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '10px',
-              overflowX: 'auto',
-            }}
-          >
-            {/* TABLE HEADER */}
-
-            <div
-              style={{
-                ...columnStyle,
-                minWidth: '780px',
-                padding: '18px 22px',
-                background: '#f8fafc',
-                borderBottom: '1px solid #e5e7eb',
-                fontSize: '12px',
-                fontWeight: 700,
-                color: '#64748b',
-              }}
-            >
-              <span>DATE</span>
-              <span>USER</span>
-              <span>ACTION</span>
-              <span>ITEM</span>
-              <span>DETAILS</span>
+          <div className="ccf-audit-stats">
+            <div className="ccf-audit-stat">
+              <span>Total Events</span>
+              <strong>{allRecords.length}</strong>
             </div>
 
-            {/* TABLE ROWS */}
+            <div className="ccf-audit-stat">
+              <span>Policy Changes</span>
+              <strong>{policyCount}</strong>
+            </div>
 
-            {visibleRecords.map((record) => (
-              <div
-                key={record.id}
-                style={{
-                  ...columnStyle,
-                  minWidth: '780px',
-                  padding: '18px 22px',
-                  borderBottom:
-                    '1px solid #edf0f3',
-                  alignItems: 'start',
-                  fontSize: '13px',
-                }}
-              >
-                <span>
-                  {formatDate(record.date)}
-                </span>
+            <div className="ccf-audit-stat">
+              <span>Guideline Changes</span>
+              <strong>{guidelineCount}</strong>
+            </div>
 
-                <span>{record.user}</span>
+            <div className="ccf-audit-stat">
+              <span>Decisions</span>
+              <strong>{decisionCount}</strong>
+            </div>
 
-                <span
-                  style={{ fontWeight: 600 }}
-                >
-                  {record.action}
-                </span>
+            <div className="ccf-audit-stat">
+              <span>Review Sessions</span>
+              <strong>{reviewCount}</strong>
+            </div>
 
-                <span>{record.item}</span>
-
-                <div
-                  style={{
-                    color: '#64748b',
-                    lineHeight: '1.6',
-                    overflowWrap: 'anywhere',
-                  }}
-                >
-                  <div>{record.details}</div>
-
-                  {/* NEW: SHOW REVIEWER RATIONALE */}
-
-                  {record.rationale && (
-                    <div
-                      style={{
-                        marginTop: '10px',
-                        padding: '11px 13px',
-                        background: '#f0f7fb',
-                        border: '1px solid #c8dce9',
-                        borderRadius: '5px',
-                        color: '#334155',
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          color: '#0078bf',
-                          marginBottom: '5px',
-                        }}
-                      >
-                        REVIEWER DECISION RATIONALE
-                      </div>
-
-                      <div
-                        style={{
-                          whiteSpace: 'pre-wrap',
-                        }}
-                      >
-                        {record.rationale}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {/* EMPTY STATE */}
-
-            {visibleRecords.length === 0 && (
-              <div
-                style={{
-                  padding: '45px 20px',
-                  textAlign: 'center',
-                  color: '#64748b',
-                }}
-              >
-                {allRecords.length === 0
-                  ? 'No recorded changes yet. Add a policy, upload a guideline, or create a review session to see activity here.'
-                  : 'No audit records match your search or filter.'}
-              </div>
-            )}
+            <div className="ccf-audit-stat">
+              <span>Document Mappings</span>
+              <strong>{mappingCount}</strong>
+            </div>
           </div>
 
-          {/* PROTOTYPE NOTICE */}
+          {/* AUDIT HISTORY */}
+          <section className="ccf-audit-panel">
+            <div className="ccf-audit-panel-heading">
+              <div>
+                <h2>Activity History</h2>
+                <p>
+                  Browse and filter recorded workspace activity.
+                </p>
+              </div>
 
-          <p
-            style={{
-              fontSize: '12px',
-              color: '#64748b',
-              marginTop: '18px',
-              lineHeight: '1.6',
-            }}
-          >
-            This prototype displays records saved in
-            this browser. Audit history is not yet
-            shared across users or devices, and browser
-            storage can be changed or cleared. Upload
-            records inferred from existing database
-            items may not include an exact upload time.
-            Deleted items are tracked when their pages
-            save deletion events.
+              <span className="ccf-audit-count">
+                {visibleRecords.length} events
+              </span>
+            </div>
+
+            <div className="ccf-audit-controls">
+              <input
+                type="search"
+                className="ccf-audit-search"
+                placeholder="Search audit history or rationale..."
+                aria-label="Search audit history"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+              />
+
+              <label className="ccf-audit-select-label">
+                <span>Category</span>
+                <select
+                  value={filter}
+                  onChange={(event) =>
+                    setFilter(event.target.value)
+                  }
+                >
+                  <option value="All">All Actions</option>
+                  <option value="Policy Changes">
+                    Policy Changes
+                  </option>
+                  <option value="Guideline Changes">
+                    Guideline Changes
+                  </option>
+                  <option value="Recommendation Decisions">
+                    Recommendation Decisions
+                  </option>
+                  <option value="Review Sessions">
+                    Review Sessions
+                  </option>
+                  <option value="Document Mappings">
+                    Document Mappings
+                  </option>
+                </select>
+              </label>
+
+              <label className="ccf-audit-select-label">
+                <span>Sort by</span>
+                <select
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value)
+                  }
+                >
+                  <option value="Newest first">
+                    Newest first
+                  </option>
+                  <option value="Oldest first">
+                    Oldest first
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            {/* SCROLLABLE TABLE */}
+            <div className="ccf-audit-table-scroll">
+              <table className="ccf-audit-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Category</th>
+                    <th>Item</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {visibleRecords.map((record) => (
+                    <tr key={record.id}>
+                      <td className="ccf-audit-date">
+                        {formatDate(record.date)}
+                      </td>
+
+                      <td>{record.user}</td>
+
+                      <td>
+                        <strong className="ccf-audit-action">
+                          {record.action}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span className="ccf-audit-category">
+                          {record.category}
+                        </span>
+                      </td>
+
+                      <td className="ccf-audit-item">
+                        {record.item}
+                      </td>
+
+                      <td className="ccf-audit-details">
+                        <div>{record.details}</div>
+
+                        {record.rationale && (
+                          <div className="ccf-audit-rationale">
+                            <strong>
+                              Reviewer Decision Rationale
+                            </strong>
+                            <p>{record.rationale}</p>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {visibleRecords.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="ccf-audit-empty"
+                      >
+                        {allRecords.length === 0
+                          ? 'No recorded changes yet. Upload a policy or guideline, create a review session, or save a mapping to see activity here.'
+                          : 'No audit records match your search or filter.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="ccf-audit-table-footer">
+              Showing {visibleRecords.length} of{' '}
+              {allRecords.length} events
+            </div>
+          </section>
+
+          <p className="ccf-audit-notice">
+            This prototype displays records saved in this browser.
+            Audit history is not shared across users or devices,
+            and browser storage can be changed or cleared.
+            Records inferred from existing database items may
+            not have exact timestamps. Deleted items appear
+            when their pages save deletion events.
           </p>
         </main>
       </div>
+
+      {/* HELP DIALOG */}
+      {helpOpen && (
+        <div
+          className="ccf-audit-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-audit-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="audit-help-title"
+          >
+            <div className="ccf-audit-help-heading">
+              <h2 id="audit-help-title">
+                Audit Log Help
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              The Audit Log displays recorded changes made
+              throughout the workspace.
+            </p>
+
+            <p>
+              Use the search bar to find events by policy,
+              guideline, action, user, or reviewer rationale.
+            </p>
+
+            <p>
+              Use Category to filter activity and Sort by
+              to change the order of events.
+            </p>
+
+            <p>
+              The activity is stored in your browser for
+              this prototype, not in a shared audit database.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-audit-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

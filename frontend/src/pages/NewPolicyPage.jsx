@@ -1,389 +1,480 @@
 
-import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { uploadPolicy } from '../api'
 import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
+import './DashboardPage.css'
+import './NewPolicyPage.css'
+
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
+function getSavedArray(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key))
+    return Array.isArray(data) ? data : []
+  } catch {
+    return []
+  }
+}
 
 function NewPolicyPage() {
   const navigate = useNavigate()
 
   const [policyName, setPolicyName] = useState('')
-
   const [selectedFile, setSelectedFile] = useState(null)
 
-  // Backend upload state
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [parsedPolicy, setParsedPolicy] = useState(null)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [documentId, setDocumentId] = useState(null)
 
-  // Handles selecting a file from the computer
+  // Select a policy document
   function handleFileChange(event) {
-    const file = event.target.files[0]
+    const file = event.target.files?.[0]
 
-    if (file) {
-      setUploadSuccess(false)
-      setUploadError('')
-      setDocumentId(null)
-      setSelectedFile({
-        name: file.name,
-        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        file,
-      })
+    if (!file) return
+
+    const allowedExtensions = ['pdf', 'docx']
+    const extension = file.name.split('.').pop()?.toLowerCase()
+
+    if (!allowedExtensions.includes(extension)) {
+      setUploadError('Please select a PDF or DOCX file.')
+      return
     }
+
+    setSelectedFile({
+      name: file.name,
+      size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+      file,
+    })
+
+    setUploadError('')
+    setUploadSuccess(false)
+    setParsedPolicy(null)
+    setDocumentId(null)
   }
 
-  // Removes the selected file
+  // Remove selected file
   function removeFile() {
     setSelectedFile(null)
-    setUploadSuccess(false)
     setUploadError('')
+    setUploadSuccess(false)
+    setParsedPolicy(null)
     setDocumentId(null)
   }
 
-  // Runs when Upload Documents is clicked
+  // Upload policy to the backend
   async function uploadDocuments() {
-    // Make sure the user entered a policy name
     if (policyName.trim() === '') {
-      alert('Please enter a policy name.')
+      setUploadError('Please enter a policy name.')
       return
     }
 
-    // Make sure the user selected a file
     if (!selectedFile) {
-      alert('Please select a policy document.')
+      setUploadError('Please select a policy document.')
       return
     }
 
-    // Upload to the backend and wait for the parse job
     setUploading(true)
     setUploadError('')
+    setParsedPolicy(null)
     setUploadSuccess(false)
     setDocumentId(null)
 
-    // A failed parse is still saved below (as 'Parse Failed') so it shows in the
-    // Policies view and can be deleted or re-uploaded.
+    // A failed parse is still saved below so it shows in the Policies
+    // view and can be deleted or re-uploaded.
     let parseFailed = false
     let storedDocumentId = null
+    let policy = null
+
     try {
-      await uploadPolicy(selectedFile.file, (id) => {
+      policy = await uploadPolicy(selectedFile.file, (id) => {
         storedDocumentId = id
         setDocumentId(id)
       })
+      setParsedPolicy(policy)
     } catch (error) {
-      setUploadError(error.message)
+      setUploadError(
+        error instanceof Error
+          ? error.message
+          : 'The policy could not be uploaded.'
+      )
       parseFailed = true
     }
 
-    // Get today's date
     const today = new Date().toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     })
 
-    // Create the new policy
     const newPolicy = {
       id: Date.now(),
-
-      name: policyName,
-
-      description: `Policy review for ${policyName}.`,
-
+      name: policyName.trim(),
+      description: `Policy review for ${policyName.trim()}.`,
       date: today,
-
       age: 'Just now',
-
       updated: today,
-
       updatedAge: 'Just now',
-
       status: parseFailed ? 'Parse Failed' : 'In Review',
-
       fileName: selectedFile.name,
       documentId: storedDocumentId,
+      createdAt: new Date().toISOString(),
     }
 
-    // Get policies that were previously added, dropping an earlier upload of
-    // the same file so a retry replaces it
     try {
-      const savedPolicies = (
-        JSON.parse(localStorage.getItem('addedPolicies')) || []
-      ).filter((policy) => policy.fileName !== selectedFile.name)
+      const savedPolicies = getSavedArray('addedPolicies').filter(
+        (item) => item.fileName !== selectedFile.name
+      )
 
-      // Add the new policy
-      savedPolicies.push(newPolicy)
+      localStorage.setItem(
+        'addedPolicies',
+        JSON.stringify([...savedPolicies, newPolicy])
+      )
 
-      // Save the updated list
-      localStorage.setItem('addedPolicies', JSON.stringify(savedPolicies))
       setUploadSuccess(!parseFailed)
     } catch {
-      setUploadError('The document was uploaded, but the policy could not be saved in this browser.')
+      setUploadError((current) =>
+        current
+          ? `${current} The policy could not be saved in this browser.`
+          : 'The document was uploaded, but the policy could not be saved in this browser.'
+      )
     } finally {
       setUploading(false)
     }
   }
 
   return (
-    <div className="app-page">
-      {/* =========================
-          TOP BAR
-      ========================= */}
-
+    <div className="app-page ccf-new-policy-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
-          <span className="brand-divider"></span>
-
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-
-            <input
-              type="text"
-              placeholder="Search policies, codes..."
-            />
-          </div>
-
-          <span className="top-icon">
+          <button
+            type="button"
+            className="ccf-new-policy-help-button"
+            aria-label="Help with uploading policies"
+            onClick={() => setHelpOpen(true)}
+          >
             ?
-          </span>
-
-          <span className="top-icon">
-            ⚙
-          </span>
+          </button>
 
           <div className="user-area">
-            <div className="user-avatar">
-              SC
-            </div>
-
-            <span>
-              Sarah Chen
-            </span>
+            <div className="user-avatar">SC</div>
+            <span>Sarah Chen</span>
           </div>
         </div>
       </header>
 
       <div className="app-body">
-        {/* =========================
-            UPDATED SIDEBAR
-        ========================= */}
-
+        {/* SIDEBAR */}
         <aside className="sidebar">
-          <Link
-            to="/dashboard"
-            className="nav-item"
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            to="/reviews"
-            className="nav-item"
-          >
-            Review Sessions
-          </Link>
-
-          <Link
-            to="/policies"
-            className="nav-item active"
-          >
-            Policy Database
-          </Link>
-
-          <Link
-            to="/guidelines"
-            className="nav-item"
-          >
-            Guideline Database
-          </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-          <Link
-            to="/audit-log"
-            className="nav-item"
-          >
-            Audit Log
-          </Link>
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={() =>
+                `nav-item${
+                  item.path === '/policies'
+                    ? ' active'
+                    : ''
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
-        {/* =========================
-            MAIN CONTENT
-        ========================= */}
-
-        <main className="new-policy-content">
-          {/* Back button */}
-
+        {/* MAIN CONTENT */}
+        <main className="ccf-new-policy-content">
           <Link
             to="/policies"
-            className="back-link"
+            className="ccf-new-policy-back"
           >
             ← Back to Policies
           </Link>
 
-          <h1>
-            New Policy
-          </h1>
+          <div className="ccf-new-policy-heading">
+            <h1>New Policy</h1>
+            <p>
+              Upload a new policy document to the Policy Database.
+            </p>
+          </div>
 
-          <p className="new-policy-subtitle">
-            Upload new policies
-          </p>
+          {/* POLICY INFORMATION */}
+          <section className="ccf-new-policy-card">
+            <div className="ccf-new-policy-card-heading">
+              <h2>Policy Information</h2>
+              <p>
+                Enter a descriptive name for the policy.
+              </p>
+            </div>
 
-          {/* =========================
-              POLICY INFORMATION
-          ========================= */}
+            <div className="ccf-new-policy-field">
+              <label htmlFor="new-policy-name">
+                Policy Name
+              </label>
 
-          <section className="new-policy-card">
-            <h2>
-              Policy Information
-            </h2>
-
-            <label className="new-policy-label">
-              Policy Name
-            </label>
-
-            <input
-              className="new-policy-name-input"
-              type="text"
-              placeholder="Enter a name for this policy"
-              value={policyName}
-              disabled={uploading}
-              onChange={(event) =>
-                setPolicyName(event.target.value)
-              }
-            />
+              <input
+                id="new-policy-name"
+                type="text"
+                placeholder="Enter a name for this policy"
+                value={policyName}
+                disabled={uploading || uploadSuccess}
+                onChange={(event) => {
+                  setPolicyName(event.target.value)
+                  setUploadError('')
+                }}
+              />
+            </div>
           </section>
 
-          {/* =========================
-              POLICY DOCUMENT
-          ========================= */}
+          {/* POLICY DOCUMENT */}
+          <section className="ccf-new-policy-card">
+            <div className="ccf-new-policy-card-heading">
+              <h2>Policy Document</h2>
+              <p>
+                Choose a PDF or DOCX file to upload
+                and parse.
+              </p>
+            </div>
 
-          <section className="new-policy-card policy-upload-card">
-            <h2>
-              Policy Document(s)
-            </h2>
-
-            <p>
-              Upload or select the policy documents you want to review.
-            </p>
-
-            <label className="new-policy-upload-area">
+            <label
+              className={`ccf-new-policy-upload-area${
+                uploading || uploadSuccess
+                  ? ' disabled'
+                  : ''
+              }`}
+            >
               <input
                 type="file"
                 accept=".pdf,.docx"
-                disabled={uploading}
-                hidden
                 onChange={handleFileChange}
+                disabled={uploading || uploadSuccess}
+                hidden
               />
 
-              <div className="new-policy-upload-icon">
-                ⇧
-              </div>
+              <span className="ccf-new-policy-upload-icon">
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 16V3" />
+                  <path d="m7 8 5-5 5 5" />
+                  <path d="M4 16v4h16v-4" />
+                </svg>
+              </span>
 
-              <div>
-                <strong>
-                  Click to upload
-                </strong>
+              <strong>Click to select a document</strong>
 
-                <span>
-                  {' '}
-                  or drag and drop a PDF or DOCX file here,
-                  or browse your computer.
-                </span>
-              </div>
+              <span>
+                PDF or DOCX
+              </span>
             </label>
+
+            {/* SELECTED FILE */}
+            {selectedFile && (
+              <div className="ccf-new-policy-selected-file">
+                <div className="ccf-new-policy-file-info">
+                  <span className="ccf-new-policy-file-icon">
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 2v6h6" />
+                      <path d="M8 13h8" />
+                      <path d="M8 17h8" />
+                    </svg>
+                  </span>
+
+                  <div>
+                    <strong>{selectedFile.name}</strong>
+                    <small>{selectedFile.size}</small>
+                  </div>
+                </div>
+
+                {!uploading && !uploadSuccess && (
+                  <button
+                    type="button"
+                    className="ccf-new-policy-remove-button"
+                    onClick={removeFile}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            )}
           </section>
 
-          {/* =========================
-              SELECTED FILE
-          ========================= */}
+          {/* ERROR MESSAGE */}
+          {uploadError && (
+            <div
+              className="ccf-new-policy-error"
+              role="alert"
+            >
+              {uploadError}
+            </div>
+          )}
 
-          {selectedFile && (
-            <div className="new-policy-selected-file">
-              <div>
-                <strong>
-                  {selectedFile.name}
-                </strong>
-
-                <small>
-                  {selectedFile.name.split('.').pop().toUpperCase()} • {selectedFile.size}
-                </small>
-              </div>
+          {/* SUCCESS MESSAGE */}
+          {uploadSuccess && (
+            <div
+              className="ccf-new-policy-success"
+              role="status"
+            >
+              <strong>Policy uploaded successfully.</strong>
+              <p>
+                Your policy has been added to the Policy
+                Database in this browser.
+              </p>
 
               <button
                 type="button"
-                onClick={removeFile}
-                disabled={uploading}
+                className="ccf-new-policy-secondary-button"
+                onClick={() => navigate('/policies')}
               >
-                Remove
+                View Policy Database →
               </button>
             </div>
           )}
 
-          {/* =========================
-              BOTTOM BUTTONS
-          ========================= */}
-
-          <div className="new-policy-actions">
+          {/* ACTION BUTTONS */}
+          <div className="ccf-new-policy-actions">
             <button
               type="button"
-              className="cancel-policy-button"
+              className="ccf-new-policy-secondary-button"
+              onClick={() => navigate('/policies')}
               disabled={uploading}
-              onClick={() =>
-                navigate('/policies')
-              }
             >
               Cancel
             </button>
 
             <button
               type="button"
-              className="upload-policy-button"
+              className="ccf-new-policy-primary-button"
               onClick={uploadDocuments}
               disabled={uploading || uploadSuccess}
             >
-              {uploading ? 'Parsing…' : 'Upload Documents'}
+              {uploading
+                ? 'Uploading and Parsing...'
+                : uploadSuccess
+                  ? 'Upload Complete'
+                  : 'Upload Documents'}
             </button>
           </div>
 
-          {/* =========================
-              PARSE RESULT
-              Upload status
-          ========================= */}
+          {/* BACKEND PARSE RESULT */}
+          {parsedPolicy && (
+            <section className="ccf-new-policy-card">
+              <div className="ccf-new-policy-card-heading">
+                <h2>Parsed Policy Result</h2>
+                <p>
+                  Raw response returned by the backend.
+                </p>
+              </div>
 
-          {uploadError && (
-            <p className="new-policy-error" role="alert">
-              {uploadError}
-            </p>
+              <pre className="ccf-new-policy-result">
+                {JSON.stringify(parsedPolicy, null, 2)}
+              </pre>
+            </section>
           )}
 
-          {uploadSuccess && (
-            <div className="new-policy-success" role="status">
-              <strong>Policy uploaded successfully.</strong>
-              <p>Your document has been processed and is ready for review.</p>
-              <Link to="/policies">Go to Policies</Link>
-            </div>
-          )}
           {documentId && (
-            <PolicyDocumentViewer key={documentId} documentId={documentId} fileName={selectedFile?.name} />
+            <PolicyDocumentViewer
+              key={documentId}
+              documentId={documentId}
+              fileName={selectedFile?.name}
+            />
           )}
         </main>
       </div>
+
+      {/* HELP DIALOG */}
+      {helpOpen && (
+        <div
+          className="ccf-new-policy-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-new-policy-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="new-policy-help-title"
+          >
+            <div className="ccf-new-policy-help-heading">
+              <h2 id="new-policy-help-title">
+                Uploading a Policy
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              Enter a policy name and select a PDF or DOCX file.
+            </p>
+
+            <p>
+              Click Upload Documents to send the file
+              to the backend for parsing.
+            </p>
+
+            <p>
+              After a successful upload, you can view
+              the policy in the Policy Database.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-new-policy-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import {
   getGuidelinesForPolicies,
   getGuidelinesForPolicy,
@@ -14,6 +14,9 @@ import {
   pairKey,
   saveConflictReports,
 } from '../data/conflictFindings'
+
+import './DashboardPage.css'
+import './ReviewFindingsPage.css'
 
 // ==========================================
 // READ LOCAL STORAGE SAFELY
@@ -39,8 +42,20 @@ function getSavedObject(key) {
   }
 }
 
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
 function ReviewFindingsPage() {
   const navigate = useNavigate()
+
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [helpOpen, setHelpOpen] = useState(false)
 
   // ==========================================
   // CURRENT REVIEW SESSION
@@ -54,21 +69,13 @@ function ReviewFindingsPage() {
     ? currentReview.selectedPolicies
     : getSavedArray('selectedPolicies')
 
-  // ==========================================
-  // GUIDELINES SAVED WITH THE REVIEW
-  // ==========================================
-
   const savedGuidelines = Array.isArray(
     currentReview?.selectedGuidelines
   )
     ? currentReview.selectedGuidelines
     : getSavedArray('selectedGuidelines')
 
-  // Recalculate associations using the shared mapping
-  // logic. The review's saved guidelines are used so
-  // historical reviews do not depend on newly added
-  // guidelines from other sessions.
-
+  // Preserve the existing mapping behavior
   const selectedGuidelines = getGuidelinesForPolicies(
     selectedPolicies,
     savedGuidelines
@@ -79,14 +86,7 @@ function ReviewFindingsPage() {
     localStorage.getItem('newReviewName') ||
     'Policy Review Session'
 
-  const reviewDescription =
-    currentReview?.description || ''
-
-  // ==========================================
-  // FILTER
-  // ==========================================
-
-  const [activeFilter, setActiveFilter] = useState('All')
+  const reviewDescription = currentReview?.description || ''
 
   // ==========================================
   // SAVED REVIEWER DECISIONS
@@ -159,7 +159,8 @@ function ReviewFindingsPage() {
         pairReports.forEach((report) => {
           updated = {
             ...updated,
-            [pairKey(guideline.documentId, report.policy_document_id)]: report,
+            [pairKey(guideline.documentId, report.policy_document_id)]:
+              report,
           }
         })
         setReports(updated)
@@ -173,7 +174,7 @@ function ReviewFindingsPage() {
   }
 
   // ==========================================
-  // COUNTS
+  // SUMMARY COUNTS
   // ==========================================
 
   const highPriorityCount = results.filter(
@@ -208,13 +209,11 @@ function ReviewFindingsPage() {
     highPriorityCount + lowPriorityCount
 
   // ==========================================
-  // FILTER RESULTS
+  // FILTER FINDINGS
   // ==========================================
 
   const visibleResults = results.filter((result) => {
-    if (activeFilter === 'All') {
-      return true
-    }
+    if (activeFilter === 'All') return true
 
     if (activeFilter === 'Needs Attention') {
       return (
@@ -258,9 +257,7 @@ function ReviewFindingsPage() {
       JSON.stringify(result)
     )
 
-    navigate(
-      `/reviews/findings/${encodeURIComponent(result.id)}/edit`
-    )
+    navigate(`/reviews/findings/${encodeURIComponent(result.id)}/edit`)
   }
 
   // ==========================================
@@ -330,61 +327,40 @@ function ReviewFindingsPage() {
     navigate('/reviews')
   }
 
-  // ==========================================
-  // COMMON STYLES
-  // ==========================================
-
-  const summaryCardStyle = {
-    background: '#ffffff',
-    border: '1px solid #dddddd',
-    borderRadius: '6px',
-    padding: '18px',
-  }
-
-  const summaryLabelStyle = {
-    fontSize: '12px',
-    color: '#777',
-    fontWeight: '700',
-    marginBottom: '8px',
-  }
-
-  const summaryNumberStyle = {
-    fontSize: '27px',
-    fontWeight: '700',
-  }
+  const filters = [
+    { name: 'All', count: results.length },
+    { name: 'Needs Attention', count: actionCount },
+    { name: 'Decided', count: decidedCount },
+    { name: 'High Priority', count: highPriorityCount },
+    { name: 'Low Priority', count: lowPriorityCount },
+    { name: 'No Change Needed', count: noChangeCount },
+  ]
 
   // ==========================================
   // PAGE
   // ==========================================
 
   return (
-    <div className="app-page">
-      {/* TOP BAR */}
-
+    <div className="app-page ccf-review-findings-page">
+      {/* GREEN CCF HEADER */}
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
-          <span className="brand-divider"></span>
-
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-            <input
-              type="text"
-              placeholder="Search policies, guidelines..."
-            />
-          </div>
-
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
+          <button
+            type="button"
+            className="ccf-findings-help-button"
+            aria-label="Help with review findings"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
 
           <div className="user-area">
             <div className="user-avatar">SC</div>
@@ -395,77 +371,48 @@ function ReviewFindingsPage() {
 
       <div className="app-body">
         {/* SIDEBAR */}
-
         <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-
-          <Link
-            to="/reviews"
-            className="nav-item active"
-          >
-            Review Sessions
-          </Link>
-
-          <Link to="/policies" className="nav-item">
-            Policy Database
-          </Link>
-
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-          <Link to="/audit-log" className="nav-item">
-            Audit Log
-          </Link>
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={() =>
+                `nav-item${
+                  item.path === '/reviews' ? ' active' : ''
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
         {/* MAIN CONTENT */}
-
         <main className="review-findings-content">
-          <Link to="/reviews" className="back-link">
+          <Link
+            to="/reviews"
+            className="ccf-findings-back-link"
+          >
             ← Back to Review Sessions
           </Link>
 
-          {/* TITLE */}
-
-          <div className="findings-title-row">
+          {/* PAGE HEADING */}
+          <div className="ccf-findings-title-row">
             <div>
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  color: '#0078bf',
-                  marginBottom: '6px',
-                }}
-              >
+              <div className="ccf-findings-eyebrow">
                 REVIEW RESULTS
               </div>
 
               <h1>{reviewName}</h1>
 
-              <p className="review-findings-subtitle">
+              <p className="ccf-findings-subtitle">
                 Run the conflict check on the mapped policies
                 and guidelines, then act on each conflict it
                 reports.
               </p>
 
               {reviewDescription && (
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: '#64748b',
-                    marginTop: '8px',
-                  }}
-                >
+                <p className="ccf-findings-description">
                   {reviewDescription}
                 </p>
               )}
@@ -474,7 +421,7 @@ function ReviewFindingsPage() {
             {currentReview?.status !== 'Completed' && (
               <button
                 type="button"
-                className="complete-review-button"
+                className="ccf-findings-primary-button"
                 onClick={completeReview}
               >
                 Complete Review Session
@@ -482,203 +429,79 @@ function ReviewFindingsPage() {
             )}
           </div>
 
-          {/* CONFLICT CHECK */}
-
-          <section
-            style={{
-              padding: '14px 16px',
-              marginTop: '20px',
-              background: '#f8fafc',
-              border: '1px solid #dbe3eb',
-              borderLeft: '4px solid #64748b',
-              borderRadius: '4px',
-              fontSize: '13px',
-              lineHeight: '1.6',
-              color: '#475569',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '16px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <strong>Conflict check:</strong>{' '}
-                {pairCount === 0
-                  ? 'none of the mapped guideline-policy pairs has an uploaded document on both sides, so nothing can be checked.'
-                  : `${pairCount} mapped guideline-policy ${
-                      pairCount === 1 ? 'pair' : 'pairs'
-                    } can be checked. Each guideline criterion is compared with the criteria of its mapped policies only.`}
-                {lastChecked && (
-                  <div>
-                    Last checked{' '}
-                    {new Date(lastChecked).toLocaleString()}
-                    {checkModel && ` with ${checkModel}`}.
-                  </div>
-                )}
-              </div>
-
-              {pairCount > 0 && (
-                <button
-                  type="button"
-                  className="complete-review-button"
-                  onClick={runConflictCheck}
-                  disabled={checking}
-                >
-                  {checking
-                    ? 'Checking… (can take a minute)'
-                    : lastChecked
-                    ? 'Re-run Conflict Check'
-                    : 'Run Conflict Check'}
-                </button>
+          <section className="ccf-findings-check">
+            <div>
+              <strong>Conflict check:</strong>{' '}
+              {pairCount === 0
+                ? 'none of the mapped guideline-policy pairs has an uploaded document on both sides, so nothing can be checked.'
+                : `${pairCount} mapped guideline-policy ${
+                    pairCount === 1 ? 'pair' : 'pairs'
+                  } can be checked. Each guideline criterion is compared with the criteria of its mapped policies only.`}
+              {lastChecked && (
+                <p>
+                  Last checked{' '}
+                  {new Date(lastChecked).toLocaleString()}
+                  {checkModel && ` with ${checkModel}`}.
+                </p>
+              )}
+              {uncheckable.length > 0 && (
+                <p>
+                  Not checked (no uploaded document):{' '}
+                  {uncheckable
+                    .map((item) => item.name || item.fileName)
+                    .join(', ')}
+                  .
+                </p>
+              )}
+              {checkError && (
+                <p className="ccf-findings-check-error" role="alert">
+                  Conflict check failed. {checkError}
+                </p>
               )}
             </div>
 
-            {uncheckable.length > 0 && (
-              <div style={{ marginTop: '8px' }}>
-                Not checked (no uploaded document):{' '}
-                {uncheckable
-                  .map((item) => item.name || item.fileName)
-                  .join(', ')}
-                .
-              </div>
-            )}
-
-            {checkError && (
-              <div
-                role="alert"
-                style={{
-                  marginTop: '8px',
-                  color: '#9f2424',
-                  whiteSpace: 'pre-wrap',
-                }}
+            {pairCount > 0 && (
+              <button
+                type="button"
+                className="ccf-findings-primary-button"
+                onClick={runConflictCheck}
+                disabled={checking}
               >
-                Conflict check failed. {checkError}
-              </div>
+                {checking
+                  ? 'Checking… (can take a minute)'
+                  : lastChecked
+                    ? 'Re-run Conflict Check'
+                    : 'Run Conflict Check'}
+              </button>
             )}
           </section>
 
-          {/* REVIEW SUMMARY */}
-
-          <section
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '14px',
-              margin: '24px 0',
-            }}
-          >
-            <div style={summaryCardStyle}>
-              <div style={summaryLabelStyle}>
-                POLICIES REVIEWED
-              </div>
-
-              <div style={summaryNumberStyle}>
-                {selectedPolicies.length}
-              </div>
+          {/* SUMMARY CARDS */}
+          <section className="ccf-findings-stats">
+            <div className="ccf-findings-stat-card">
+              <span>POLICIES REVIEWED</span>
+              <strong>{selectedPolicies.length}</strong>
             </div>
 
-            <div
-              style={{
-                ...summaryCardStyle,
-                background: '#fff7f7',
-                borderColor: '#e6b7b7',
-              }}
-            >
-              <div
-                style={{
-                  ...summaryLabelStyle,
-                  color: '#8c2d2d',
-                }}
-              >
-                HIGH PRIORITY
-              </div>
-
-              <div
-                style={{
-                  ...summaryNumberStyle,
-                  color: '#9f2424',
-                }}
-              >
-                {highPriorityCount}
-              </div>
+            <div className="ccf-findings-stat-card high">
+              <span>HIGH PRIORITY</span>
+              <strong>{highPriorityCount}</strong>
             </div>
 
-            <div
-              style={{
-                ...summaryCardStyle,
-                background: '#fffaf0',
-                borderColor: '#e5d2a6',
-              }}
-            >
-              <div
-                style={{
-                  ...summaryLabelStyle,
-                  color: '#8a6418',
-                }}
-              >
-                LOW PRIORITY
-              </div>
-
-              <div
-                style={{
-                  ...summaryNumberStyle,
-                  color: '#8a6418',
-                }}
-              >
-                {lowPriorityCount}
-              </div>
+            <div className="ccf-findings-stat-card low">
+              <span>LOW PRIORITY</span>
+              <strong>{lowPriorityCount}</strong>
             </div>
 
-            <div
-              style={{
-                ...summaryCardStyle,
-                background: '#f4faf5',
-                borderColor: '#b9d7bd',
-              }}
-            >
-              <div
-                style={{
-                  ...summaryLabelStyle,
-                  color: '#387644',
-                }}
-              >
-                NO CHANGE NEEDED
-              </div>
-
-              <div
-                style={{
-                  ...summaryNumberStyle,
-                  color: '#387644',
-                }}
-              >
-                {noChangeCount}
-              </div>
+            <div className="ccf-findings-stat-card no-change">
+              <span>NO CHANGE NEEDED</span>
+              <strong>{noChangeCount}</strong>
             </div>
           </section>
 
           {/* REVIEW STATUS */}
-
           {actionCount > 0 ? (
-            <section
-              style={{
-                padding: '14px 18px',
-                marginBottom: '20px',
-                background: '#fff8e7',
-                border: '1px solid #e5cf93',
-                borderLeft: '4px solid #c38b13',
-                borderRadius: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '20px',
-              }}
-            >
+            <section className="ccf-findings-status warning">
               <div>
                 <strong>
                   {actionCount}{' '}
@@ -688,44 +511,16 @@ function ReviewFindingsPage() {
                   reviewer attention.
                 </strong>
 
-                <div
-                  style={{
-                    fontSize: '13px',
-                    color: '#666',
-                    marginTop: '3px',
-                  }}
-                >
+                <p>
                   Review each suggested change before
                   completing this session.
-                </div>
+                </p>
               </div>
 
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  color: '#8a6418',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                ACTION REQUIRED
-              </span>
+              <span>ACTION REQUIRED</span>
             </section>
           ) : (
-            <section
-              style={{
-                padding: '14px 18px',
-                marginBottom: '20px',
-                background: '#f4faf5',
-                border: '1px solid #b9d7bd',
-                borderLeft: '4px solid #4e8b59',
-                borderRadius: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '20px',
-              }}
-            >
+            <section className="ccf-findings-status success">
               <div>
                 <strong>
                   {totalSuggestedChanges === 0
@@ -733,36 +528,20 @@ function ReviewFindingsPage() {
                     : 'All recommendations have been reviewed.'}
                 </strong>
 
-                <div
-                  style={{
-                    fontSize: '13px',
-                    color: '#666',
-                    marginTop: '3px',
-                  }}
-                >
+                <p>
                   {results.length === 0
                     ? 'No conflict-check results yet for these selected policies. This does not indicate clinical approval.'
                     : 'There are no outstanding reviewer decisions for the reported conflicts.'}
-                </div>
+                </p>
               </div>
 
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  color: '#387644',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                NO PENDING ACTIONS
-              </span>
+              <span>NO PENDING ACTIONS</span>
             </section>
           )}
 
-          {/* SESSION REFERENCES */}
-
-          <section className="findings-selection-summary">
-            <div className="findings-summary-column">
+          {/* POLICIES AND GUIDELINES */}
+          <section className="ccf-findings-references">
+            <div>
               <h3>Policies Reviewed</h3>
 
               {selectedPolicies.length > 0 ? (
@@ -775,48 +554,31 @@ function ReviewFindingsPage() {
 
                   return (
                     <div
+                      className="ccf-findings-reference-item"
                       key={policy.id}
-                      style={{
-                        marginBottom: '15px',
-                      }}
                     >
-                      <p
-                        style={{
-                          fontWeight: '600',
-                          marginBottom: '4px',
-                        }}
-                      >
+                      <strong>
                         • {policy.name || policy.fileName}
-                      </p>
+                      </strong>
 
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#64748b',
-                          paddingLeft: '14px',
-                          lineHeight: '1.6',
-                        }}
-                      >
+                      <p>
                         {associatedGuidelines.length > 0
                           ? `Mapped to: ${associatedGuidelines
                               .map(
-                                (guideline) =>
-                                  guideline.name
+                                (guideline) => guideline.name
                               )
                               .join(', ')}`
                           : 'No associated guidelines'}
-                      </div>
+                      </p>
                     </div>
                   )
                 })
               ) : (
-                <p>• No policies selected</p>
+                <p>No policies selected.</p>
               )}
             </div>
 
-            <div className="findings-summary-divider"></div>
-
-            <div className="findings-summary-column">
+            <div>
               <h3>Reference Guidelines</h3>
 
               {selectedGuidelines.length > 0 ? (
@@ -829,100 +591,41 @@ function ReviewFindingsPage() {
 
                   return (
                     <div
+                      className="ccf-findings-reference-item"
                       key={guideline.id}
-                      style={{
-                        marginBottom: '15px',
-                      }}
                     >
-                      <p
-                        style={{
-                          fontWeight: '600',
-                          marginBottom: '4px',
-                        }}
-                      >
-                        • {guideline.name}
-                      </p>
+                      <strong>• {guideline.name}</strong>
 
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#64748b',
-                          paddingLeft: '14px',
-                          lineHeight: '1.6',
-                        }}
-                      >
+                      <p>
                         Applies to:{' '}
                         {associatedPolicies
                           .map((policy) => policy.name)
                           .join(', ')}
-                      </div>
+                      </p>
                     </div>
                   )
                 })
               ) : (
                 <p>
-                  • No automatically associated guidelines
+                  No automatically associated guidelines.
                 </p>
               )}
             </div>
           </section>
 
-          {/* FILTERS */}
+          {/* FILTER BUTTONS */}
+          <section className="ccf-findings-filters">
+            <strong>Show:</strong>
 
-          <section
-            style={{
-              marginTop: '24px',
-              marginBottom: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              flexWrap: 'wrap',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '13px',
-                fontWeight: '700',
-                marginRight: '4px',
-              }}
-            >
-              Show:
-            </span>
-
-            {[
-              {
-                name: 'All',
-                count: results.length,
-              },
-              {
-                name: 'Needs Attention',
-                count: actionCount,
-              },
-              {
-                name: 'Decided',
-                count: decidedCount,
-              },
-              {
-                name: 'High Priority',
-                count: highPriorityCount,
-              },
-              {
-                name: 'Low Priority',
-                count: lowPriorityCount,
-              },
-              {
-                name: 'No Change Needed',
-                count: noChangeCount,
-              },
-            ].map((filter) => (
+            {filters.map((filter) => (
               <button
                 key={filter.name}
                 type="button"
-                className={
+                className={`ccf-findings-filter-button${
                   activeFilter === filter.name
-                    ? 'finding-filter-button active'
-                    : 'finding-filter-button'
-                }
+                    ? ' active'
+                    : ''
+                }`}
                 onClick={() =>
                   setActiveFilter(filter.name)
                 }
@@ -933,15 +636,7 @@ function ReviewFindingsPage() {
           </section>
 
           {/* FINDING CARDS */}
-
-          <section
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              paddingBottom: '30px',
-            }}
-          >
+          <section className="ccf-findings-results">
             {visibleResults.map((result) => {
               const highPriority =
                 result.priority === 'High'
@@ -953,96 +648,44 @@ function ReviewFindingsPage() {
 
               const isAccepted =
                 decision?.decision === 'Accepted' ||
-                decision?.decision ===
-                  'Accepted with Edits'
+                decision?.decision === 'Accepted with Edits'
 
               const isRejected =
                 decision?.decision === 'Rejected'
 
-              return (
-                <div
-                  key={result.id}
-                  style={{
-                    background: '#ffffff',
-                    border: decision
-                      ? isAccepted
-                        ? '1px solid #b9d7bd'
-                        : '1px solid #d4d4d4'
-                      : noChange
-                      ? '1px solid #b9d7bd'
-                      : highPriority
-                      ? '1px solid #dfb0b0'
-                      : '1px solid #e2d0a6',
-                    borderLeft: decision
-                      ? isAccepted
-                        ? '5px solid #4e8b59'
-                        : '5px solid #777777'
-                      : noChange
-                      ? '5px solid #4e8b59'
-                      : highPriority
-                      ? '5px solid #b53939'
-                      : '5px solid #c18a20',
-                    borderRadius: '5px',
-                    padding: '18px 20px',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: '24px',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <div
-                      style={{
-                        flex: 1,
-                        minWidth: '250px',
-                      }}
-                    >
-                      {/* STATUS */}
+              let cardType = highPriority ? 'high' : 'low'
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          flexWrap: 'wrap',
-                          marginBottom: '9px',
-                        }}
-                      >
+              if (noChange || isAccepted) {
+                cardType = 'success'
+              } else if (decision) {
+                cardType = 'decided'
+              }
+
+              return (
+                <article
+                  key={result.id}
+                  className={`ccf-findings-result-card ${cardType}`}
+                >
+                  <div className="ccf-findings-result-content">
+                    <div className="ccf-findings-result-main">
+                      <div className="ccf-findings-badges">
                         <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '4px 9px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            background: noChange
-                              ? '#eaf5ec'
+                          className={`ccf-findings-badge ${
+                            noChange
+                              ? 'success'
                               : highPriority
-                              ? '#f9e5e5'
-                              : '#fff2d5',
-                            color: noChange
-                              ? '#387644'
-                              : highPriority
-                              ? '#9f2424'
-                              : '#8a6418',
-                          }}
+                                ? 'high'
+                                : 'low'
+                          }`}
                         >
                           {result.status}
                         </span>
 
                         {!noChange && (
                           <span
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              color: highPriority
-                                ? '#9f2424'
-                                : '#8a6418',
-                            }}
+                            className={`ccf-findings-priority ${
+                              highPriority ? 'high' : 'low'
+                            }`}
                           >
                             {result.priority.toUpperCase()}{' '}
                             PRIORITY
@@ -1051,205 +694,104 @@ function ReviewFindingsPage() {
 
                         {decision && (
                           <span
-                            style={{
-                              display: 'inline-block',
-                              padding: '4px 9px',
-                              borderRadius: '12px',
-                              fontSize: '11px',
-                              fontWeight: '700',
-                              background: isAccepted
-                                ? '#eaf5ec'
-                                : '#eeeeee',
-                              color: isAccepted
-                                ? '#387644'
-                                : '#555555',
-                            }}
+                            className={`ccf-findings-badge ${
+                              isAccepted
+                                ? 'success'
+                                : 'decided'
+                            }`}
                           >
                             {isAccepted
                               ? '✓ '
                               : isRejected
-                              ? '✕ '
-                              : ''}
+                                ? '✕ '
+                                : ''}
                             {decision.decision}
                           </span>
                         )}
                       </div>
 
-                      {/* POLICY NAME */}
+                      <h2>{result.policy}</h2>
 
-                      <h2
-                        style={{
-                          fontSize: '17px',
-                          margin: '0 0 5px',
-                        }}
-                      >
-                        {result.policy}
-                      </h2>
-
-                      {/* MATCHED GUIDELINE */}
-
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#777',
-                          marginBottom: '12px',
-                        }}
-                      >
+                      <p className="ccf-findings-result-meta">
                         {result.category}
-                        {'  •  '}
+                        {' • '}
                         Reference: {result.guideline}
-                      </div>
+                      </p>
 
-                      {/* SUMMARY */}
-
-                      <p
-                        style={{
-                          margin: '0 0 12px',
-                          lineHeight: '1.5',
-                          color: '#444',
-                        }}
-                      >
+                      <p className="ccf-findings-result-summary">
                         {result.summary}
                       </p>
 
-                      {/* CRITERIA */}
-
-                      <div
-                        style={{
-                          fontSize: '12px',
-                          color: '#777',
-                        }}
-                      >
+                      <p className="ccf-findings-result-criteria">
                         Policy section:{' '}
                         <strong>
                           {result.policyCriterion}
                         </strong>
-
-                        {'  •  '}
-
+                        {' • '}
                         Guideline section:{' '}
                         <strong>
                           {result.guidelineCriterion}
                         </strong>
-                      </div>
-
-                      {/* QUOTED CRITERIA */}
+                      </p>
 
                       {!noChange && (
-                        <div
-                          style={{
-                            marginTop: '12px',
-                            display: 'grid',
-                            gap: '8px',
-                            fontSize: '13px',
-                            lineHeight: '1.5',
-                            color: '#444',
-                          }}
-                        >
+                        <div className="ccf-findings-quotes">
                           {[
                             ['Guideline', result.guidelineText],
                             ['Policy', result.policyText],
                           ]
-                            .filter(([, text]) => text)
-                            .map(([side, text]) => (
-                              <blockquote
-                                key={side}
-                                style={{
-                                  margin: 0,
-                                  padding: '6px 10px',
-                                  borderLeft: '3px solid #d4d4d4',
-                                  background: '#fafafa',
-                                }}
-                              >
-                                <strong>{side}:</strong> “{text}”
+                            .filter(([, quote]) => quote)
+                            .map(([side, quote]) => (
+                              <blockquote key={side}>
+                                <strong>{side}:</strong> “{quote}”
                               </blockquote>
                             ))}
                         </div>
                       )}
                     </div>
 
-                    {/* ACTION */}
-
-                    <div
-                      style={{
-                        minWidth: '190px',
-                        textAlign: 'right',
-                      }}
-                    >
+                    <div className="ccf-findings-result-action">
                       {noChange ? (
-                        <div
-                          style={{
-                            color: '#387644',
-                            fontSize: '13px',
-                            fontWeight: '700',
-                            paddingTop: '8px',
-                          }}
-                        >
+                        <strong className="ccf-findings-no-action">
                           ✓ No action required
-                        </div>
-                      ) : decision ? (
-                        <div>
-                          <div
-                            style={{
-                              fontSize: '13px',
-                              fontWeight: '700',
-                              color: isAccepted
-                                ? '#387644'
-                                : '#555555',
-                              marginBottom: '9px',
-                            }}
-                          >
-                            {isAccepted
-                              ? '✓ Decision recorded'
-                              : '✕ Decision recorded'}
-                          </div>
+                        </strong>
+                      ) : (
+                        <>
+                          {decision && (
+                            <strong className="ccf-findings-decided-label">
+                              {isAccepted ? '✓' : '✕'}{' '}
+                              Decision recorded
+                            </strong>
+                          )}
 
                           <button
                             type="button"
-                            className="view-edit-report-button"
+                            className="ccf-findings-outline-button"
                             onClick={() =>
                               openRecommendation(result)
                             }
                           >
-                            View Recommendation
+                            {decision
+                              ? 'View Recommendation'
+                              : 'Review Recommendation'}
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="view-edit-report-button"
-                          onClick={() =>
-                            openRecommendation(result)
-                          }
-                        >
-                          Review Recommendation
-                        </button>
+                        </>
                       )}
                     </div>
                   </div>
-                </div>
+                </article>
               )
             })}
 
             {visibleResults.length === 0 && (
-              <div
-                style={{
-                  padding: '35px',
-                  textAlign: 'center',
-                  background: '#ffffff',
-                  border: '1px solid #dddddd',
-                  borderRadius: '5px',
-                  color: '#64748b',
-                  lineHeight: '1.6',
-                }}
-              >
+              <div className="ccf-findings-empty">
                 {results.length === 0 ? (
                   <>
                     <strong>
                       No conflict-check results yet.
                     </strong>
 
-                    <p style={{ marginTop: '8px' }}>
+                    <p>
                       Your selected policies and their mapped
                       guidelines are listed above. Run the
                       conflict check to compare each mapped
@@ -1257,13 +799,72 @@ function ReviewFindingsPage() {
                     </p>
                   </>
                 ) : (
-                  'No results match this filter.'
+                  <p>No results match this filter.</p>
                 )}
               </div>
             )}
           </section>
         </main>
       </div>
+
+      {/* HELP DIALOG */}
+      {helpOpen && (
+        <div
+          className="ccf-findings-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-findings-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="findings-help-title"
+          >
+            <div className="ccf-findings-help-heading">
+              <h2 id="findings-help-title">
+                Understanding Review Findings
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              Run the conflict check to compare each mapped
+              guideline with its policies. Only pairs that
+              have uploaded documents are sent.
+            </p>
+
+            <p>
+              Use the filters to view findings by priority
+              or reviewer decision status. Quoted criteria
+              show the language the check compared.
+            </p>
+
+            <p>
+              Click Review Recommendation to record a
+              decision. You can complete the review session
+              once you are ready.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-findings-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
