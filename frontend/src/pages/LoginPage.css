@@ -1,0 +1,408 @@
+
+/* ==========================================
+   CCF LOGIN PAGE
+   ========================================== */
+
+.ccf-login-page {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+/* ==========================================
+   LEFT BRANDING PANEL
+   ========================================== */
+
+.ccf-login-brand-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 48%;
+  min-height: 100vh;
+  padding: 38px 52px;
+  box-sizing: border-box;
+  background: linear-gradient(
+    145deg,
+    #24764b 0%,
+    #1d633e 55%,
+    #164d32 100%
+  );
+  color: #ffffff;
+}
+
+.ccf-login-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.ccf-login-brand-logo {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.ccf-login-brand-label {
+  padding-left: 15px;
+  border-left: 1px solid rgba(255,255,255,0.4);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.85);
+}
+
+/* CENTER BRAND CONTENT */
+
+.ccf-login-brand-content {
+  max-width: 520px;
+  margin: 50px 0;
+}
+
+.ccf-login-brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 75px;
+  height: 75px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.12);
+}
+
+.ccf-login-brand-mark span {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.ccf-login-brand-content h1 {
+  margin: 0 0 22px;
+  color: #ffffff;
+  font-size: clamp(30px, 3.2vw, 46px);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+
+.ccf-login-brand-content > p {
+  max-width: 440px;
+  margin: 0;
+  color: rgba(255,255,255,0.83);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.ccf-login-brand-divider {
+  width: 65px;
+  height: 2px;
+  margin: 32px 0;
+  background: rgba(255,255,255,0.55);
+}
+
+.ccf-login-brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ccf-login-brand-features > div {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: rgba(255,255,255,0.9);
+  font-size: 13px;
+}
+
+.ccf-login-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.16);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ccf-login-brand-footer {
+  color: rgba(255,255,255,0.6);
+  font-size: 11px;
+}
+
+/* ==========================================
+   RIGHT LOGIN PANEL
+   ========================================== */
+
+.ccf-login-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  padding: 50px 40px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.ccf-login-form-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+.ccf-login-mobile-brand {
+  display: none;
+}
+
+/* FORM HEADING */
+
+.ccf-login-form-heading {
+  margin-bottom: 36px;
+}
+
+.ccf-login-welcome {
+  display: block;
+  margin-bottom: 12px;
+  color: #24764b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.ccf-login-form-heading h2 {
+  margin: 0 0 12px;
+  color: #193d2b;
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+
+.ccf-login-form-heading p {
+  margin: 0;
+  color: #718076;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* FORM FIELDS */
+
+.ccf-login-field {
+  margin-bottom: 23px;
+}
+
+.ccf-login-field label {
+  display: block;
+  margin-bottom: 9px;
+  color: #34473a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ccf-login-field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 15px;
+  box-sizing: border-box;
+  border: 1px solid #d6e1d9;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #263a2e;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.15s ease,
+              box-shadow 0.15s ease;
+}
+
+.ccf-login-field input::placeholder {
+  color: #9aa9a0;
+}
+
+.ccf-login-field input:focus {
+  border-color: #24764b;
+  box-shadow: 0 0 0 3px rgba(36,118,75,0.1);
+}
+
+/* PASSWORD */
+
+.ccf-login-password-wrapper {
+  position: relative;
+}
+
+.ccf-login-password-wrapper input {
+  padding-right: 75px;
+}
+
+.ccf-login-show-password {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: #24764b;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ccf-login-show-password:hover {
+  color: #164d32;
+}
+
+/* REMEMBER ME */
+
+.ccf-login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 27px;
+}
+
+.ccf-login-remember {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #526358;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ccf-login-remember input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #24764b;
+  cursor: pointer;
+}
+
+/* LOGIN BUTTON */
+
+.ccf-login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 48px;
+  border: 1px solid #24764b;
+  border-radius: 8px;
+  background: #24764b;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ccf-login-submit:hover {
+  background: #195c39;
+}
+
+.ccf-login-submit span {
+  font-size: 19px;
+}
+
+/* ACCOUNT LINKS */
+
+.ccf-login-account-links {
+  margin-top: 26px;
+  text-align: center;
+}
+
+.ccf-login-account-links p {
+  color: #718076;
+  font-size: 12px;
+}
+
+.ccf-login-account-links a {
+  color: #24764b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ccf-login-account-links a:hover {
+  text-decoration: underline;
+}
+
+/* FOOTER */
+
+.ccf-login-form-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 65px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e9e3;
+  color: #9aa9a0;
+  font-size: 11px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 1000px) {
+  .ccf-login-brand-panel {
+    width: 43%;
+    padding: 32px;
+  }
+
+  .ccf-login-form-panel {
+    padding: 40px 30px;
+  }
+
+  .ccf-login-brand-content h1 {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 750px) {
+  .ccf-login-page {
+    flex-direction: column;
+  }
+
+  .ccf-login-brand-panel {
+    display: none;
+  }
+
+  .ccf-login-form-panel {
+    min-height: 100vh;
+    padding: 45px 24px;
+  }
+
+  .ccf-login-mobile-brand {
+    display: block;
+    margin-bottom: 55px;
+    color: #24764b;
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  .ccf-login-form-heading h2 {
+    font-size: 30px;
+  }
+
+  .ccf-login-form-footer {
+    margin-top: 50px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ccf-login-form-panel {
+    padding: 35px 20px;
+  }
+
+  .ccf-login-form-heading h2 {
+    font-size: 28px;
+  }
+}

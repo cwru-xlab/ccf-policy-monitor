@@ -1,16 +1,13 @@
 
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import {
   getGuidelinesForPolicy,
   getGuidelinePolicyIds,
   saveGuidelinePolicyIds,
 } from '../data/guidelineMappings'
+import './DashboardPage.css'
 import './DocumentMappingsPage.css'
-
-// ==========================================
-// ORIGINAL POLICIES AND GUIDELINES
-// ==========================================
 
 const originalPolicies = [
   { id: 1, name: 'Cardiac Coverage Policy' },
@@ -28,9 +25,14 @@ const originalGuidelines = [
   { id: 5, name: 'Mental Health Guideline' },
 ]
 
-// ==========================================
-// HELPERS
-// ==========================================
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
 
 function getSavedArray(key) {
   try {
@@ -42,10 +44,10 @@ function getSavedArray(key) {
 }
 
 function recordMappingAudit(action, policy, guideline) {
-  const auditEvents = getSavedArray('auditEvents')
+  const events = getSavedArray('auditEvents')
   const now = new Date()
 
-  auditEvents.push({
+  events.push({
     id: `mapping-${now.getTime()}-${Math.random()
       .toString(36)
       .slice(2, 9)}`,
@@ -59,79 +61,36 @@ function recordMappingAudit(action, policy, guideline) {
     guidelineId: guideline.id,
   })
 
-  localStorage.setItem('auditEvents', JSON.stringify(auditEvents))
+  localStorage.setItem('auditEvents', JSON.stringify(events))
 }
-
-// ==========================================
-// DYNAMIC MODE STYLING
-// ==========================================
-
-const primaryButton = {
-  padding: '12px 22px',
-  background: '#2563eb',
-  color: 'white',
-  border: 'none',
-  borderRadius: '8px',
-  fontWeight: 600,
-  cursor: 'pointer',
-}
-
-const secondaryButton = {
-  padding: '12px 22px',
-  background: 'white',
-  color: '#334155',
-  border: '1px solid #cbd5e1',
-  borderRadius: '8px',
-  fontWeight: 600,
-  cursor: 'pointer',
-}
-
-const dynamicCard = {
-  background: 'white',
-  border: '1px solid #e2e8f0',
-  borderRadius: '10px',
-  padding: '24px',
-}
-
-const actionRow = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: '12px',
-  marginTop: '24px',
-}
-
-// ==========================================
-// DOCUMENT MAPPINGS PAGE
-// ==========================================
 
 function DocumentMappingsPage() {
-  // MANUAL MODE
   const [mappingMode, setMappingMode] = useState('manual')
+  const [helpOpen, setHelpOpen] = useState(false)
+
+  // Manual Mapping
   const [policySearch, setPolicySearch] = useState('')
   const [guidelineSearch, setGuidelineSearch] = useState('')
   const [policyFilter, setPolicyFilter] = useState('All')
   const [guidelineFilter, setGuidelineFilter] = useState('All')
-
   const [selectedPolicyId, setSelectedPolicyId] = useState(null)
   const [selectedGuidelineIds, setSelectedGuidelineIds] = useState([])
   const [message, setMessage] = useState('')
 
-  // DYNAMIC MODE
+  // Dynamic Mapping
   const [dynamicStep, setDynamicStep] = useState(1)
   const [dynamicPolicyId, setDynamicPolicyId] = useState(null)
   const [dynamicPolicySearch, setDynamicPolicySearch] = useState('')
+  const [dynamicGuidelineSearch, setDynamicGuidelineSearch] = useState('')
   const [dynamicSelectedIds, setDynamicSelectedIds] = useState([])
   const [dynamicResults, setDynamicResults] = useState([])
   const [dynamicMessage, setDynamicMessage] = useState('')
   const [previewGuideline, setPreviewGuideline] = useState(null)
 
-  // Forces the page to refresh after mapping changes
+  // Refresh mapping counts after changes
   const [, setRevision] = useState(0)
 
-  // ==========================================
-  // LOAD DOCUMENT DATABASES
-  // ==========================================
-
+  // Load policies and guidelines
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
   const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
 
@@ -155,10 +114,6 @@ function DocumentMappingsPage() {
       )
   )
 
-  // ==========================================
-  // SELECTED DOCUMENTS
-  // ==========================================
-
   const selectedPolicy = policies.find(
     (policy) => String(policy.id) === String(selectedPolicyId)
   )
@@ -171,45 +126,39 @@ function DocumentMappingsPage() {
     ? getGuidelinesForPolicy(selectedPolicy, guidelines)
     : []
 
-  const isMapped = (policy, guideline) =>
-    getGuidelinePolicyIds(guideline).some(
+  function isMapped(policy, guideline) {
+    return getGuidelinePolicyIds(guideline).some(
       (id) => String(id) === String(policy.id)
     )
+  }
 
-  // ==========================================
-  // MAPPING STATISTICS
-  // ==========================================
-
-  const mappingCountForPolicy = (policy) =>
-    guidelines.filter((guideline) =>
+  function mappingCountForPolicy(policy) {
+    return guidelines.filter((guideline) =>
       isMapped(policy, guideline)
     ).length
+  }
 
-  const mappingCountForGuideline = (guideline) =>
-    policies.filter((policy) =>
+  function mappingCountForGuideline(guideline) {
+    return policies.filter((policy) =>
       isMapped(policy, guideline)
     ).length
+  }
 
   const totalMappings = guidelines.reduce(
-    (count, guideline) =>
-      count + mappingCountForGuideline(guideline),
+    (total, guideline) =>
+      total + mappingCountForGuideline(guideline),
     0
   )
 
   const mappedDocuments =
-    policies.filter(
-      (policy) => mappingCountForPolicy(policy) > 0
-    ).length +
+    policies.filter((policy) => mappingCountForPolicy(policy) > 0)
+      .length +
     guidelines.filter(
       (guideline) => mappingCountForGuideline(guideline) > 0
     ).length
 
   const unmappedDocuments =
     policies.length + guidelines.length - mappedDocuments
-
-  // ==========================================
-  // MANUAL MODE FILTERS
-  // ==========================================
 
   const visiblePolicies = policies.filter((policy) => {
     const matchesSearch = String(policy.name || '')
@@ -241,10 +190,7 @@ function DocumentMappingsPage() {
     )
   })
 
-  // ==========================================
-  // MANUAL MODE FUNCTIONS
-  // ==========================================
-
+  // Manual Mapping functions
   function selectPolicy(policyId) {
     setSelectedPolicyId(policyId)
     setSelectedGuidelineIds([])
@@ -276,17 +222,15 @@ function DocumentMappingsPage() {
         selectedGuidelineIds.includes(String(guideline.id))
       )
       .forEach((guideline) => {
-        const currentIds =
-          getGuidelinePolicyIds(guideline).map(String)
-
+        const currentIds = getGuidelinePolicyIds(guideline).map(String)
         const policyId = String(selectedPolicy.id)
         const alreadyMapped = currentIds.includes(policyId)
 
         if (action === 'add' && !alreadyMapped) {
-          saveGuidelinePolicyIds(
-            guideline.id,
-            [...currentIds, policyId]
-          )
+          saveGuidelinePolicyIds(guideline.id, [
+            ...currentIds,
+            policyId,
+          ])
 
           recordMappingAudit(
             'Mapping Created',
@@ -294,7 +238,7 @@ function DocumentMappingsPage() {
             guideline
           )
 
-          changed++
+          changed += 1
         }
 
         if (action === 'remove' && alreadyMapped) {
@@ -309,7 +253,7 @@ function DocumentMappingsPage() {
             guideline
           )
 
-          changed++
+          changed += 1
         }
       })
 
@@ -329,8 +273,7 @@ function DocumentMappingsPage() {
     if (!selectedPolicy) return
 
     const policyId = String(selectedPolicy.id)
-    const currentIds =
-      getGuidelinePolicyIds(guideline).map(String)
+    const currentIds = getGuidelinePolicyIds(guideline).map(String)
 
     if (!currentIds.includes(policyId)) {
       setMessage('This mapping no longer exists.')
@@ -364,14 +307,12 @@ function DocumentMappingsPage() {
     setMessage('')
   }
 
-  // ==========================================
-  // DYNAMIC MODE FUNCTIONS
-  // ==========================================
-
+  // Dynamic Mapping functions
   function chooseDynamicPolicy(policyId) {
     setDynamicPolicyId(policyId)
     setDynamicResults([])
     setDynamicSelectedIds([])
+    setDynamicGuidelineSearch('')
     setDynamicMessage('')
     setPreviewGuideline(null)
     setDynamicStep(3)
@@ -380,12 +321,12 @@ function DocumentMappingsPage() {
   function startGuidelineSearch() {
     if (!dynamicPolicy) return
 
-    // PRELIMINARY SEARCH:
-    // Use existing Guideline Database records.
-    // Replace this with the backend API later.
+    // Prototype: search existing guidelines, not external sources
     setDynamicResults([...guidelines])
     setDynamicSelectedIds([])
     setDynamicMessage('')
+    setDynamicGuidelineSearch('')
+    setPreviewGuideline(null)
     setDynamicStep(4)
   }
 
@@ -413,20 +354,18 @@ function DocumentMappingsPage() {
         dynamicSelectedIds.includes(String(guideline.id))
       )
       .forEach((guideline) => {
-        const currentIds =
-          getGuidelinePolicyIds(guideline).map(String)
-
+        const currentIds = getGuidelinePolicyIds(guideline).map(String)
         const policyId = String(dynamicPolicy.id)
 
         if (currentIds.includes(policyId)) {
-          alreadyMapped++
+          alreadyMapped += 1
           return
         }
 
-        saveGuidelinePolicyIds(
-          guideline.id,
-          [...currentIds, policyId]
-        )
+        saveGuidelinePolicyIds(guideline.id, [
+          ...currentIds,
+          policyId,
+        ])
 
         recordMappingAudit(
           'Mapping Created',
@@ -434,16 +373,16 @@ function DocumentMappingsPage() {
           guideline
         )
 
-        created++
+        created += 1
       })
 
     setRevision((previous) => previous + 1)
 
     setDynamicMessage(
       `${created} new mapping${created === 1 ? '' : 's'} created.` +
-      (alreadyMapped > 0
-        ? ` ${alreadyMapped} already existed.`
-        : '')
+        (alreadyMapped > 0
+          ? ` ${alreadyMapped} already existed.`
+          : '')
     )
 
     setDynamicStep(5)
@@ -453,15 +392,12 @@ function DocumentMappingsPage() {
     setDynamicStep(1)
     setDynamicPolicyId(null)
     setDynamicPolicySearch('')
+    setDynamicGuidelineSearch('')
     setDynamicSelectedIds([])
     setDynamicResults([])
     setDynamicMessage('')
     setPreviewGuideline(null)
   }
-
-  // ==========================================
-  // DYNAMIC POLICY FILTER
-  // ==========================================
 
   const dynamicVisiblePolicies = policies.filter((policy) =>
     String(policy.name || '')
@@ -469,26 +405,35 @@ function DocumentMappingsPage() {
       .includes(dynamicPolicySearch.toLowerCase())
   )
 
-  // ==========================================
-  // PAGE LAYOUT
-  // ==========================================
+  const dynamicVisibleGuidelines = dynamicResults.filter(
+    (guideline) =>
+      String(guideline.name || '')
+        .toLowerCase()
+        .includes(dynamicGuidelineSearch.toLowerCase())
+  )
 
   return (
-    <div className="app-page">
+    <div className="app-page ccf-dashboard ccf-mappings-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">
-            Policy Review
-          </span>
-
+          <span className="brand-name">CCF</span>
           <span className="brand-divider" />
-
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
+          <button
+            type="button"
+            className="ccf-help-button"
+            aria-label="Help with document mappings"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
+
           <div className="user-area">
             <div className="user-avatar">SC</div>
             <span>Sarah Chen</span>
@@ -498,236 +443,178 @@ function DocumentMappingsPage() {
 
       <div className="app-body">
         {/* SIDEBAR */}
-
-        <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-
-          <Link to="/reviews" className="nav-item">
-            Review Sessions
-          </Link>
-
-          <Link to="/policies" className="nav-item">
-            Policy Database
-          </Link>
-
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-
-          <Link to="/mappings" className="nav-item active">
-            Document Mappings
-          </Link>
-
-          <Link to="/audit-log" className="nav-item">
-            Audit Log
-          </Link>
+        <aside className="sidebar" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
         {/* MAIN CONTENT */}
-
-        <main className="mapping-content">
-          <div className="mapping-heading">
+        <main className="ccf-mappings-content">
+          <div className="ccf-mappings-heading">
             <h1>Document Mappings</h1>
             <p>
               Manage associations between internal policies
-              and external guidelines.
+              and external reference guidelines.
             </p>
           </div>
 
-          {/* MODE SWITCH */}
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '12px',
-              marginTop: '24px',
-              marginBottom: '28px',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="ccf-mappings-mode-switch">
             <button
               type="button"
+              className={
+                mappingMode === 'manual' ? 'selected' : ''
+              }
               onClick={() => setMappingMode('manual')}
-              style={{
-                ...primaryButton,
-                background:
-                  mappingMode === 'manual'
-                    ? '#2563eb'
-                    : 'white',
-                color:
-                  mappingMode === 'manual'
-                    ? 'white'
-                    : '#2563eb',
-                border: '1px solid #2563eb',
-              }}
             >
               Manual Mapping
             </button>
 
             <button
               type="button"
+              className={
+                mappingMode === 'dynamic' ? 'selected' : ''
+              }
               onClick={() => setMappingMode('dynamic')}
-              style={{
-                ...primaryButton,
-                background:
-                  mappingMode === 'dynamic'
-                    ? '#2563eb'
-                    : 'white',
-                color:
-                  mappingMode === 'dynamic'
-                    ? 'white'
-                    : '#2563eb',
-                border: '1px solid #2563eb',
-              }}
             >
               Dynamic Mapping
             </button>
           </div>
 
-          {/* ==================================
-              MANUAL MAPPING MODE
-          ================================== */}
-
+          {/* MANUAL MAPPING */}
           {mappingMode === 'manual' && (
-            <>
-              {/* SUMMARY COUNTS */}
-
-              <div className="mapping-stats">
-                <div className="mapping-stat">
+            <div className="ccf-mappings-workspace">
+              <div className="ccf-mappings-stats">
+                <div className="ccf-mappings-stat">
                   <span>Total Mappings</span>
                   <strong>{totalMappings}</strong>
                 </div>
 
-                <div className="mapping-stat">
+                <div className="ccf-mappings-stat">
                   <span>Mapped Documents</span>
                   <strong>{mappedDocuments}</strong>
                 </div>
 
-                <div className="mapping-stat">
+                <div className="ccf-mappings-stat">
                   <span>Unmapped Documents</span>
                   <strong>{unmappedDocuments}</strong>
                 </div>
               </div>
 
-              {/* DOCUMENT LISTS */}
-
-              <div className="mapping-columns">
-                {/* POLICIES */}
-
-                <section className="mapping-panel">
-                  <h2>Internal Policies</h2>
+              <div className="ccf-mappings-columns">
+                {/* POLICY LIST */}
+                <section className="ccf-mappings-panel">
+                  <div className="ccf-mappings-panel-heading">
+                    <h2>Internal Policies</h2>
+                    <span>{policies.length} policies</span>
+                  </div>
 
                   <input
-                    className="mapping-search"
-                    type="text"
+                    className="ccf-mappings-search"
+                    type="search"
                     placeholder="Search policies..."
+                    aria-label="Search policies"
                     value={policySearch}
                     onChange={(event) =>
                       setPolicySearch(event.target.value)
                     }
                   />
 
-                  <div className="mapping-filters">
-                    {['All', 'Mapped', 'Unmapped'].map(
-                      (option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          className={
-                            policyFilter === option
-                              ? 'selected'
-                              : ''
-                          }
-                          onClick={() =>
-                            setPolicyFilter(option)
-                          }
-                        >
-                          {option}
-                        </button>
-                      )
-                    )}
+                  <div className="ccf-mappings-filters">
+                    {['All', 'Mapped', 'Unmapped'].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={
+                          policyFilter === option ? 'selected' : ''
+                        }
+                        onClick={() => setPolicyFilter(option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="mapping-list">
+                  <div className="ccf-mappings-list">
                     {visiblePolicies.map((policy) => {
-                      const count =
-                        mappingCountForPolicy(policy)
-
+                      const count = mappingCountForPolicy(policy)
                       const selected =
-                        String(selectedPolicyId) ===
-                        String(policy.id)
+                        String(selectedPolicyId) === String(policy.id)
 
                       return (
                         <button
                           key={policy.id}
                           type="button"
-                          className={`mapping-document ${
+                          className={`ccf-mappings-document ${
                             selected ? 'selected' : ''
                           }`}
-                          onClick={() =>
-                            selectPolicy(policy.id)
-                          }
+                          onClick={() => selectPolicy(policy.id)}
                         >
                           <strong>{policy.name}</strong>
-
-                          <small>
-                            Policy ID: {policy.id}
-                          </small>
-
+                          <small>Policy ID: {policy.id}</small>
                           <span
-                            className={
-                              count ? 'mapped' : 'unmapped'
-                            }
+                            className={`ccf-mappings-tag ${
+                              count > 0 ? 'mapped' : 'unmapped'
+                            }`}
                           >
-                            {count
+                            {count > 0
                               ? `${count} mapped`
                               : 'Unmapped'}
                           </span>
                         </button>
                       )
                     })}
+
+                    {visiblePolicies.length === 0 && (
+                      <p className="ccf-mappings-empty">
+                        No policies found.
+                      </p>
+                    )}
                   </div>
                 </section>
 
-                {/* GUIDELINES */}
-
-                <section className="mapping-panel">
-                  <h2>External Guidelines</h2>
+                {/* GUIDELINE LIST */}
+                <section className="ccf-mappings-panel">
+                  <div className="ccf-mappings-panel-heading">
+                    <h2>External Guidelines</h2>
+                    <span>{guidelines.length} guidelines</span>
+                  </div>
 
                   <input
-                    className="mapping-search"
-                    type="text"
+                    className="ccf-mappings-search"
+                    type="search"
                     placeholder="Search guidelines..."
+                    aria-label="Search guidelines"
                     value={guidelineSearch}
                     onChange={(event) =>
                       setGuidelineSearch(event.target.value)
                     }
                   />
 
-                  <div className="mapping-filters">
-                    {['All', 'Mapped', 'Unmapped'].map(
-                      (option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          className={
-                            guidelineFilter === option
-                              ? 'selected'
-                              : ''
-                          }
-                          onClick={() =>
-                            setGuidelineFilter(option)
-                          }
-                        >
-                          {option}
-                        </button>
-                      )
-                    )}
+                  <div className="ccf-mappings-filters">
+                    {['All', 'Mapped', 'Unmapped'].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={
+                          guidelineFilter === option ? 'selected' : ''
+                        }
+                        onClick={() => setGuidelineFilter(option)}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="mapping-list">
+                  <div className="ccf-mappings-list">
                     {visibleGuidelines.map((guideline) => {
                       const count =
                         mappingCountForGuideline(guideline)
@@ -744,11 +631,11 @@ function DocumentMappingsPage() {
                       return (
                         <label
                           key={guideline.id}
-                          className={`mapping-document ${
+                          className={`ccf-mappings-document ${
                             checked ? 'selected' : ''
                           }`}
                         >
-                          <div className="mapping-checkbox-row">
+                          <span className="ccf-mappings-checkbox-row">
                             <input
                               type="checkbox"
                               checked={checked}
@@ -756,58 +643,58 @@ function DocumentMappingsPage() {
                                 toggleGuideline(guideline.id)
                               }
                             />
-
-                            <strong>
-                              {guideline.name}
-                            </strong>
-                          </div>
+                            <strong>{guideline.name}</strong>
+                          </span>
 
                           <small>
                             Guideline ID: {guideline.id}
                           </small>
 
                           <span
-                            className={
-                              count ? 'mapped' : 'unmapped'
-                            }
+                            className={`ccf-mappings-tag ${
+                              count > 0 ? 'mapped' : 'unmapped'
+                            }`}
                           >
-                            {count
+                            {count > 0
                               ? `${count} mapped`
                               : 'Unmapped'}
                           </span>
 
                           {linked && (
-                            <em>
+                            <em className="ccf-mappings-linked">
                               Linked to selected policy
                             </em>
                           )}
                         </label>
                       )
                     })}
+
+                    {visibleGuidelines.length === 0 && (
+                      <p className="ccf-mappings-empty">
+                        No guidelines found.
+                      </p>
+                    )}
                   </div>
                 </section>
               </div>
 
               {/* MAPPING ACTIONS */}
-
-              <section className="mapping-actions">
+              <section className="ccf-mappings-panel ccf-mappings-actions">
                 <h2>Mapping Actions</h2>
-
                 <p>
                   Selected policy:{' '}
                   <strong>
                     {selectedPolicy?.name || 'None'}
                   </strong>
-                  {' | '}
+                  {' · '}
                   Selected guidelines:{' '}
-                  <strong>
-                    {selectedGuidelineIds.length}
-                  </strong>
+                  <strong>{selectedGuidelineIds.length}</strong>
                 </p>
 
-                <div className="mapping-action-buttons">
+                <div className="ccf-mappings-action-buttons">
                   <button
                     type="button"
+                    className="ccf-mappings-primary-button"
                     onClick={() => updateMappings('add')}
                   >
                     Create Mapping
@@ -815,6 +702,7 @@ function DocumentMappingsPage() {
 
                   <button
                     type="button"
+                    className="ccf-mappings-danger-button"
                     onClick={() => updateMappings('remove')}
                   >
                     Remove Mapping
@@ -822,6 +710,7 @@ function DocumentMappingsPage() {
 
                   <button
                     type="button"
+                    className="ccf-mappings-secondary-button"
                     onClick={clearSelection}
                   >
                     Clear Selection
@@ -831,7 +720,7 @@ function DocumentMappingsPage() {
                 {message && (
                   <p
                     role="status"
-                    className="mapping-message"
+                    className="ccf-mappings-message"
                   >
                     {message}
                   </p>
@@ -839,37 +728,37 @@ function DocumentMappingsPage() {
               </section>
 
               {/* ASSOCIATION INSPECTOR */}
-
-              <section className="mapping-inspector">
+              <section className="ccf-mappings-panel ccf-mappings-inspector">
                 <h2>Association Inspector</h2>
 
                 {!selectedPolicy ? (
-                  <p>
-                    Select a policy to view its associated
-                    guidelines.
+                  <p className="ccf-mappings-muted">
+                    Select a policy to view its associated guidelines.
                   </p>
                 ) : (
                   <>
-                    <h3>{selectedPolicy.name}</h3>
+                    <h3>
+                      <Link to={`/policies/${selectedPolicy.id}`}>
+                        {selectedPolicy.name}
+                      </Link>
+                    </h3>
 
                     {mappedGuidelines.length === 0 ? (
-                      <p>
-                        No guidelines currently mapped to
-                        this policy.
+                      <p className="ccf-mappings-muted">
+                        No guidelines currently mapped to this policy.
                       </p>
                     ) : (
-                      <div className="mapping-inspector-list">
+                      <div className="ccf-mappings-inspector-list">
                         {mappedGuidelines.map((guideline) => (
                           <div
                             key={guideline.id}
-                            className="mapping-inspector-item"
+                            className="ccf-mappings-inspector-item"
                           >
-                            <span>
-                              {guideline.name}
-                            </span>
+                            <span>{guideline.name}</span>
 
                             <button
                               type="button"
+                              className="ccf-mappings-danger-button"
                               onClick={() =>
                                 removeSingleMapping(guideline)
                               }
@@ -883,37 +772,51 @@ function DocumentMappingsPage() {
                   </>
                 )}
               </section>
-            </>
+            </div>
           )}
 
-          {/* ==================================
-              DYNAMIC MAPPING MODE
-          ================================== */}
-
+          {/* DYNAMIC MAPPING */}
           {mappingMode === 'dynamic' && (
-            <section style={dynamicCard}>
-              {/* STEP 1: START */}
-
-              {dynamicStep === 1 && (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '45px 20px',
-                  }}
-                >
+            <section className="ccf-mappings-panel ccf-mappings-dynamic">
+              <div className="ccf-mappings-dynamic-header">
+                <div>
                   <h2>Dynamic Document Mapping</h2>
+                  <p>
+                    Select a policy, review guidelines, and
+                    create associations.
+                  </p>
+                </div>
+                <span>Step {dynamicStep} of 5</span>
+              </div>
 
-                  <p style={{ color: '#64748b' }}>
-                    Select a policy to find and review
-                    guidelines for mapping.
+              <div className="ccf-mappings-progress">
+                {[1, 2, 3, 4, 5].map((step) => (
+                  <span
+                    key={step}
+                    className={
+                      step <= dynamicStep ? 'active' : ''
+                    }
+                  />
+                ))}
+              </div>
+
+              {/* STEP 1 */}
+              {dynamicStep === 1 && (
+                <div className="ccf-mappings-dynamic-intro">
+                  <h3>Start a New Mapping</h3>
+                  <p>
+                    Choose an internal policy and review guidelines
+                    available in your Guideline Database.
+                  </p>
+
+                  <p className="ccf-mappings-muted">
+                    This prototype uses existing guidelines.
+                    External guideline discovery is not connected yet.
                   </p>
 
                   <button
                     type="button"
-                    style={{
-                      ...primaryButton,
-                      marginTop: '20px',
-                    }}
+                    className="ccf-mappings-primary-button"
                     onClick={() => setDynamicStep(2)}
                   >
                     Select a Policy
@@ -921,66 +824,37 @@ function DocumentMappingsPage() {
                 </div>
               )}
 
-              {/* STEP 2: POLICY DATABASE */}
-
+              {/* STEP 2 */}
               {dynamicStep === 2 && (
-                <div>
-                  <h2>Select a Policy</h2>
-
-                  <p style={{ color: '#64748b' }}>
+                <div className="ccf-mappings-step">
+                  <h3>Select a Policy</h3>
+                  <p className="ccf-mappings-muted">
                     Choose a policy from your Policy Database.
                   </p>
 
                   <input
-                    className="mapping-search"
-                    type="text"
+                    type="search"
+                    className="ccf-mappings-search"
                     placeholder="Search policy database..."
+                    aria-label="Search policy database"
                     value={dynamicPolicySearch}
                     onChange={(event) =>
-                      setDynamicPolicySearch(
-                        event.target.value
-                      )
+                      setDynamicPolicySearch(event.target.value)
                     }
-                    style={{
-                      width: '100%',
-                      boxSizing: 'border-box',
-                      margin: '16px 0',
-                    }}
                   />
 
-                  <div
-                    style={{
-                      display: 'grid',
-                      gap: '10px',
-                    }}
-                  >
+                  <div className="ccf-mappings-choice-list">
                     {dynamicVisiblePolicies.map((policy) => (
                       <button
                         key={policy.id}
                         type="button"
+                        className="ccf-mappings-choice"
                         onClick={() =>
                           chooseDynamicPolicy(policy.id)
                         }
-                        style={{
-                          padding: '16px',
-                          textAlign: 'left',
-                          background: 'white',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                        }}
                       >
                         <strong>{policy.name}</strong>
-
-                        <div
-                          style={{
-                            fontSize: '12px',
-                            color: '#64748b',
-                            marginTop: '5px',
-                          }}
-                        >
-                          Policy ID: {policy.id}
-                        </div>
+                        <small>Policy ID: {policy.id}</small>
                       </button>
                     ))}
 
@@ -989,10 +863,10 @@ function DocumentMappingsPage() {
                     )}
                   </div>
 
-                  <div style={actionRow}>
+                  <div className="ccf-mappings-step-actions">
                     <button
                       type="button"
-                      style={secondaryButton}
+                      className="ccf-mappings-secondary-button"
                       onClick={() => setDynamicStep(1)}
                     >
                       Back
@@ -1001,55 +875,32 @@ function DocumentMappingsPage() {
                 </div>
               )}
 
-              {/* STEP 3: SELECTED POLICY */}
-
+              {/* STEP 3 */}
               {dynamicStep === 3 && (
-                <div>
-                  <h2>Selected Policy</h2>
+                <div className="ccf-mappings-step">
+                  <h3>Selected Policy</h3>
 
-                  <div
-                    style={{
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '20px',
-                      marginTop: '20px',
-                    }}
-                  >
-                    <strong>
-                      {dynamicPolicy?.name}
-                    </strong>
-
-                    <p
-                      style={{
-                        color: '#64748b',
-                        marginBottom: 0,
-                      }}
-                    >
+                  <div className="ccf-mappings-selected-policy">
+                    <strong>{dynamicPolicy?.name}</strong>
+                    <small>
                       Policy ID: {dynamicPolicy?.id}
-                    </p>
+                    </small>
                   </div>
 
-                  <p style={{ marginTop: '20px' }}>
+                  <p>
                     Start the guideline search for this policy.
                   </p>
 
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#64748b',
-                    }}
-                  >
-                    Preliminary version: this searches the
-                    existing Guideline Database. External
-                    guideline discovery will be connected
-                    to the backend later.
+                  <p className="ccf-mappings-muted">
+                    This search returns records already in the
+                    Guideline Database. A backend search can be
+                    connected later.
                   </p>
 
-                  <div style={actionRow}>
+                  <div className="ccf-mappings-step-actions">
                     <button
                       type="button"
-                      style={secondaryButton}
+                      className="ccf-mappings-secondary-button"
                       onClick={() => setDynamicStep(2)}
                     >
                       Back
@@ -1057,7 +908,7 @@ function DocumentMappingsPage() {
 
                     <button
                       type="button"
-                      style={primaryButton}
+                      className="ccf-mappings-primary-button"
                       onClick={startGuidelineSearch}
                     >
                       Start Guideline Search
@@ -1066,36 +917,33 @@ function DocumentMappingsPage() {
                 </div>
               )}
 
-              {/* STEP 4: GUIDELINE RESULTS */}
-
+              {/* STEP 4 */}
               {dynamicStep === 4 && (
-                <div>
-                  <h2>Guidelines Found</h2>
-
-                  <p style={{ color: '#64748b' }}>
+                <div className="ccf-mappings-step">
+                  <h3>Guidelines Found</h3>
+                  <p>
                     Select guidelines to map to{' '}
                     <strong>{dynamicPolicy?.name}</strong>.
                   </p>
 
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#64748b',
-                    }}
-                  >
-                    Showing existing Guideline Database
-                    records, not external backend search
-                    results.
+                  <p className="ccf-mappings-muted">
+                    Showing existing Guideline Database records,
+                    not external search results.
                   </p>
 
-                  <div
-                    style={{
-                      display: 'grid',
-                      gap: '12px',
-                      marginTop: '20px',
-                    }}
-                  >
-                    {dynamicResults.map((guideline) => {
+                  <input
+                    type="search"
+                    className="ccf-mappings-search"
+                    placeholder="Search results by guideline name..."
+                    aria-label="Search guideline results"
+                    value={dynamicGuidelineSearch}
+                    onChange={(event) =>
+                      setDynamicGuidelineSearch(event.target.value)
+                    }
+                  />
+
+                  <div className="ccf-mappings-choice-list">
+                    {dynamicVisibleGuidelines.map((guideline) => {
                       const checked =
                         dynamicSelectedIds.includes(
                           String(guideline.id)
@@ -1108,53 +956,23 @@ function DocumentMappingsPage() {
                       return (
                         <div
                           key={guideline.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '16px',
-                            padding: '16px',
-                            border: checked
-                              ? '2px solid #2563eb'
-                              : '1px solid #e2e8f0',
-                            borderRadius: '8px',
-                            background: checked
-                              ? '#eff6ff'
-                              : 'white',
-                            flexWrap: 'wrap',
-                          }}
+                          className={`ccf-mappings-result ${
+                            checked ? 'selected' : ''
+                          }`}
                         >
-                          <label
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              cursor: 'pointer',
-                            }}
-                          >
+                          <label>
                             <input
                               type="checkbox"
                               checked={checked}
                               onChange={() =>
-                                toggleDynamicGuideline(
-                                  guideline.id
-                                )
+                                toggleDynamicGuideline(guideline.id)
                               }
                             />
 
                             <span>
-                              <strong>
-                                {guideline.name}
-                              </strong>
-
+                              <strong>{guideline.name}</strong>
                               {linked && (
-                                <small
-                                  style={{
-                                    display: 'block',
-                                    color: '#64748b',
-                                    marginTop: '4px',
-                                  }}
-                                >
+                                <small>
                                   Already mapped to this policy
                                 </small>
                               )}
@@ -1163,7 +981,7 @@ function DocumentMappingsPage() {
 
                           <button
                             type="button"
-                            style={secondaryButton}
+                            className="ccf-mappings-secondary-button"
                             onClick={() =>
                               setPreviewGuideline(guideline)
                             }
@@ -1174,38 +992,21 @@ function DocumentMappingsPage() {
                       )
                     })}
 
-                    {dynamicResults.length === 0 && (
-                      <p>No guidelines are available.</p>
+                    {dynamicVisibleGuidelines.length === 0 && (
+                      <p className="ccf-mappings-empty">
+                        No guidelines found.
+                      </p>
                     )}
                   </div>
 
-                  {/* GUIDELINE DETAILS */}
-
                   {previewGuideline && (
-                    <div
-                      style={{
-                        background: '#f8fafc',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        marginTop: '20px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '12px',
-                        }}
-                      >
-                        <h3 style={{ margin: 0 }}>
-                          Guideline Details
-                        </h3>
+                    <div className="ccf-mappings-preview">
+                      <div className="ccf-mappings-preview-heading">
+                        <h4>Guideline Details</h4>
 
                         <button
                           type="button"
-                          style={secondaryButton}
+                          className="ccf-mappings-secondary-button"
                           onClick={() =>
                             setPreviewGuideline(null)
                           }
@@ -1214,49 +1015,40 @@ function DocumentMappingsPage() {
                         </button>
                       </div>
 
-                      <h4>{previewGuideline.name}</h4>
+                      <strong>{previewGuideline.name}</strong>
 
                       <p>
                         Guideline ID: {previewGuideline.id}
                       </p>
 
                       {previewGuideline.description && (
-                        <p>
-                          {previewGuideline.description}
-                        </p>
+                        <p>{previewGuideline.description}</p>
                       )}
 
                       {previewGuideline.url &&
-                        /^https?:\/\//i.test(
-                          previewGuideline.url
-                        ) && (
-                          <a
-                            href={previewGuideline.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Open Guideline Document
-                          </a>
-                        )}
-
-                      {!previewGuideline.url && (
-                        <p
-                          style={{
-                            fontSize: '13px',
-                            color: '#64748b',
-                          }}
+                      /^https?:\/\//i.test(
+                        previewGuideline.url
+                      ) ? (
+                        <a
+                          href={previewGuideline.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          No external document link is
-                          available for this guideline.
+                          Open Guideline Document
+                        </a>
+                      ) : (
+                        <p className="ccf-mappings-muted">
+                          No external document link is available
+                          for this guideline.
                         </p>
                       )}
                     </div>
                   )}
 
-                  <div style={actionRow}>
+                  <div className="ccf-mappings-step-actions">
                     <button
                       type="button"
-                      style={secondaryButton}
+                      className="ccf-mappings-secondary-button"
                       onClick={() => {
                         setPreviewGuideline(null)
                         setDynamicStep(3)
@@ -1267,72 +1059,44 @@ function DocumentMappingsPage() {
 
                     <button
                       type="button"
-                      style={{
-                        ...primaryButton,
-                        opacity:
-                          dynamicSelectedIds.length === 0
-                            ? 0.5
-                            : 1,
-                      }}
+                      className="ccf-mappings-primary-button"
                       disabled={
                         dynamicSelectedIds.length === 0
                       }
                       onClick={saveDynamicMappings}
                     >
-                      Map to Policy (
-                      {dynamicSelectedIds.length})
+                      Map to Policy ({dynamicSelectedIds.length})
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 5: CONFIRMATION */}
-
+              {/* STEP 5 */}
               {dynamicStep === 5 && (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '45px 20px',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '42px',
-                      color: '#16a34a',
-                    }}
-                  >
+                <div className="ccf-mappings-dynamic-intro">
+                  <div className="ccf-mappings-success-icon">
                     ✓
                   </div>
 
-                  <h2>Guidelines Mapped Successfully</h2>
+                  <h3>Mapping Review Complete</h3>
 
-                  <p role="status">
-                    {dynamicMessage}
-                  </p>
+                  <p role="status">{dynamicMessage}</p>
 
-                  <p style={{ color: '#64748b' }}>
-                    Your selected guidelines are now
-                    associated with{' '}
+                  <p>
+                    Your selected guidelines have been reviewed
+                    for association with{' '}
                     <strong>{dynamicPolicy?.name}</strong>.
                   </p>
 
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: '#64748b',
-                    }}
-                  >
+                  <p className="ccf-mappings-muted">
                     These guidelines were already in the
-                    Guideline Database. No new external
-                    documents were imported.
+                    Guideline Database. No external documents
+                    were imported.
                   </p>
 
                   <button
                     type="button"
-                    style={{
-                      ...primaryButton,
-                      marginTop: '20px',
-                    }}
+                    className="ccf-mappings-primary-button"
                     onClick={resetDynamicMapping}
                   >
                     Start Another Mapping
@@ -1343,6 +1107,64 @@ function DocumentMappingsPage() {
           )}
         </main>
       </div>
+
+      {/* HELP DIALOG */}
+      {helpOpen && (
+        <div
+          className="ccf-mappings-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-mappings-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mappings-help-title"
+          >
+            <div className="ccf-mappings-help-heading">
+              <h2 id="mappings-help-title">
+                Document Mappings Help
+              </h2>
+
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              <strong>Manual Mapping:</strong> Select an internal
+              policy and one or more guidelines. Create or
+              remove their associations.
+            </p>
+
+            <p>
+              <strong>Dynamic Mapping:</strong> Select a policy,
+              search existing guidelines, review details, and
+              confirm your selections.
+            </p>
+
+            <p>
+              Mapping changes are saved in your browser and
+              recorded in the Audit Log.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-mappings-primary-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

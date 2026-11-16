@@ -1,6 +1,157 @@
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import './DashboardPage.css'
+import './PolicyReviewPage.css'
+
+const originalReviews = [
+  {
+    id: 1,
+    name: 'Cardiac Coverage Review',
+    description:
+      'Review of cardiac coverage policies against current clinical guidelines.',
+    policies: 3,
+    guideline: '2026 Cardiac Coverage Guidelines',
+    date: 'Sep 23, 2026',
+    age: '2 days ago',
+    status: 'In Review',
+    findings: 14,
+    selectedPolicies: [
+      { id: 'demo-cardiac-1', name: 'Cardiac Coverage Policy' },
+      { id: 'demo-cardiac-2', name: 'Coronary Intervention Policy' },
+      { id: 'demo-cardiac-3', name: 'Cardiac Imaging Policy' },
+    ],
+    selectedGuidelines: [
+      {
+        id: 'demo-cardiac-guideline',
+        name: '2026 Cardiac Coverage Guidelines',
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Diabetes Treatment Review',
+    description:
+      'Review of diabetes management and treatment policies.',
+    policies: 2,
+    guideline: '2026 Diabetes Treatment Guidelines',
+    date: 'Sep 18, 2026',
+    age: '6 days ago',
+    status: 'Completed',
+    findings: 8,
+    selectedPolicies: [
+      { id: 'demo-diabetes-1', name: 'Diabetes Treatment Policy' },
+      {
+        id: 'demo-diabetes-2',
+        name: 'Diabetes Medication Coverage Policy',
+      },
+    ],
+    selectedGuidelines: [
+      {
+        id: 'demo-diabetes-guideline',
+        name: '2026 Diabetes Treatment Guidelines',
+      },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Oncology Coverage Review',
+    description:
+      'Review of oncology coverage policies and treatment criteria.',
+    policies: 4,
+    guideline: 'Oncology Coverage Guidelines',
+    date: 'Sep 10, 2026',
+    age: '14 days ago',
+    status: 'Completed',
+    findings: 21,
+    selectedPolicies: [
+      { id: 'demo-oncology-1', name: 'Oncology Coverage Policy' },
+      { id: 'demo-oncology-2', name: 'Targeted Therapy Policy' },
+      { id: 'demo-oncology-3', name: 'Cancer Treatment Policy' },
+      { id: 'demo-oncology-4', name: 'Oncology Medication Policy' },
+    ],
+    selectedGuidelines: [
+      {
+        id: 'demo-oncology-guideline',
+        name: 'Oncology Coverage Guidelines',
+      },
+    ],
+  },
+  {
+    id: 4,
+    name: 'Orthopedic Surgery Review',
+    description:
+      'Review of orthopedic procedure and rehabilitation policies.',
+    policies: 3,
+    guideline: '2026 Orthopedic Guidelines',
+    date: 'Sep 5, 2026',
+    age: '19 days ago',
+    status: 'In Review',
+    findings: 0,
+    selectedPolicies: [
+      { id: 'demo-orthopedic-1', name: 'Orthopedic Surgery Policy' },
+      { id: 'demo-orthopedic-2', name: 'Joint Replacement Policy' },
+      {
+        id: 'demo-orthopedic-3',
+        name: 'Rehabilitation Coverage Policy',
+      },
+    ],
+    selectedGuidelines: [
+      {
+        id: 'demo-orthopedic-guideline',
+        name: '2026 Orthopedic Guidelines',
+      },
+    ],
+  },
+  {
+    id: 5,
+    name: 'Mental Health Coverage Review',
+    description:
+      'Review of mental health coverage and treatment policies.',
+    policies: 2,
+    guideline: '2026 Mental Health Guidelines',
+    date: 'Aug 28, 2026',
+    age: '27 days ago',
+    status: 'Completed',
+    findings: 12,
+    selectedPolicies: [
+      {
+        id: 'demo-mental-health-1',
+        name: 'Mental Health Coverage Policy',
+      },
+      {
+        id: 'demo-mental-health-2',
+        name: 'Behavioral Health Treatment Policy',
+      },
+    ],
+    selectedGuidelines: [
+      {
+        id: 'demo-mental-health-guideline',
+        name: '2026 Mental Health Guidelines',
+      },
+    ],
+  },
+]
+
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
+
+function getSavedReviews() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem('createdReviews') || '[]'
+    )
+    return Array.isArray(saved) ? saved : []
+  } catch {
+    return []
+  }
+}
 
 function PolicyReviewPage() {
   const navigate = useNavigate()
@@ -8,142 +159,9 @@ function PolicyReviewPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
+  const [helpOpen, setHelpOpen] = useState(false)
 
-  // ORIGINAL / DEMO REVIEW SESSIONS
-
-  const originalReviews = [
-    {
-      id: 1,
-      name: 'Cardiac Coverage Review',
-      description:
-        'Review of cardiac coverage policies against current clinical guidelines.',
-      policies: 3,
-      guideline: '2026 Cardiac Coverage Guidelines',
-      date: 'Sep 23, 2026',
-      age: '2 days ago',
-      status: 'In Review',
-      findings: 14,
-      selectedPolicies: [
-        { id: 'demo-cardiac-1', name: 'Cardiac Coverage Policy' },
-        { id: 'demo-cardiac-2', name: 'Coronary Intervention Policy' },
-        { id: 'demo-cardiac-3', name: 'Cardiac Imaging Policy' },
-      ],
-      selectedGuidelines: [
-        {
-          id: 'demo-cardiac-guideline',
-          name: '2026 Cardiac Coverage Guidelines',
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Diabetes Treatment Review',
-      description:
-        'Review of diabetes management and treatment policies.',
-      policies: 2,
-      guideline: '2026 Diabetes Treatment Guidelines',
-      date: 'Sep 18, 2026',
-      age: '6 days ago',
-      status: 'Completed',
-      findings: 8,
-      selectedPolicies: [
-        { id: 'demo-diabetes-1', name: 'Diabetes Treatment Policy' },
-        {
-          id: 'demo-diabetes-2',
-          name: 'Diabetes Medication Coverage Policy',
-        },
-      ],
-      selectedGuidelines: [
-        {
-          id: 'demo-diabetes-guideline',
-          name: '2026 Diabetes Treatment Guidelines',
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Oncology Coverage Review',
-      description:
-        'Review of oncology coverage policies and treatment criteria.',
-      policies: 4,
-      guideline: 'Oncology Coverage Guidelines',
-      date: 'Sep 10, 2026',
-      age: '14 days ago',
-      status: 'Completed',
-      findings: 21,
-      selectedPolicies: [
-        { id: 'demo-oncology-1', name: 'Oncology Coverage Policy' },
-        { id: 'demo-oncology-2', name: 'Targeted Therapy Policy' },
-        { id: 'demo-oncology-3', name: 'Cancer Treatment Policy' },
-        { id: 'demo-oncology-4', name: 'Oncology Medication Policy' },
-      ],
-      selectedGuidelines: [
-        {
-          id: 'demo-oncology-guideline',
-          name: 'Oncology Coverage Guidelines',
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: 'Orthopedic Surgery Review',
-      description:
-        'Review of orthopedic procedure and rehabilitation policies.',
-      policies: 3,
-      guideline: '2026 Orthopedic Guidelines',
-      date: 'Sep 5, 2026',
-      age: '19 days ago',
-      status: 'In Review',
-      findings: 0,
-      selectedPolicies: [
-        { id: 'demo-orthopedic-1', name: 'Orthopedic Surgery Policy' },
-        { id: 'demo-orthopedic-2', name: 'Joint Replacement Policy' },
-        {
-          id: 'demo-orthopedic-3',
-          name: 'Rehabilitation Coverage Policy',
-        },
-      ],
-      selectedGuidelines: [
-        {
-          id: 'demo-orthopedic-guideline',
-          name: '2026 Orthopedic Guidelines',
-        },
-      ],
-    },
-    {
-      id: 5,
-      name: 'Mental Health Coverage Review',
-      description:
-        'Review of mental health coverage and treatment policies.',
-      policies: 2,
-      guideline: '2026 Mental Health Guidelines',
-      date: 'Aug 28, 2026',
-      age: '27 days ago',
-      status: 'Completed',
-      findings: 12,
-      selectedPolicies: [
-        {
-          id: 'demo-mental-health-1',
-          name: 'Mental Health Coverage Policy',
-        },
-        {
-          id: 'demo-mental-health-2',
-          name: 'Behavioral Health Treatment Policy',
-        },
-      ],
-      selectedGuidelines: [
-        {
-          id: 'demo-mental-health-guideline',
-          name: '2026 Mental Health Guidelines',
-        },
-      ],
-    },
-  ]
-
-  // GET REVIEW SESSIONS CREATED BY USER
-
-  const savedReviews =
-    JSON.parse(localStorage.getItem('createdReviews')) || []
+  const savedReviews = getSavedReviews()
 
   const createdReviews = savedReviews.map((review) => ({
     ...review,
@@ -154,9 +172,9 @@ function PolicyReviewPage() {
     guideline:
       review.guideline ||
       review.selectedGuidelines?.[0]?.name ||
-      'Reference guidelines selected',
+      'No mapped guidelines',
     status: review.status || 'In Review',
-    findings: review.findings ?? 0,
+    findings: Number(review.findings) || 0,
     age: review.age || 'Recently',
   }))
 
@@ -175,15 +193,13 @@ function PolicyReviewPage() {
     0
   )
 
-  // SEARCH / FILTER / SORT
-
-  const visibleReviews = [...allReviews]
+  const visibleReviews = allReviews
     .filter((review) => {
-      const reviewName = review.name || 'Untitled Review Session'
+      const query = search.toLowerCase().trim()
 
-      const matchesSearch = reviewName
-        .toLowerCase()
-        .includes(search.toLowerCase())
+      const matchesSearch =
+        (review.name || '').toLowerCase().includes(query) ||
+        (review.description || '').toLowerCase().includes(query)
 
       const matchesFilter =
         filter === 'All' || review.status === filter
@@ -191,23 +207,13 @@ function PolicyReviewPage() {
       return matchesSearch && matchesFilter
     })
     .sort((a, b) => {
-      const aDate = new Date(a.date)
-      const bDate = new Date(b.date)
-
-      const aTime = Number.isNaN(aDate.getTime())
-        ? 0
-        : aDate.getTime()
-
-      const bTime = Number.isNaN(bDate.getTime())
-        ? 0
-        : bDate.getTime()
+      const aTime = new Date(a.date).getTime() || 0
+      const bTime = new Date(b.date).getTime() || 0
 
       return sort === 'Oldest'
         ? aTime - bTime
         : bTime - aTime
     })
-
-  // OPEN EXISTING REVIEW SESSION
 
   function openReviewSession(review) {
     const sessionToOpen = {
@@ -244,27 +250,37 @@ function PolicyReviewPage() {
     navigate('/reviews/findings')
   }
 
+  function startNewReview() {
+    localStorage.removeItem('currentReview')
+    localStorage.removeItem('selectedPolicies')
+    localStorage.removeItem('selectedGuidelines')
+    localStorage.removeItem('newReviewName')
+    localStorage.removeItem('newReviewDescription')
+
+    navigate('/reviews/new')
+  }
+
   return (
-    <div className="app-page">
+    <div className="app-page ccf-dashboard ccf-review-page">
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">Policy Review</span>
-          <span className="brand-divider"></span>
+          <span className="brand-name">CCF</span>
+          <span className="brand-divider" />
           <span className="workspace-name">
-            Policy Review Workspace
+            Insurance Policy Review Workspace
           </span>
         </div>
 
         <div className="top-right">
-          <div className="search-box">
-            <span>⌕</span>
-            <input
-              type="text"
-              placeholder="Search policies, guidelines..."
-            />
-          </div>
-          <span className="top-icon">?</span>
-          <span className="top-icon">⚙</span>
+          <button
+            type="button"
+            className="ccf-help-button"
+            aria-label="Help"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
+
           <div className="user-area">
             <div className="user-avatar">SC</div>
             <span>Sarah Chen</span>
@@ -273,264 +289,265 @@ function PolicyReviewPage() {
       </header>
 
       <div className="app-body">
-        {/* SIDEBAR */}
-
-        <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">
-            Dashboard
-          </Link>
-
-          <Link to="/reviews" className="nav-item active">
-            Review Sessions
-          </Link>
-
-          <Link to="/policies" className="nav-item">
-            Policy Database
-          </Link>
-
-          <Link to="/guidelines" className="nav-item">
-            Guideline Database
-          </Link>
-
-          <Link
-            to="/mappings"
-            className="nav-item"
-          >
-            Document Mappings
-          </Link>
-
-          <Link to="/audit-log" className="nav-item">
-            Audit Log
-          </Link>
+        <aside className="sidebar" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
-        {/* MAIN PAGE */}
-
-        <main className="policy-reviews-content">
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              gap: '24px',
-              marginBottom: '28px',
-            }}
-          >
-            <div>
-              <h1 style={{ marginBottom: '8px' }}>
-                Review Sessions
-              </h1>
-
-              <p
-                className="page-subtitle"
-                style={{ marginBottom: 0 }}
-              >
-                Create, continue, and monitor policy review
-                sessions.
-              </p>
-            </div>
-
-            <Link
-              to="/reviews/new"
-              className="new-review-button"
-              style={{
-                position: 'static',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-                backgroundColor: '#0077bb',
-                color: '#ffffff',
-                borderColor: '#0077bb',
-              }}
-            >
-              Start a Review Session
-              <span>+</span>
-            </Link>
+        <main className="ccf-review-content">
+          <div className="ccf-review-heading">
+            <h1>Review Sessions</h1>
+            <p>
+              Create, continue, and monitor insurance policy review
+              sessions.
+            </p>
           </div>
 
-          {/* SESSION SUMMARY */}
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(3, minmax(0, 1fr))',
-              gap: '16px',
-              marginBottom: '28px',
-            }}
-          >
-            <div className="stat-card">
+          <div className="ccf-review-stats">
+            <div className="ccf-review-stat">
               <span>ACTIVE SESSIONS</span>
               <strong>{activeCount}</strong>
+              <small>Currently in progress</small>
             </div>
 
-            <div className="stat-card">
+            <div className="ccf-review-stat">
               <span>COMPLETED SESSIONS</span>
               <strong>{completedCount}</strong>
+              <small>Finished reviews</small>
             </div>
 
-            <div className="stat-card">
+            <div className="ccf-review-stat">
               <span>TOTAL FINDINGS</span>
               <strong>{totalFindings}</strong>
+              <small>Findings identified</small>
             </div>
           </div>
 
-          {/* CONTROLS */}
-
-          <div className="review-controls">
-            <input
-              className="review-search"
-              type="text"
-              placeholder="⌕   Search review sessions..."
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-            />
-
-            <div className="filter-buttons">
-              <button
-                type="button"
-                className={filter === 'All' ? 'selected' : ''}
-                onClick={() => setFilter('All')}
-              >
-                All
-              </button>
-
-              <button
-                type="button"
-                className={
-                  filter === 'In Review' ? 'selected' : ''
-                }
-                onClick={() => setFilter('In Review')}
-              >
-                In Review
-              </button>
-
-              <button
-                type="button"
-                className={
-                  filter === 'Completed' ? 'selected' : ''
-                }
-                onClick={() => setFilter('Completed')}
-              >
-                Completed
-              </button>
-            </div>
-
-            <div className="sort-area">
-              <span>Sort by</span>
-
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value)}
-              >
-                <option>Most recent</option>
-                <option>Oldest</option>
-              </select>
-            </div>
-          </div>
-
-          {/* REVIEW SESSION TABLE */}
-
-          <div className="policy-review-table">
-            <div className="policy-review-header">
-              <span>REVIEW SESSION</span>
-              <span>POLICIES</span>
-              <span>REFERENCE GUIDELINES</span>
-              <span>DATE CREATED</span>
-              <span>STATUS</span>
-              <span>FINDINGS</span>
-            </div>
-
-            {visibleReviews.map((review) => (
-              <div
-                className="policy-review-row"
-                key={review.id}
-                onClick={() => openReviewSession(review)}
-                style={{ cursor: 'pointer' }}
-                title="Open review session"
-              >
-                <div>
-                  <strong
-                    className="review-name"
-                    style={{
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '2px',
-                    }}
-                  >
-                    {review.name || 'Untitled Review Session'}
-                  </strong>
-
-                  <p>
-                    {review.description || 'Policy review session.'}
-                  </p>
-                </div>
-
-                <div className="document-cell">
-                  <span className="pdf-icon">
-                    {review.policies || 1}
-                  </span>
-
-                  <div>
-                    <strong>
-                      {review.policies || 1}{' '}
-                      {(review.policies || 1) === 1
-                        ? 'Policy'
-                        : 'Policies'}
-                    </strong>
-                    <small>included in session</small>
-                  </div>
-                </div>
-
-                <div className="guideline-cell">
-                  <span className="guideline-icon">⌜</span>
-
-                  <div>
-                    <strong>
-                      {review.guideline || 'Not selected'}
-                    </strong>
-                    <small>Reference guideline</small>
-                  </div>
-                </div>
-
-                <div className="date-cell">
-                  <span>{review.date || 'Recently'}</span>
-                  <small>{review.age || 'Recently'}</small>
-                </div>
-
-                <div>
-                  <span
-                    className={
-                      review.status === 'Completed'
-                        ? 'status completed'
-                        : 'status in-review'
-                    }
-                  >
-                    {review.status || 'In Review'}
-                  </span>
-                </div>
-
-                <div className="findings-cell">
-                  <strong>{review.findings || 0}</strong>
-                  <small>identified</small>
-                </div>
+          <section className="ccf-review-panel">
+            <div className="ccf-review-panel-heading">
+              <div>
+                <h2>All Review Sessions</h2>
+                <p>
+                  Select a review session to view its findings.
+                </p>
               </div>
-            ))}
+              <span className="ccf-review-total">
+                {visibleReviews.length} sessions
+              </span>
+            </div>
 
-            {visibleReviews.length === 0 && (
-              <div
-                style={{
-                  padding: '35px',
-                  textAlign: 'center',
-                  color: '#777',
-                }}
-              >
-                No review sessions match your search.
+            <div className="ccf-review-controls">
+              <input
+                type="search"
+                aria-label="Search review sessions"
+                placeholder="Search review sessions..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+
+              <div className="ccf-review-filters">
+                {['All', 'In Review', 'Completed'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={filter === option ? 'selected' : ''}
+                    onClick={() => setFilter(option)}
+                  >
+                    {option}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+
+              <label className="ccf-review-sort">
+                <span>Sort by</span>
+                <select
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                >
+                  <option value="Most recent">Most recent</option>
+                  <option value="Oldest">Oldest</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="ccf-review-table-scroll">
+              <table className="ccf-review-table">
+                <thead>
+                  <tr>
+                    <th>Review Session</th>
+                    <th>Policies</th>
+                    <th>Reference Guidelines</th>
+                    <th>Date Created</th>
+                    <th>Status</th>
+                    <th>Findings</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {visibleReviews.map((review) => (
+                    <tr key={review.id}>
+                      <td>
+                        <button
+                          type="button"
+                          className="ccf-review-name-link"
+                          onClick={() => openReviewSession(review)}
+                        >
+                          {review.name || 'Untitled Review Session'}
+                        </button>
+                        <p className="ccf-review-description">
+                          {review.description || 'Policy review session.'}
+                        </p>
+                      </td>
+
+                      <td>
+                        <strong>{review.policies || 1}</strong>
+                        <small>
+                          {(review.policies || 1) === 1
+                            ? 'Policy'
+                            : 'Policies'}
+                        </small>
+                      </td>
+
+                      <td>
+                        <span className="ccf-review-guideline">
+                          {review.guideline || 'No mapped guidelines'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span>{review.date || 'Recently'}</span>
+                        <small>{review.age || ''}</small>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`ccf-review-status ${
+                            review.status === 'Completed'
+                              ? 'completed'
+                              : 'in-review'
+                          }`}
+                        >
+                          {review.status}
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong>{review.findings || 0}</strong>
+                        <small>identified</small>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {visibleReviews.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="ccf-review-empty">
+                        No review sessions match your search.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="ccf-review-bottom">
+              <span>
+                Showing {visibleReviews.length} of {allReviews.length}{' '}
+                review sessions
+              </span>
+
+              <button
+                type="button"
+                className="ccf-review-new-button"
+                onClick={startNewReview}
+              >
+                <span aria-hidden="true">+</span>
+                New Review
+              </button>
+            </div>
+          </section>
         </main>
       </div>
+
+      {helpOpen && (
+        <div
+          className="ccf-review-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setHelpOpen(false)
+            }
+          }}
+        >
+          <div
+            className="ccf-review-help-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-help-title"
+          >
+            <div className="ccf-review-help-heading">
+              <h2 id="review-help-title">
+                How Review Sessions Work
+              </h2>
+              <button
+                type="button"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <p>
+              Review Sessions helps you organize policy evaluations
+              and inspect findings.
+            </p>
+
+            <ol>
+              <li>
+                Click <strong>New Review</strong> to create a session.
+              </li>
+              <li>
+                Enter a name and description for the review.
+              </li>
+              <li>
+                Choose a policy from the Policy Database.
+              </li>
+              <li>
+                Review the guidelines already mapped to that policy.
+              </li>
+              <li>
+                Open the review session to inspect its findings.
+              </li>
+            </ol>
+
+            <p>
+              To manage policy-to-guideline relationships, visit{' '}
+              <Link
+                to="/mappings"
+                onClick={() => setHelpOpen(false)}
+              >
+                Document Mappings
+              </Link>.
+            </p>
+
+            <button
+              type="button"
+              className="ccf-review-new-button"
+              onClick={() => setHelpOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
