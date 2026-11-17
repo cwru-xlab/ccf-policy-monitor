@@ -1,11 +1,31 @@
 
-/* =========================================
-   CCF DOCUMENT MAPPINGS PAGE
-   ========================================= */
+/* =========================================================
+   CCF INSURANCE POLICY REVIEW WORKSPACE
+   DOCUMENT MAPPINGS PAGE
+   ========================================================= */
+
+/* =========================================================
+   1. PAGE LAYOUT
+   ========================================================= */
 
 .ccf-mappings-page {
+  --mapping-green: #007f59;
+  --mapping-green-dark: #006747;
+  --mapping-green-light: #e9f5ee;
+  --mapping-text: #17253b;
+  --mapping-muted: #65758a;
+  --mapping-border: #e1e8ec;
+  --mapping-background: #f5f7fa;
+
   min-height: 100vh;
-  background: #f5f7f6;
+  background: var(--mapping-background);
+  color: var(--mapping-text);
+}
+
+.ccf-mappings-page *,
+.ccf-mappings-page *::before,
+.ccf-mappings-page *::after {
+  box-sizing: border-box;
 }
 
 .ccf-mappings-page .app-body {
@@ -16,117 +36,126 @@
 .ccf-mappings-content {
   flex: 1;
   min-width: 0;
-  padding: 32px 36px 56px;
-  box-sizing: border-box;
-  color: #24342c;
+  padding: 32px 28px 60px;
 }
 
+/* =========================================================
+   2. PAGE HEADING
+   ========================================================= */
+
 .ccf-mappings-heading {
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .ccf-mappings-heading h1 {
   margin: 0 0 8px;
+  color: #173d2c;
   font-size: 28px;
-  font-weight: 700;
-  color: #183f2d;
+  font-weight: 750;
+  letter-spacing: -0.5px;
 }
 
 .ccf-mappings-heading p {
   margin: 0;
+  color: var(--mapping-muted);
   font-size: 14px;
-  color: #68776e;
   line-height: 1.6;
 }
 
-/* =========================================
-   MODE SWITCH
-   ========================================= */
+/* =========================================================
+   3. MANUAL / DYNAMIC MODE BUTTONS
+   ========================================================= */
 
 .ccf-mappings-mode-switch {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 24px;
 }
 
 .ccf-mappings-mode-switch button {
-  padding: 12px 22px;
-  border: 1px solid #bfd2c5;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 11px 22px;
+  border: 1px solid #d5e4da;
+  border-radius: 9px;
   background: #ffffff;
-  color: #286445;
-  font-size: 14px;
-  font-weight: 600;
+  color: #246847;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .ccf-mappings-mode-switch button:hover {
-  background: #eef6f0;
+  background: #eef8f2;
+  border-color: #91c7a6;
 }
 
+.ccf-mappings-mode-switch button.active,
 .ccf-mappings-mode-switch button.selected {
-  background: #24764b;
-  border-color: #24764b;
+  background: var(--mapping-green);
+  border-color: var(--mapping-green);
   color: #ffffff;
+  box-shadow: 0 3px 9px rgba(0, 127, 89, 0.13);
 }
 
-.ccf-mappings-automation-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 22px;
-  border: 1px solid #bfd2c5;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #286445;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.ccf-mappings-automation-link:hover {
-  background: #eef6f0;
-}
-
-/* =========================================
-   STATISTICS
-   ========================================= */
+/* =========================================================
+   4. SUMMARY STATISTICS CARDS
+   ========================================================= */
 
 .ccf-mappings-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
 .ccf-mappings-stat {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  min-height: 128px;
   padding: 22px 24px;
   background: #ffffff;
-  border: 1px solid #e1e9e3;
+  border: 1px solid var(--mapping-border);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(20, 54, 34, 0.03);
+  box-shadow: 0 2px 8px rgba(20, 54, 34, 0.035);
 }
 
 .ccf-mappings-stat span {
-  font-size: 13px;
-  color: #68776e;
-  font-weight: 500;
+  margin-bottom: 10px;
+  color: #607085;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
 }
 
 .ccf-mappings-stat strong {
-  font-size: 30px;
-  font-weight: 700;
-  color: #1c6240;
+  display: block;
+  color: #17253b;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
 }
 
-/* =========================================
-   MAIN PANELS
-   ========================================= */
+.ccf-mappings-stat small {
+  margin-top: 9px;
+  color: #728197;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   5. MAIN CONTENT PANELS
+   ========================================================= */
 
 .ccf-mappings-columns {
   display: grid;
@@ -139,88 +168,120 @@
   min-width: 0;
   padding: 24px;
   background: #ffffff;
-  border: 1px solid #e1e9e3;
+  border: 1px solid var(--mapping-border);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(20, 54, 34, 0.03);
-  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(20, 54, 34, 0.035);
 }
 
 .ccf-mappings-panel h2 {
   margin: 0 0 18px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #234c35;
+  color: #174b35;
+  font-size: 17px;
+  font-weight: 750;
 }
 
-.ccf-mappings-panel-heading {
+.ccf-mappings-panel-heading,
+.ccf-mappings-panel-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 18px;
 }
 
-.ccf-mappings-panel-heading h2 {
+.ccf-mappings-panel-heading h2,
+.ccf-mappings-panel-title h2 {
   margin: 0;
 }
 
-.ccf-mappings-panel-heading > span {
-  color: #718076;
-  font-size: 12px;
-  white-space: nowrap;
+.ccf-mappings-panel-heading > span,
+.ccf-mappings-panel-title > span {
+  padding: 6px 11px;
+  border-radius: 20px;
+  background: #e7f4ec;
+  color: #176c46;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-/* =========================================
-   SEARCH AND FILTERS
-   ========================================= */
+/* =========================================================
+   6. SEARCH INPUTS
+   ========================================================= */
 
 .ccf-mappings-search {
   display: block;
   width: 100%;
-  min-height: 43px;
-  padding: 11px 14px;
-  box-sizing: border-box;
-  border: 1px solid #d6e1d9;
-  border-radius: 8px;
+  min-height: 46px;
+  padding: 12px 15px;
+  border: 1px solid #dce4e8;
+  border-radius: 9px;
   background: #ffffff;
-  color: #24342c;
-  font: inherit;
+  color: #253449;
+  font-family: inherit;
   font-size: 13px;
   outline: none;
+  transition: all 0.2s ease;
+}
+
+.ccf-mappings-search::placeholder {
+  color: #9ba7b4;
 }
 
 .ccf-mappings-search:focus {
-  border-color: #298354;
-  box-shadow: 0 0 0 3px rgba(41, 131, 84, 0.1);
+  border-color: var(--mapping-green);
+  box-shadow: 0 0 0 3px rgba(0, 127, 89, 0.1);
 }
 
-.ccf-mappings-filters {
+/* =========================================================
+   7. FILTER BUTTONS
+   ========================================================= */
+
+.ccf-mappings-filters,
+.ccf-mappings-dynamic .ccf-mappings-filters {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 16px 0;
+  gap: 9px;
+  margin: 12px 0 20px;
 }
 
-.ccf-mappings-filters button {
-  padding: 8px 13px;
-  border: 1px solid #dbe5dd;
-  border-radius: 7px;
+.ccf-mappings-filters button,
+.ccf-mappings-dynamic .ccf-mappings-filters button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 1px solid #dce5e0;
+  border-radius: 8px;
   background: #ffffff;
-  color: #56665b;
+  color: #53685b;
+  font-family: inherit;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.ccf-mappings-filters button.selected {
-  background: #e8f4eb;
-  border-color: #a9d1b6;
-  color: #206c43;
+.ccf-mappings-filters button:hover,
+.ccf-mappings-dynamic .ccf-mappings-filters button:hover {
+  border-color: #9fcdb1;
+  background: #f0f8f3;
 }
 
-/* =========================================
-   DOCUMENT LISTS
-   ========================================= */
+.ccf-mappings-filters button.selected,
+.ccf-mappings-filters button.active,
+.ccf-mappings-dynamic .ccf-mappings-filters button.selected,
+.ccf-mappings-dynamic .ccf-mappings-filters button.active {
+  background: var(--mapping-green);
+  border-color: var(--mapping-green);
+  color: #ffffff;
+}
+
+/* =========================================================
+   8. POLICY AND GUIDELINE DOCUMENT LISTS
+   ========================================================= */
 
 .ccf-mappings-list {
   display: flex;
@@ -237,166 +298,206 @@
   align-items: flex-start;
   gap: 8px;
   width: 100%;
-  padding: 16px;
-  border: 1px solid #e1e9e3;
-  border-radius: 9px;
+  padding: 17px 18px;
+  border: 1px solid #e2e9e5;
+  border-radius: 10px;
   background: #ffffff;
   color: #263b2d;
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
-  box-sizing: border-box;
-  font: inherit;
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .ccf-mappings-document:hover {
-  border-color: #96c5a5;
+  border-color: #b0d6bf;
   background: #f7fbf8;
 }
 
 .ccf-mappings-document.selected {
-  border-color: #298354;
-  background: #eff8f1;
-  box-shadow: inset 0 0 0 1px #298354;
+  border-color: #65ad83;
+  background: #f0f8f3;
+  box-shadow: inset 0 0 0 1px #65ad83;
 }
 
 .ccf-mappings-document strong {
+  color: #253b2e;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1.5;
 }
 
 .ccf-mappings-document small {
-  color: #79867d;
-  font-size: 12px;
+  color: #758579;
+  font-size: 11px;
 }
 
-.ccf-mappings-checkbox-row {
+.ccf-mappings-checkbox-row,
+.ccf-mappings-checkbox-line {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   width: 100%;
 }
 
-.ccf-mappings-checkbox-row input,
-.ccf-mappings-result input {
-  accent-color: #24764b;
-  width: 16px;
-  height: 16px;
+.ccf-mappings-page input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
+  accent-color: var(--mapping-green);
+  cursor: pointer;
 }
 
+/* =========================================================
+   9. MAPPED / UNMAPPED AND LINKED / UNLINKED TAGS
+   ========================================================= */
+
 .ccf-mappings-tag {
-  display: inline-block;
-  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 6px 12px;
   border-radius: 20px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 750;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .ccf-mappings-tag.mapped {
-  color: #206c43;
-  background: #e7f4ea;
+  background: #e3f4e9;
+  color: #167246;
 }
 
 .ccf-mappings-tag.unmapped {
-  color: #7b6b4b;
-  background: #f8f1e2;
+  background: #f0f2f3;
+  color: #68757b;
 }
 
 .ccf-mappings-linked {
+  color: #24764b;
   font-size: 11px;
-  color: #28794c;
+  font-weight: 600;
   font-style: normal;
 }
 
-.ccf-mappings-empty {
-  padding: 18px;
-  text-align: center;
-  color: #77847a;
-  font-size: 13px;
-}
+/* =========================================================
+   10. ALL ACTION BUTTONS
+   ========================================================= */
 
-.ccf-mappings-muted {
-  color: #718076;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-/* =========================================
-   BUTTONS
-   ========================================= */
-
-.ccf-mappings-primary-button,
-.ccf-mappings-secondary-button,
-.ccf-mappings-danger-button {
+.ccf-mappings-page .ccf-mappings-primary,
+.ccf-mappings-page .ccf-mappings-primary-button,
+.ccf-mappings-page .ccf-mappings-secondary,
+.ccf-mappings-page .ccf-mappings-secondary-button,
+.ccf-mappings-page .ccf-mappings-danger,
+.ccf-mappings-page .ccf-mappings-danger-button {
   display: inline-flex;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 11px 18px;
-  min-height: 42px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 12px 22px;
+  border-radius: 10px;
   font-family: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
-  transition: 0.2s ease;
-  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
-.ccf-mappings-primary-button {
-  background: #24764b;
-  border: 1px solid #24764b;
+/* Primary: Save, Create Mapping, End */
+
+.ccf-mappings-page .ccf-mappings-primary,
+.ccf-mappings-page .ccf-mappings-primary-button {
+  border: 1px solid var(--mapping-green);
+  background: var(--mapping-green);
   color: #ffffff !important;
+  box-shadow: 0 3px 8px rgba(0, 127, 89, 0.12);
 }
 
-.ccf-mappings-primary-button:hover:not(:disabled) {
-  background: #195c39;
+.ccf-mappings-page .ccf-mappings-primary:hover:not(:disabled),
+.ccf-mappings-page .ccf-mappings-primary-button:hover:not(:disabled) {
+  background: var(--mapping-green-dark);
+  border-color: var(--mapping-green-dark);
+  box-shadow: 0 5px 12px rgba(0, 127, 89, 0.16);
+  transform: translateY(-1px);
 }
 
-.ccf-mappings-primary-button:disabled {
+/* Secondary: Back, Clear Selection, View Details */
+
+.ccf-mappings-page .ccf-mappings-secondary,
+.ccf-mappings-page .ccf-mappings-secondary-button {
+  border: 1px solid #d7e4dc;
+  background: #ffffff;
+  color: #246847;
+}
+
+.ccf-mappings-page .ccf-mappings-secondary:hover:not(:disabled),
+.ccf-mappings-page .ccf-mappings-secondary-button:hover:not(:disabled) {
+  background: #edf7f0;
+  border-color: #a7d2b5;
+}
+
+/* Danger: Remove Mapping */
+
+.ccf-mappings-page .ccf-mappings-danger,
+.ccf-mappings-page .ccf-mappings-danger-button {
+  border: 1px solid #efcccc;
+  background: #fff8f8;
+  color: #b54747;
+}
+
+.ccf-mappings-page .ccf-mappings-danger:hover:not(:disabled),
+.ccf-mappings-page .ccf-mappings-danger-button:hover:not(:disabled) {
+  background: #ffeded;
+  border-color: #e8aaaa;
+}
+
+/* Disabled buttons */
+
+.ccf-mappings-page button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
-.ccf-mappings-secondary-button {
-  background: #ffffff;
-  border: 1px solid #cbd9cf;
-  color: #365541;
+/* Keyboard accessibility */
+
+.ccf-mappings-page button:focus-visible,
+.ccf-mappings-page input:focus-visible,
+.ccf-mappings-page a:focus-visible {
+  outline: 3px solid rgba(0, 127, 89, 0.28);
+  outline-offset: 3px;
 }
 
-.ccf-mappings-secondary-button:hover {
-  background: #f1f6f2;
-}
-
-.ccf-mappings-danger-button {
-  background: #ffffff;
-  border: 1px solid #e5c9c9;
-  color: #a43f3f;
-}
-
-.ccf-mappings-danger-button:hover {
-  background: #fff4f4;
-}
-
-/* =========================================
-   MAPPING ACTIONS
-   ========================================= */
+/* =========================================================
+   11. MAPPING ACTIONS
+   ========================================================= */
 
 .ccf-mappings-actions {
   margin-bottom: 22px;
 }
 
 .ccf-mappings-actions > p {
+  margin: 12px 0 20px;
+  color: #66758a;
   font-size: 13px;
-  color: #66766c;
   line-height: 1.7;
 }
 
-.ccf-mappings-action-buttons {
+.ccf-mappings-actions > p strong {
+  color: #243a30;
+  font-weight: 750;
+}
+
+.ccf-mappings-action-buttons,
+.ccf-mappings-buttons {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 20px;
@@ -404,29 +505,33 @@
 
 .ccf-mappings-message {
   margin: 18px 0 0;
-  padding: 12px 16px;
+  padding: 13px 16px;
   border: 1px solid #b9d8c3;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #f0f8f2;
   color: #206c43;
   font-size: 13px;
 }
 
-/* =========================================
-   ASSOCIATION INSPECTOR
-   ========================================= */
+/* =========================================================
+   12. ASSOCIATION INSPECTOR
+   ========================================================= */
 
 .ccf-mappings-inspector h3 {
-  font-size: 15px;
   margin: 12px 0 16px;
+  color: #244a34;
+  font-size: 15px;
 }
 
-.ccf-mappings-inspector h3 a {
-  color: #1768ae;
+.ccf-mappings-inspector h3 a,
+.ccf-mappings-preview a {
+  color: #087f59;
   text-decoration: none;
+  font-weight: 650;
 }
 
-.ccf-mappings-inspector h3 a:hover {
+.ccf-mappings-inspector h3 a:hover,
+.ccf-mappings-preview a:hover {
   text-decoration: underline;
 }
 
@@ -442,20 +547,20 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 15px 18px;
   border: 1px solid #e2eae4;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #fafcfb;
   font-size: 13px;
 }
 
-/* =========================================
-   DYNAMIC MAPPING
-   ========================================= */
+/* =========================================================
+   13. DYNAMIC MAPPING MAIN LAYOUT
+   ========================================================= */
 
 .ccf-mappings-dynamic {
   width: 100%;
-  min-height: 360px;
+  min-height: 400px;
 }
 
 .ccf-mappings-dynamic-header {
@@ -468,6 +573,7 @@
 
 .ccf-mappings-dynamic-header h2 {
   margin: 0 0 8px;
+  color: #174b35;
 }
 
 .ccf-mappings-dynamic-header p {
@@ -477,14 +583,20 @@
   line-height: 1.6;
 }
 
-.ccf-mappings-dynamic-header > span {
+.ccf-mappings-dynamic-header > span,
+.ccf-mappings-step-label {
+  display: inline-flex;
   padding: 7px 12px;
   border-radius: 20px;
-  background: #eaf5ed;
-  color: #24764b;
+  background: #e8f5ed;
+  color: #176c46;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 750;
 }
+
+/* =========================================================
+   14. PROGRESS INDICATOR
+   ========================================================= */
 
 .ccf-mappings-progress {
   display: grid;
@@ -494,14 +606,18 @@
 }
 
 .ccf-mappings-progress span {
-  height: 6px;
-  background: #e3eae5;
+  height: 7px;
   border-radius: 10px;
+  background: #e3eae5;
 }
 
 .ccf-mappings-progress span.active {
-  background: #298354;
+  background: var(--mapping-green);
 }
+
+/* =========================================================
+   15. DYNAMIC MAPPING INTRO
+   ========================================================= */
 
 .ccf-mappings-dynamic-intro {
   max-width: 650px;
@@ -511,14 +627,14 @@
 }
 
 .ccf-mappings-dynamic-intro h3 {
-  font-size: 22px;
-  color: #234c35;
   margin: 0 0 14px;
+  color: #234c35;
+  font-size: 22px;
 }
 
 .ccf-mappings-dynamic-intro p {
-  font-size: 14px;
   color: #637368;
+  font-size: 14px;
   line-height: 1.8;
 }
 
@@ -526,8 +642,12 @@
   margin-top: 18px;
 }
 
+/* =========================================================
+   16. DYNAMIC MAPPING STEPS
+   ========================================================= */
+
 .ccf-mappings-step {
-  max-width: 900px;
+  max-width: 1050px;
   margin: 0 auto;
 }
 
@@ -535,100 +655,147 @@
   margin: 0 0 12px;
   color: #234c35;
   font-size: 20px;
+  font-weight: 750;
 }
 
 .ccf-mappings-step > p {
+  color: #526358;
   font-size: 14px;
   line-height: 1.7;
 }
 
 .ccf-mappings-step > .ccf-mappings-search {
-  margin: 20px 0;
+  margin: 18px 0 0;
 }
 
-.ccf-mappings-choice-list {
+/* The filters should sit immediately below search
+   when the JSX places them there. */
+
+.ccf-mappings-step > .ccf-mappings-search
+  + .ccf-mappings-filters {
+  margin-top: 12px;
+  margin-bottom: 18px;
+}
+
+/* =========================================================
+   17. POLICY SELECTION CARDS
+   ========================================================= */
+
+.ccf-mappings-choice-list,
+.ccf-mappings-dynamic-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 450px;
+  max-height: 500px;
   overflow-y: auto;
-  margin: 20px 0;
+  margin: 18px 0;
 }
 
 .ccf-mappings-choice {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 7px;
   width: 100%;
-  padding: 17px 20px;
-  border: 1px solid #e0e9e2;
-  border-radius: 9px;
+  padding: 19px 20px;
+  border: 1px solid #e1e9e5;
+  border-radius: 10px;
   background: #ffffff;
   color: #293e30;
-  font: inherit;
+  font-family: inherit;
   text-align: left;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .ccf-mappings-choice:hover {
-  border-color: #298354;
-  background: #f4faf5;
+  border-color: #80bd98;
+  background: #f1f9f4;
+  transform: translateY(-1px);
+}
+
+.ccf-mappings-choice.selected {
+  border-color: var(--mapping-green);
+  background: #eff8f2;
 }
 
 .ccf-mappings-choice strong {
+  color: #243c2e;
   font-size: 14px;
+  font-weight: 750;
 }
 
 .ccf-mappings-choice small {
-  font-size: 12px;
   color: #78877c;
+  font-size: 12px;
 }
 
-.ccf-mappings-selected-policy {
+/* =========================================================
+   18. SELECTED POLICY HIGHLIGHT
+   ========================================================= */
+
+.ccf-mappings-selected-policy,
+.ccf-mappings-dynamic .ccf-mappings-highlight {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 22px;
+  gap: 7px;
+  padding: 18px 20px;
   margin: 18px 0 24px;
-  border: 1px solid #d7e7dc;
+  border: 1px solid #d9e9df;
   border-radius: 10px;
-  background: #f5faf6;
+  background: #f0f8f3;
 }
 
-.ccf-mappings-selected-policy strong {
-  color: #234c35;
-  font-size: 16px;
+.ccf-mappings-selected-policy strong,
+.ccf-mappings-dynamic .ccf-mappings-highlight strong {
+  color: #1e5838;
+  font-size: 15px;
+  font-weight: 750;
 }
 
-.ccf-mappings-selected-policy small {
-  color: #728077;
+.ccf-mappings-selected-policy small,
+.ccf-mappings-dynamic .ccf-mappings-highlight small {
+  color: #718076;
   font-size: 12px;
 }
 
-.ccf-mappings-result {
+/* =========================================================
+   19. GUIDELINE RESULTS
+   ========================================================= */
+
+.ccf-mappings-result,
+.ccf-mappings-dynamic .ccf-mappings-result {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid #e1e9e3;
-  border-radius: 9px;
+  padding: 18px 20px;
+  margin-bottom: 10px;
+  border: 1px solid #e1e9e5;
+  border-radius: 10px;
   background: #ffffff;
+  transition: all 0.2s ease;
 }
 
-.ccf-mappings-result.selected {
-  background: #f0f8f2;
-  border-color: #298354;
+.ccf-mappings-result:hover,
+.ccf-mappings-dynamic .ccf-mappings-result:hover {
+  border-color: #b6d7c1;
 }
 
-.ccf-mappings-result label {
+.ccf-mappings-result.selected,
+.ccf-mappings-dynamic .ccf-mappings-result.selected {
+  border-color: #b5dac2;
+  background: #f3faf5;
+}
+
+.ccf-mappings-result label,
+.ccf-mappings-dynamic .ccf-mappings-result label {
   display: flex;
   align-items: center;
-  gap: 12px;
   flex: 1;
-  min-width: 180px;
+  gap: 14px;
+  min-width: 220px;
   cursor: pointer;
 }
 
@@ -638,22 +805,89 @@
   gap: 5px;
 }
 
-.ccf-mappings-result label strong {
+.ccf-mappings-result label strong,
+.ccf-mappings-dynamic .ccf-mappings-result strong {
+  display: block;
+  color: #243c2e;
   font-size: 13px;
+  font-weight: 700;
 }
 
-.ccf-mappings-result label small {
+.ccf-mappings-result label small,
+.ccf-mappings-dynamic .ccf-mappings-result small {
+  display: block;
+  color: #74847a;
+  font-size: 11px;
+}
+
+.ccf-mappings-dynamic .ccf-mappings-tag {
+  min-width: 72px;
+  padding: 7px 12px;
+  border-radius: 7px;
+}
+
+.ccf-mappings-dynamic .ccf-mappings-tag.mapped {
+  background: #e3f4e9;
+  color: #167246;
+}
+
+.ccf-mappings-dynamic .ccf-mappings-tag.unmapped {
+  background: #f0f2f3;
+  color: #68757b;
+}
+
+/* =========================================================
+   20. VIEW DETAILS BUTTONS
+   ========================================================= */
+
+.ccf-mappings-result > button:not(.ccf-mappings-primary),
+.ccf-mappings-dynamic
+  .ccf-mappings-result
+  > button:not(.ccf-mappings-primary) {
+  min-height: 38px;
+  padding: 9px 16px;
+  border: 1px solid #d7e4dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #246847;
+  font-family: inherit;
   font-size: 12px;
-  color: #718076;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.ccf-mappings-step-actions {
+.ccf-mappings-result > button:not(.ccf-mappings-primary):hover,
+.ccf-mappings-dynamic
+  .ccf-mappings-result
+  > button:not(.ccf-mappings-primary):hover {
+  background: #edf7f0;
+  border-color: #a7d2b5;
+}
+
+/* =========================================================
+   21. BACK / SAVE / END BUTTON ROW
+   ========================================================= */
+
+.ccf-mappings-step-actions,
+.ccf-mappings-dynamic .ccf-mappings-step-actions {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
   margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #e5ebe7;
 }
+
+.ccf-mappings-step-actions button {
+  min-width: 110px;
+}
+
+/* =========================================================
+   22. LINKED GUIDELINES PREVIEW
+   ========================================================= */
 
 .ccf-mappings-preview {
   padding: 22px;
@@ -665,8 +899,9 @@
 
 .ccf-mappings-preview-heading {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -675,39 +910,54 @@
   margin: 0;
   color: #234c35;
   font-size: 16px;
+  font-weight: 750;
 }
 
 .ccf-mappings-preview p {
+  color: #526358;
   font-size: 13px;
   line-height: 1.7;
 }
 
-.ccf-mappings-preview a {
-  color: #1768ae;
-  text-decoration: none;
-}
-
-.ccf-mappings-preview a:hover {
-  text-decoration: underline;
-}
+/* =========================================================
+   23. SUCCESS SCREEN
+   ========================================================= */
 
 .ccf-mappings-success-icon {
   display: flex;
-  justify-content: center;
   align-items: center;
-  width: 64px;
-  height: 64px;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
   margin: 0 auto 20px;
   border-radius: 50%;
   background: #e3f3e8;
-  color: #24764b;
-  font-size: 34px;
-  font-weight: 700;
+  color: var(--mapping-green);
+  font-size: 36px;
+  font-weight: 800;
 }
 
-/* =========================================
-   HELP DIALOG
-   ========================================= */
+/* =========================================================
+   24. EMPTY AND MUTED TEXT
+   ========================================================= */
+
+.ccf-mappings-empty {
+  padding: 24px;
+  text-align: center;
+  color: #77847a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ccf-mappings-muted {
+  color: #718076;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   25. HELP DIALOG
+   ========================================================= */
 
 .ccf-mappings-help-overlay {
   position: fixed;
@@ -733,8 +983,8 @@
 
 .ccf-mappings-help-heading {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -746,22 +996,29 @@
 }
 
 .ccf-mappings-help-heading > button {
+  width: 36px;
+  height: 36px;
   border: none;
-  background: transparent;
+  border-radius: 8px;
+  background: #f2f6f3;
   color: #5e6d62;
-  font-size: 26px;
+  font-size: 24px;
   cursor: pointer;
 }
 
-.ccf-mappings-help-dialog p {
-  font-size: 13px;
-  line-height: 1.8;
-  color: #526358;
+.ccf-mappings-help-heading > button:hover {
+  background: #e6f0e9;
 }
 
-/* =========================================
-   RESPONSIVE DESIGN
-   ========================================= */
+.ccf-mappings-help-dialog p {
+  color: #526358;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* =========================================================
+   26. RESPONSIVE DESIGN
+   ========================================================= */
 
 @media (max-width: 1100px) {
   .ccf-mappings-content {
@@ -770,6 +1027,12 @@
 
   .ccf-mappings-columns {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 850px) {
+  .ccf-mappings-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -786,31 +1049,78 @@
     grid-template-columns: 1fr;
   }
 
+  .ccf-mappings-stat {
+    min-height: 115px;
+  }
+
   .ccf-mappings-panel {
     padding: 18px;
   }
 
-  .ccf-mappings-action-buttons {
+  .ccf-mappings-action-buttons,
+  .ccf-mappings-buttons {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .ccf-mappings-action-buttons button {
+  .ccf-mappings-action-buttons button,
+  .ccf-mappings-buttons button {
     width: 100%;
   }
 
-  .ccf-mappings-result {
+  .ccf-mappings-result,
+  .ccf-mappings-dynamic .ccf-mappings-result {
+    align-items: flex-start;
+  }
+
+  .ccf-mappings-step-actions,
+  .ccf-mappings-dynamic .ccf-mappings-step-actions {
+    flex-direction: column;
     align-items: stretch;
+  }
+
+  .ccf-mappings-step-actions button,
+  .ccf-mappings-dynamic .ccf-mappings-step-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ccf-mappings-mode-switch {
+    flex-direction: column;
+  }
+
+  .ccf-mappings-mode-switch button {
+    width: 100%;
+  }
+
+  .ccf-mappings-result label,
+  .ccf-mappings-dynamic .ccf-mappings-result label {
+    min-width: 0;
+    width: 100%;
   }
 
   .ccf-mappings-result > button {
     width: 100%;
   }
+}
 
-  .ccf-mappings-step-actions {
-    flex-direction: column;
-  }
 
-  .ccf-mappings-step-actions button {
-    width: 100%;
-  }
+/* Spacing between step badge and heading */
+.ccf-mappings-step-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+/* Spacing below the heading */
+.ccf-mappings-dynamic h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+/* Filters directly below guideline search */
+.ccf-mappings-search + .ccf-mappings-filters {
+  margin-top: 12px;
+  margin-bottom: 18px;
 }
