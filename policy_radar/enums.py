@@ -135,11 +135,14 @@ class UpdateStatus(StrEnum):
 
 
 class JobKind(StrEnum):
-    """The three background pipelines."""
+    """Background jobs: the three pipelines and the mapping engine's runs."""
 
     INGEST = "ingest"
     ATOMIZE = "atomize"
     PARSE_CPB = "parse_cpb"
+    DISCOVER = "discover"
+    CHECK_UPDATES = "check_updates"
+    SCHEDULED_RUN = "scheduled_run"
 
 
 class JobStatus(StrEnum):
@@ -149,3 +152,34 @@ class JobStatus(StrEnum):
     RUNNING = "running"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class ConflictCategory(StrEnum):
+    """How a payer policy criterion falls short of a guideline criterion it addresses.
+
+    ``coverage_gap`` is the only category without a policy criterion: the guideline
+    recommends something no policy criterion addresses."""
+
+    COVERAGE_GAP = "coverage_gap"
+    OPPOSITE_STANCE = "opposite_stance"  # policy excludes or calls investigational what is recommended
+    EXCLUDED_SERVICE = "excluded_service"  # a recommended drug, test or service is excluded
+    NARROWER_POPULATION = "narrower_population"  # stricter age range, risk group or diagnosis
+    FREQUENCY_LIMIT = "frequency_limit"
+    PRIOR_AUTHORIZATION = "prior_authorization"
+    OTHER_RESTRICTION = "other_restriction"  # setting, provider, step therapy, documentation
+
+
+class MappingStatus(StrEnum):
+    """Review state of a proposed authority or (guideline URL, policy) mapping."""
+
+    PROPOSED = "proposed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class MappingOrigin(StrEnum):
+    """What proposed a mapping."""
+
+    DISCOVERY = "discovery"  # a user-started discovery run
+    SCHEDULED = "scheduled"  # a scheduled discovery run
+    MANUAL = "manual"  # a URL a user added by hand

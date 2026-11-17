@@ -2,6 +2,10 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
+import { useEffect, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { listGuidelineChanges } from '../api'
+import AutomatedMapping from '../components/AutomatedMapping'
 import {
   getGuidelinesForPolicy,
   getGuidelinePolicyIds,
@@ -111,6 +115,18 @@ function DocumentMappingsPage() {
   // LOAD POLICIES AND GUIDELINES
   // =========================================
 
+  // Refresh mapping counts after changes
+  const [, setRevision] = useState(0)
+
+  const [unreadChanges, setUnreadChanges] = useState(0)
+
+  useEffect(() => {
+    listGuidelineChanges(true)
+      .then((changes) => setUnreadChanges(changes.length))
+      .catch(() => setUnreadChanges(0))
+  }, [])
+
+  // Load policies and guidelines
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
   const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
 
@@ -145,6 +161,9 @@ function DocumentMappingsPage() {
   // =========================================
   // SHARED MAPPING HELPERS
   // =========================================
+  const mappedGuidelines = selectedPolicy
+    ? getGuidelinesForPolicy(selectedPolicy, guidelines)
+    : []
 
   const isMapped = (policy, guideline) =>
     getGuidelinePolicyIds(guideline).some(
@@ -570,6 +589,18 @@ function DocumentMappingsPage() {
             >
               Dynamic Mapping
             </button>
+
+            <Link
+              to="/mappings/automation"
+              className="ccf-mappings-automation-link"
+            >
+              Mapping Automation
+              {unreadChanges > 0 && (
+                <span className="auto-badge unread">
+                  {unreadChanges} update{unreadChanges === 1 ? '' : 's'}
+                </span>
+              )}
+            </Link>
           </div>
 
           {/* =====================================
@@ -1257,6 +1288,12 @@ function DocumentMappingsPage() {
                 </>
               )}
             </section>
+            <AutomatedMapping
+              policies={policies}
+              onMapped={() =>
+                setRevision((previous) => previous + 1)
+              }
+            />
           )}
         </main>
       </div>
@@ -1310,6 +1347,14 @@ function DocumentMappingsPage() {
             <p>
               Click Save to apply your changes. The next step
               displays only the linked guidelines.
+              <strong>Dynamic Mapping:</strong> Select an uploaded
+              policy. The mapping engine searches authoritative
+              sources and proposes guidelines for you to approve.
+            </p>
+
+            <p>
+              <strong>Mapping Automation:</strong> Set the schedule,
+              review guideline updates, and manage tracked sources.
             </p>
 
             <p>

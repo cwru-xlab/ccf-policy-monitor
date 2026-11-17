@@ -222,6 +222,31 @@
   font-size: 13px;
 }
 
+a.ccf-guideline-name {
+  text-decoration: none;
+}
+
+a.ccf-guideline-name:hover {
+  text-decoration: underline;
+}
+
+.ccf-guideline-delete {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px solid #f3c6c3;
+  border-radius: 7px;
+  background: #fff7f6;
+  color: #b42318;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ccf-guideline-delete:hover {
+  background: #fee4e2;
+}
+
 .ccf-guideline-description {
   margin: 7px 0 0;
   color: var(--guideline-muted);
@@ -316,6 +341,13 @@
 .ccf-guidelines-primary-button:hover {
   background: var(--guideline-green-dark);
   color: #ffffff;
+}
+
+.ccf-guidelines-primary-button:disabled,
+.ccf-guidelines-secondary-button:disabled,
+.ccf-guidelines-selected-file button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .ccf-guidelines-secondary-button {

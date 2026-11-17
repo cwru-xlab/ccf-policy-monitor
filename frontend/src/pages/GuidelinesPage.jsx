@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { deleteGuideline, originalGuidelines } from '../data/guidelines'
 import { getPoliciesForGuideline } from '../data/guidelineMappings'
 import './DashboardPage.css'
 import './GuidelinesPage.css'
@@ -22,49 +23,6 @@ const originalPolicies = [
   { id: 5, name: 'Mental Health Coverage Policy' },
 ]
 
-const originalGuidelines = [
-  {
-    id: 1,
-    name: 'Cardiac Coverage Guideline',
-    description: 'Policy review for cardiac procedures and treatments.',
-    created: 'Sep 23, 2026',
-    updated: 'Sep 23, 2026',
-    status: 'In Review',
-  },
-  {
-    id: 2,
-    name: 'Diabetes Treatment Guideline',
-    description: 'Policy review for diabetes management and treatment.',
-    created: 'Sep 18, 2026',
-    updated: 'Sep 18, 2026',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    name: 'Oncology Coverage Guideline',
-    description: 'Policy review for oncology services and treatments.',
-    created: 'Sep 10, 2026',
-    updated: 'Sep 10, 2026',
-    status: 'Completed',
-  },
-  {
-    id: 4,
-    name: 'Orthopedic Surgery Guideline',
-    description: 'Policy review for orthopedic procedures and rehab.',
-    created: 'Sep 5, 2026',
-    updated: 'Sep 5, 2026',
-    status: 'In Review',
-  },
-  {
-    id: 5,
-    name: 'Mental Health Guideline',
-    description: 'Policy review for mental health services and treatment.',
-    created: 'Aug 28, 2026',
-    updated: 'Aug 28, 2026',
-    status: 'Completed',
-  },
-]
-
 const navigation = [
   { label: 'Dashboard', path: '/dashboard' },
   { label: 'Review Sessions', path: '/reviews' },
@@ -79,9 +37,33 @@ function GuidelinesPage() {
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
   const [helpOpen, setHelpOpen] = useState(false)
+  const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(() =>
+    getSavedArray('deletedGuidelineIds')
+  )
+  const [deleteError, setDeleteError] = useState('')
+
+  function handleDelete(guideline) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${guideline.name}"?`
+      )
+    ) {
+      return
+    }
+
+    try {
+      deleteGuideline(guideline)
+      setDeleteError('')
+    } catch {
+      setDeleteError(
+        'Could not finish deleting the guideline. Please try again.'
+      )
+    } finally {
+      setDeletedGuidelineIds(getSavedArray('deletedGuidelineIds'))
+    }
+  }
 
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
-  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
 
   const allPolicies = [
     ...getSavedArray('addedPolicies'),
@@ -244,6 +226,12 @@ function GuidelinesPage() {
               </label>
             </div>
 
+            {deleteError && (
+              <div className="ccf-guidelines-error" role="alert">
+                {deleteError}
+              </div>
+            )}
+
             <div className="ccf-guidelines-table-scroll">
               <table className="ccf-guidelines-table">
                 <thead>
@@ -266,12 +254,23 @@ function GuidelinesPage() {
                     return (
                       <tr key={guideline.id}>
                         <td>
-                          <strong className="ccf-guideline-name">
+                          <Link
+                            className="ccf-guideline-name"
+                            to={`/guidelines/${guideline.id}`}
+                          >
                             {guideline.name || 'Untitled Guideline'}
-                          </strong>
+                          </Link>
                           <p className="ccf-guideline-description">
                             {guideline.description || 'Reference guideline'}
                           </p>
+                          <button
+                            type="button"
+                            className="ccf-guideline-delete"
+                            aria-label={`Delete ${guideline.name}`}
+                            onClick={() => handleDelete(guideline)}
+                          >
+                            Delete
+                          </button>
                         </td>
 
                         <td>
@@ -389,7 +388,9 @@ function GuidelinesPage() {
               <li>Search for a guideline by name or associated policy.</li>
               <li>Filter guidelines by review status.</li>
               <li>Click a blue policy name to open its details.</li>
+              <li>Click a guideline name to open its details.</li>
               <li>Upload a new guideline using the button below the table.</li>
+              <li>Delete hides a guideline in this browser and records it in the Audit Log.</li>
               <li>Use Document Mappings to manage guideline associations.</li>
             </ol>
 

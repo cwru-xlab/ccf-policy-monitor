@@ -54,6 +54,11 @@ Stack: Python 3.12, FastAPI, Postgres + pgvector (Supabase later), asyncpg with 
 
 ## Tables
 
+The mapping engine's tables (`authority`, `tracked_source`, `source_mapping`,
+`guideline_change`, `discovery_schedule`) and the `web_discovery` source row that holds
+snapshots of tracked guideline URLs are specified in
+[MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md#data-model-dbschemasql).
+
 ### `source`
 
 One row per endpoint or page we fetch from, seeded by `db/schema.sql` (re-applying the
@@ -200,7 +205,7 @@ The diagram's `guideline_id` was dropped: it follows from the guideline criterio
 | Column | Type | Notes |
 |---|---|---|
 | job_id | text **PK** | |
-| kind | text | `ingest`, `atomize`, `parse_cpb` |
+| kind | text | `ingest`, `atomize`, `parse_cpb`; mapping engine: `discover`, `check_updates`, `scheduled_run` |
 | status | text | `queued` → `running` → `succeeded` or `failed` |
 | detail | jsonb | inputs, then result counts and per-document failures |
 | error | text | set when the whole job fails |
@@ -291,6 +296,7 @@ Prompts and extraction schemas are in `policy_radar/llm.py`.
 | GET | `/policies` | list policies |
 | GET | `/policies/{policy_number}` | one policy with criteria, codes, watched triggers |
 | GET | `/jobs/{job_id}` | job status and result |
+| * | `/mapping/...` | the mapping engine: guideline discovery, approvals, tracking, schedule — see [MAPPING_ENGINE_SPEC.md](MAPPING_ENGINE_SPEC.md). The frontend relies on `GET /mapping/sources` returning each source's current snapshot as `document_id` |
 
 No authentication yet.
 
@@ -300,11 +306,15 @@ A placeholder route (`POST ""`, "ingest all guidelines") exists in `api.py` with
 
 Every setting comes from `.env`; `example.env` lists them. `DATABASE_URL` and
 `OPENAI_API_KEY` are required and the app does not start without them.
+`FIRECRAWL_API_KEY` is optional: without it the mapping engine's `/mapping` routes that
+search or fetch answer 503 and the rest of the app is unaffected. Firecrawl bills PDF
+parsing per page, so the mapping engine downloads `.pdf` URLs directly when it can.
 
 ## Code layout
 
 ```
-frontend/                  Vite + React review UI (separate from the backend; see FRONTEND_SPEC.md)
+frontend/                  Vite + React review UI (separate from the backend; see FRONTEND_SPEC.md;
+                           mapping-engine pages: MAPPING_ENGINE_SPEC.md § Frontend)
 db/schema.sql              tables, keys, indexes
 scripts/create_schema.py   applies schema.sql to DATABASE_URL
 policy_radar/
@@ -316,7 +326,10 @@ policy_radar/
   sources.py               one fetch function per guideline source
   llm.py                   OpenAI extraction and embeddings
   pipelines.py             ingest, atomize, parse
+  jobs.py                  background job runner (job table)
   api.py                   FastAPI routes
+  mapping_api.py           /mapping routes; with firecrawl.py, discovery.py, tracking.py and
+                           scheduler.py, the mapping engine (MAPPING_ENGINE_SPEC.md)
 notebooks/                 exploratory work, not imported by the app: intervention normalizer
                            (see [INTERVENTION_NORMALIZATION.md](INTERVENTION_NORMALIZATION.md)) and RAG comparison
 tests/

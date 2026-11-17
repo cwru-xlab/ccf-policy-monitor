@@ -1,5 +1,8 @@
 
 import './App.css'
+import { useEffect } from 'react'
+import { listTrackedSources } from './api'
+import { syncTrackedGuidelines } from './data/discoveredGuidelines'
 
 import {
   BrowserRouter,
@@ -18,6 +21,7 @@ import ReviewFindingsPage from './pages/ReviewFindingsPage'
 import PolicyReviewEditingPage from './pages/PolicyReviewEditingPage'
 import GuidelinesPage from './pages/GuidelinesPage'
 import NewGuidelinePage from './pages/NewGuidelinePage'
+import GuidelineDetailsPage from './pages/GuidelineDetailsPage'
 import PoliciesPage from './pages/PoliciesPage'
 import NewPolicyPage from './pages/NewPolicyPage'
 import PolicyDetailsPage from './pages/PolicyDetailsPage'
@@ -25,11 +29,18 @@ import AuditLogPage from './pages/AuditLogPage'
 
 // New policy-to-guideline mapping page
 import DocumentMappingsPage from './pages/DocumentMappingsPage'
+import MappingAutomationPage from './pages/MappingAutomationPage'
 
 function App() {
+  // Guidelines found by the mapping engine follow their latest snapshot.
+  useEffect(() => {
+    listTrackedSources().then(syncTrackedGuidelines).catch(() => {})
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/guidelines/:guidelineId" element={<GuidelineDetailsPage />} />
         <Route
           path="/login"
           element={<LoginPage />}
@@ -99,6 +110,12 @@ function App() {
         <Route
           path="/mappings"
           element={<DocumentMappingsPage />}
+        />
+
+        {/* Mapping engine setup: schedule, approvals, tracked guidelines */}
+        <Route
+          path="/mappings/automation"
+          element={<MappingAutomationPage />}
         />
 
         <Route

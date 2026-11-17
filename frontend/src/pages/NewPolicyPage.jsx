@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { uploadPolicy } from '../api'
+import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
 import './DashboardPage.css'
 import './NewPolicyPage.css'
 
@@ -34,6 +35,7 @@ function NewPolicyPage() {
   const [parsedPolicy, setParsedPolicy] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [documentId, setDocumentId] = useState(null)
 
   // Select a policy document
   function handleFileChange(event) {
@@ -41,11 +43,11 @@ function NewPolicyPage() {
 
     if (!file) return
 
-    const allowedExtensions = ['pdf', 'doc', 'docx']
+    const allowedExtensions = ['pdf', 'docx']
     const extension = file.name.split('.').pop()?.toLowerCase()
 
     if (!allowedExtensions.includes(extension)) {
-      setUploadError('Please select a PDF, DOC, or DOCX file.')
+      setUploadError('Please select a PDF or DOCX file.')
       return
     }
 
@@ -58,6 +60,7 @@ function NewPolicyPage() {
     setUploadError('')
     setUploadSuccess(false)
     setParsedPolicy(null)
+    setDocumentId(null)
   }
 
   // Remove selected file
@@ -66,6 +69,7 @@ function NewPolicyPage() {
     setUploadError('')
     setUploadSuccess(false)
     setParsedPolicy(null)
+    setDocumentId(null)
   }
 
   // Upload policy to the backend
@@ -84,23 +88,28 @@ function NewPolicyPage() {
     setUploadError('')
     setParsedPolicy(null)
     setUploadSuccess(false)
+    setDocumentId(null)
 
-    let policy
+    // A failed parse is still saved below so it shows in the Policies
+    // view and can be deleted or re-uploaded.
+    let parseFailed = false
+    let storedDocumentId = null
+    let policy = null
 
     try {
-      policy = await uploadPolicy(selectedFile.file)
+      policy = await uploadPolicy(selectedFile.file, (id) => {
+        storedDocumentId = id
+        setDocumentId(id)
+      })
+      setParsedPolicy(policy)
     } catch (error) {
       setUploadError(
         error instanceof Error
           ? error.message
           : 'The policy could not be uploaded.'
       )
-      return
-    } finally {
-      setUploading(false)
+      parseFailed = true
     }
-
-    setParsedPolicy(policy)
 
     const today = new Date().toLocaleDateString('en-US', {
       month: 'short',
@@ -116,19 +125,32 @@ function NewPolicyPage() {
       age: 'Just now',
       updated: today,
       updatedAge: 'Just now',
-      status: 'In Review',
+      status: parseFailed ? 'Parse Failed' : 'In Review',
       fileName: selectedFile.name,
+      documentId: storedDocumentId,
       createdAt: new Date().toISOString(),
     }
 
-    const savedPolicies = getSavedArray('addedPolicies')
+    try {
+      const savedPolicies = getSavedArray('addedPolicies').filter(
+        (item) => item.fileName !== selectedFile.name
+      )
 
-    localStorage.setItem(
-      'addedPolicies',
-      JSON.stringify([...savedPolicies, newPolicy])
-    )
+      localStorage.setItem(
+        'addedPolicies',
+        JSON.stringify([...savedPolicies, newPolicy])
+      )
 
-    setUploadSuccess(true)
+      setUploadSuccess(!parseFailed)
+    } catch {
+      setUploadError((current) =>
+        current
+          ? `${current} The policy could not be saved in this browser.`
+          : 'The document was uploaded, but the policy could not be saved in this browser.'
+      )
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -229,7 +251,7 @@ function NewPolicyPage() {
             <div className="ccf-new-policy-card-heading">
               <h2>Policy Document</h2>
               <p>
-                Choose a PDF, DOC, or DOCX file to upload
+                Choose a PDF or DOCX file to upload
                 and parse.
               </p>
             </div>
@@ -243,7 +265,7 @@ function NewPolicyPage() {
             >
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".pdf,.docx"
                 onChange={handleFileChange}
                 disabled={uploading || uploadSuccess}
                 hidden
@@ -270,7 +292,7 @@ function NewPolicyPage() {
               <strong>Click to select a document</strong>
 
               <span>
-                PDF, DOC, or DOCX
+                PDF or DOCX
               </span>
             </label>
 
@@ -388,6 +410,14 @@ function NewPolicyPage() {
               </pre>
             </section>
           )}
+
+          {documentId && (
+            <PolicyDocumentViewer
+              key={documentId}
+              documentId={documentId}
+              fileName={selectedFile?.name}
+            />
+          )}
         </main>
       </div>
 
@@ -422,8 +452,7 @@ function NewPolicyPage() {
             </div>
 
             <p>
-              Enter a policy name and select a PDF, DOC,
-              or DOCX file.
+              Enter a policy name and select a PDF or DOCX file.
             </p>
 
             <p>
