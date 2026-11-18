@@ -270,7 +270,7 @@ function PolicyReviewEditingPage() {
   }
 
   return (
-    <div className="app-page ccf-policy-editor-page">
+    <div className="app-page ccf-dashboard ccf-policy-editor-page">
       {/* GREEN CCF HEADER */}
       <header className="top-bar">
         <div className="brand-area">

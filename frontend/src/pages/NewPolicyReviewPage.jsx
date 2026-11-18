@@ -240,7 +240,7 @@ function NewPolicyReviewPage() {
   }
 
   return (
-    <div className="app-page ccf-new-review-page">
+    <div className="app-page ccf-dashboard ccf-new-review-page">
       {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
