@@ -1,12 +1,22 @@
 // Backend client. Every backend path the frontend uses lives in this file.
 //
 // In dev, '/api' is proxied to http://localhost:8000 by vite.config.js.
-// Set VITE_API_URL to call a deployed backend directly instead.
+// On Vercel, api/proxy.mjs proxies '/api' to API_ORIGIN.
+// Set VITE_API_URL to call a deployed backend directly instead (the API must allow it).
 
-const API = import.meta.env.VITE_API_URL ?? '/api'
+const API = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+
+function assertApi(res) {
+  if ((res.headers.get('content-type') || '').includes('text/html')) {
+    throw new Error(
+      'This site is not connected to the Policy Radar API. Set API_ORIGIN on the frontend host.',
+    )
+  }
+}
 
 async function call(path, options) {
   const res = await fetch(API + path, options)
+  assertApi(res)
   if (!res.ok) {
     const text = await res.text()
     let detail = text
@@ -63,6 +73,7 @@ export async function uploadPolicy(file, onStored = () => {}) {
 
 export async function fetchPolicyDocument(documentId, signal, collection = 'policies') {
   const res = await fetch(`${API}/${collection}/documents/${encodeURIComponent(documentId)}`, { signal })
+  assertApi(res)
   if (!res.ok) throw new Error('Unable to load this document. It may no longer be available.')
   return res.blob()
 }

@@ -41,6 +41,16 @@ curl -X POST localhost:8000/mapping/discover -H 'Content-Type: application/json'
 curl 'localhost:8000/mapping/proposals?status=proposed'
 ```
 
+## Deploying the frontend to Vercel
+
+Vercel builds `frontend/` and serves that static app. Dynamic mapping runs in the Python API, which is a separate long-lived process (`uvicorn policy_radar.api:app`). Requests from the deployed site to `/api/...` are proxied to that process.
+
+1. On the API host, set `DATABASE_URL`, the Bedrock credentials, and `FIRECRAWL_API_KEY`, then restart the process. Settings are read at startup. Apply `db/schema.sql` to that database (`uv run python scripts/create_schema.py`). A Firecrawl key saved on the Vercel project never reaches this process.
+2. On the Vercel project, set `API_ORIGIN` to the API origin with no path, for example `https://your-api.example.com`, and redeploy. The value is the same host you would curl for `/health`.
+3. Optional: set `VITE_API_URL` to that origin at build time to skip the proxy. The API allows browser calls (`CORS_ORIGINS`, default `*`).
+
+The proxy returns as soon as the API does. Discovery still runs in the API process after `POST /mapping/discover` answers, so that process has to stay up for the whole search. Approving a guideline waits on the proxy until the API finishes fetching it; a short host timeout can cut off that wait. The search itself is not one of those waits.
+
 ## Development
 
 ```bash

@@ -10,10 +10,12 @@ from contextlib import asynccontextmanager, suppress
 from datetime import date
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from policy_radar import conflicts, db, mapping_api, pipelines, scheduler, storage
+from policy_radar.config import settings
 from policy_radar.enums import JobKind
 from policy_radar.jobs import start as _start
 from policy_radar.models import Source
@@ -43,6 +45,16 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Policy Radar", lifespan=lifespan)
 app.include_router(mapping_api.router)
+
+_origins = [part.strip() for part in settings.cors_origins.split(",") if part.strip()]
+if _origins:
+    # No cookies: "*" is valid. A specific list is for a public VITE_API_URL deployment.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/health")

@@ -29,5 +29,10 @@ class Settings(BaseSettings):
     discovery_model: str = "us.anthropic.claude-opus-5-5"  # the discovery agent
     scheduler_poll_seconds: int = 60
 
+    # Origins allowed to call this API from a browser. Comma-separated, or "*".
+    # The Vite dev proxy and the Vercel /api proxy are same-origin and ignore this.
+    # Set a specific origin when VITE_API_URL makes the browser call this API directly.
+    cors_origins: str = "*"
+
 
 settings = Settings()
