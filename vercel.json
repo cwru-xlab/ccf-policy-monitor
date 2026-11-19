@@ -5,6 +5,7 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://ccf-policy-monitor.onrender.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
