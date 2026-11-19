@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: policy-radar-api
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: backend-deploy
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: AWS_BEARER_TOKEN_BEDROCK
+        sync: false
+      - key: AWS_REGION_NAME
+        value: us-east-1
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: OPENFDA_API_KEY
+        sync: false
+      - key: NCBI_API_KEY
+        sync: false
+      - key: USPSTF_API_KEY
+        sync: false
