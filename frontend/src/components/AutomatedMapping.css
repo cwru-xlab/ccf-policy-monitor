@@ -25,8 +25,8 @@
 }
 
 .auto-button {
-  background: var(--brand-green);
-  border: 1px solid var(--brand-green);
+  background: #24764b;
+  border: 1px solid #24764b;
   color: #ffffff;
 }
 
@@ -36,8 +36,8 @@
   color: var(--brand-gray);
 }
 
-.auto-button:hover { filter: brightness(0.92); }
-.auto-button-secondary:hover { background: #f0f7fa; border-color: var(--brand-blue); }
+.auto-button:hover { background: #195c39; }
+.auto-button-secondary:hover { background: #eef6f0; border-color: #24764b; }
 .auto-button:disabled,
 .auto-button-secondary:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
 
@@ -68,14 +68,14 @@
 }
 
 button.auto-item { width: 100%; font: inherit; color: inherit; cursor: pointer; }
-button.auto-item:hover:not(:disabled) { border-color: var(--brand-blue); background: #f0f7fa; }
+button.auto-item:hover:not(:disabled) { border-color: #24764b; background: #eef6f0; }
 button.auto-item:disabled { cursor: not-allowed; opacity: 0.6; }
-.auto-item.selected { border: 2px solid var(--brand-blue); background: #e8f4fa; }
+.auto-item.selected { border: 2px solid #24764b; background: #eef6f0; }
 .auto-item-main { flex: 1 1 320px; min-width: 0; }
 .auto-item-main label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
-.auto-item input[type="checkbox"] { margin-top: 3px; accent-color: var(--brand-blue); }
+.auto-item input[type="checkbox"] { margin-top: 3px; accent-color: #24764b; }
 .auto-item small { display: block; margin-top: 4px; color: #6b7280; }
-.auto-item a { color: var(--brand-blue); }
+.auto-item a { color: #006fb9; }
 .auto-item-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .auto-details {
@@ -95,11 +95,11 @@ button.auto-item:disabled { cursor: not-allowed; opacity: 0.6; }
 }
 
 .auto-badge.proposed { background: #fff2cc; color: #7a5b00; }
-.auto-badge.approved { background: #e5f4ec; color: var(--brand-green); }
+.auto-badge.approved { background: #e5f4ec; color: #1c6240; }
 .auto-badge.rejected { background: #f3f4f6; color: #6b7280; }
-.auto-badge.unread { background: var(--brand-blue); color: #ffffff; }
+.auto-badge.unread { background: #24764b; color: #ffffff; }
 
-.auto-status { margin-top: 14px; padding: 12px 14px; border-radius: 6px; background: #e8f4fa; }
+.auto-status { margin-top: 14px; padding: 12px 14px; border-radius: 6px; background: #eef6f0; color: #234c35; }
 .auto-error { margin-top: 14px; padding: 12px 14px; border-radius: 6px; background: #fff0f0; color: #9e2020; overflow-wrap: anywhere; }
 
 /* Mode switch and header link on Document Mappings */
@@ -107,20 +107,20 @@ button.auto-item:disabled { cursor: not-allowed; opacity: 0.6; }
 .mapping-mode-switch button {
   min-height: 42px;
   padding: 10px 20px;
-  border: 1px solid var(--brand-blue);
+  border: 1px solid #24764b;
   border-radius: 7px;
   background: #ffffff;
-  color: var(--brand-blue);
+  color: #286445;
   font-weight: 600;
   cursor: pointer;
 }
-.mapping-mode-switch button.selected { background: var(--brand-blue); color: #ffffff; }
-.mapping-automation-link { margin-left: auto; align-self: center; color: var(--brand-blue); font-weight: 600; text-decoration: none; }
+.mapping-mode-switch button.selected { background: #24764b; color: #ffffff; }
+.mapping-automation-link { margin-left: auto; align-self: center; color: #286445; font-weight: 600; text-decoration: none; }
 .mapping-automation-link:hover { text-decoration: underline; }
 
 /* Mapping Automation page */
 .automation-content { flex: 1; min-width: 0; padding: 32px; display: grid; gap: 20px; align-content: start; }
-.automation-content .back-link { color: var(--brand-blue); text-decoration: none; font-weight: 600; }
+.automation-content .back-link { color: #286445; text-decoration: none; font-weight: 600; }
 .automation-form { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; }
 .automation-form input[type="number"],
 .automation-form input[type="url"],
@@ -134,7 +134,7 @@ button.auto-item:disabled { cursor: not-allowed; opacity: 0.6; }
 }
 .automation-form input[type="url"] { flex: 1 1 280px; }
 .automation-form input:focus,
-.automation-form select:focus { outline: none; border-color: var(--brand-blue); }
+.automation-form select:focus { outline: none; border-color: #24764b; }
 
 @media (max-width: 640px) {
   .automation-content { padding: 16px; }

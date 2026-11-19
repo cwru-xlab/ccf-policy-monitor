@@ -7,7 +7,7 @@
 */
 
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import {
   addTrackedSource,
   checkGuidelineUpdates,
@@ -30,6 +30,17 @@ import {
   syncTrackedGuidelines,
 } from '../data/discoveredGuidelines'
 import '../components/AutomatedMapping.css'
+import './DashboardPage.css'
+import './MappingAutomationPage.css'
+
+const navigation = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Policy Database', path: '/policies' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Audit Log', path: '/audit-log' },
+]
 
 const INTERVALS = [
   { hours: 24, label: 'Daily' },
@@ -66,6 +77,7 @@ function MappingAutomationPage() {
   const [busy, setBusy] = useState('')
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
+  const [helpOpen, setHelpOpen] = useState(false)
 
   const uploadedPolicies = getSavedArray('addedPolicies').filter((p) => p.documentId)
 
@@ -94,6 +106,17 @@ function MappingAutomationPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (!helpOpen) return
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setHelpOpen(false)
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [helpOpen])
 
   // Run one action with a status line, then reload everything.
   async function act(label, work, done) {
@@ -149,14 +172,25 @@ function MappingAutomationPage() {
   const unread = changes.filter((c) => !c.read_at).length
 
   return (
-    <div className="app-page">
+    <div className="app-page ccf-dashboard ccf-automation-page">
       <header className="top-bar">
         <div className="brand-area">
-          <span className="brand-name">Policy Review</span>
+          <span className="brand-name">CCF</span>
           <span className="brand-divider" />
-          <span className="workspace-name">Policy Review Workspace</span>
+          <span className="workspace-name">
+            Insurance Policy Review Workspace
+          </span>
         </div>
         <div className="top-right">
+          <button
+            type="button"
+            className="ccf-help-button"
+            aria-label="Help with mapping automation"
+            title="Help with mapping automation"
+            onClick={() => setHelpOpen(true)}
+          >
+            ?
+          </button>
           <div className="user-area">
             <div className="user-avatar">SC</div>
             <span>Sarah Chen</span>
@@ -165,25 +199,30 @@ function MappingAutomationPage() {
       </header>
 
       <div className="app-body">
-        <aside className="sidebar">
-          <Link to="/dashboard" className="nav-item">Dashboard</Link>
-          <Link to="/reviews" className="nav-item">Review Sessions</Link>
-          <Link to="/policies" className="nav-item">Policy Database</Link>
-          <Link to="/guidelines" className="nav-item">Guideline Database</Link>
-          <Link to="/mappings" className="nav-item active">Document Mappings</Link>
-          <Link to="/audit-log" className="nav-item">Audit Log</Link>
+        <aside className="sidebar" aria-label="Main navigation">
+          {navigation.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-item${isActive ? ' active' : ''}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </aside>
 
-        <main className="automation-content">
-          <div>
-            <Link to="/mappings" className="back-link">← Document Mappings</Link>
-            <div className="mapping-heading">
-              <h1>Mapping Automation</h1>
-              <p>
-                Scheduled discovery of guidelines from approved authorities, and tracking of
-                mapped guidelines for updates. Every new guideline waits for your approval.
-              </p>
-            </div>
+        <main className="ccf-automation-content">
+          <div className="ccf-automation-heading">
+            <Link to="/mappings" className="ccf-automation-back">
+              ← Document Mappings
+            </Link>
+            <h1>Mapping Automation</h1>
+            <p>
+              Scheduled discovery of guidelines from approved authorities, and tracking of
+              mapped guidelines for updates. Every new guideline waits for your approval.
+            </p>
           </div>
 
           {schedule && !schedule.firecrawl_configured && (
@@ -367,6 +406,80 @@ function MappingAutomationPage() {
           </section>
         </main>
       </div>
+
+      {helpOpen && (
+        <div
+          className="ccf-help-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setHelpOpen(false)
+          }}
+        >
+          <div
+            className="ccf-help-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="automation-help-title"
+          >
+            <div className="ccf-help-modal-header">
+              <div>
+                <h2 id="automation-help-title">Mapping Automation</h2>
+                <p>How scheduled discovery and guideline tracking work.</p>
+              </div>
+              <button
+                type="button"
+                className="ccf-help-close"
+                aria-label="Close help"
+                onClick={() => setHelpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="ccf-help-modal-body">
+              <div className="ccf-help-step">
+                <span className="ccf-help-step-number">1</span>
+                <div>
+                  <h3>Scheduled runs</h3>
+                  <p>
+                    Turn automatic runs on and choose how often the engine
+                    searches approved authorities, then checks tracked guidelines
+                    for changes.
+                  </p>
+                </div>
+              </div>
+              <div className="ccf-help-step">
+                <span className="ccf-help-step-number">2</span>
+                <div>
+                  <h3>Updates and approvals</h3>
+                  <p>
+                    New guideline updates appear in the updates list. Guidelines
+                    found by a run stay in Waiting for approval until you approve
+                    or reject them.
+                  </p>
+                </div>
+              </div>
+              <div className="ccf-help-step">
+                <span className="ccf-help-step-number">3</span>
+                <div>
+                  <h3>Tracked guidelines and authorities</h3>
+                  <p>
+                    Pause or remove a tracked guideline, or add one by URL.
+                    Scheduled search only uses authorities you have approved.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="ccf-help-modal-footer">
+              <button
+                type="button"
+                className="ccf-dashboard-primary-button"
+                onClick={() => setHelpOpen(false)}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

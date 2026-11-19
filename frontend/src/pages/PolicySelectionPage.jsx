@@ -168,7 +168,7 @@ function PolicySelectionPage() {
   }
 
   return (
-    <div className="app-page ccf-policy-selection-page">
+    <div className="app-page ccf-dashboard ccf-policy-selection-page">
       {/* GREEN HEADER */}
       <header className="top-bar">
         <div className="brand-area">

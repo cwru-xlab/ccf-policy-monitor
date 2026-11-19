@@ -344,7 +344,7 @@ function GuidelineSelectionPage() {
   }
 
   return (
-    <div className="app-page ccf-guideline-selection-page">
+    <div className="app-page ccf-dashboard ccf-guideline-selection-page">
       {/* GREEN HEADER */}
       <header className="top-bar">
         <div className="brand-area">

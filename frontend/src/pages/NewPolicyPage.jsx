@@ -154,7 +154,7 @@ function NewPolicyPage() {
   }
 
   return (
-    <div className="app-page ccf-new-policy-page">
+    <div className="app-page ccf-dashboard ccf-new-policy-page">
       {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">

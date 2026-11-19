@@ -341,7 +341,7 @@ function ReviewFindingsPage() {
   // ==========================================
 
   return (
-    <div className="app-page ccf-review-findings-page">
+    <div className="app-page ccf-dashboard ccf-review-findings-page">
       {/* GREEN CCF HEADER */}
       <header className="top-bar">
         <div className="brand-area">
