@@ -64,13 +64,20 @@ these pairs: {_STRENGTH_SCALES}. Set both or neither; if the scheme is not liste
 document has no single overall grade, set both to null. If the document holds no testable \
 criteria, return an empty criteria list."""
 
+_DOC_TYPES = ", ".join(t.value for t in PolicyDocumentType)
+_COVERAGE_EFFECTS = ", ".join(e.value for e in CoverageEffect)
+
 POLICY_PROMPT = f"""You parse a payer Clinical Policy Bulletin (CPB) into criteria and codes. \
 {_CRITERION_RULES} Include medical-necessity, experimental/investigational and exclusion \
 criteria. Take criteria only from the bulletin's policy (coverage) section: background, \
 literature reviews and other bodies' recommendations quoted there are not the payer's \
-criteria. policy_number is the bulletin number as printed (e.g. "0584"). coverage_effect is \
-the bulletin's predominant determination. codes are only the codes the bulletin lists. \
-effective_date is the policy's own effective date, or null if the text states none."""
+criteria. policy_number is the bulletin number as printed (e.g. "0584"). doc_type is exactly \
+one of: {_DOC_TYPES}. Use medical_clinical_policy_bulletin unless the document clearly is \
+another of those types. coverage_effect is the payer's own predominant determination and is \
+exactly one of: {_COVERAGE_EFFECTS}. A recommendation quoted from another body (for example \
+USPSTF "recommended") is not the coverage effect; use covered when the payer covers the \
+service. codes are only the codes the bulletin lists. effective_date is the policy's own \
+effective date, or null if the text states none."""
 
 
 class ExtractedCriterion(BaseModel):
@@ -91,18 +98,25 @@ class ExtractedGuideline(BaseModel):
 
 class ExtractedPolicy(BaseModel):
     policy_number: str
-    doc_type: str = Field(description="e.g. medical_clinical_policy_bulletin")
+    doc_type: str = Field(description=f"Exactly one of: {_DOC_TYPES}")
     title: str
-    coverage_effect: str = Field(description="e.g. covered, not_covered, covered_with_prior_auth")
+    coverage_effect: str = Field(description=f"Exactly one of: {_COVERAGE_EFFECTS}")
     effective_date: str | None = Field(description="YYYY-MM-DD")
     last_reviewed: str | None = Field(description="YYYY-MM-DD")
     codes: list[ExtractedCode]
     criteria: list[ExtractedCriterion]
 
 
-def _content(doc: SourceDocument) -> list[dict]:
-    """Document as Anthropic multimodal parts: local Markdown plus scanned-page PNGs."""
-    parsed = parser.parse_document(storage.get(doc.storage_uri), doc.media_type)
+def _content(
+    doc: SourceDocument, parsed: parser.ParsedDocument | None = None
+) -> list[dict]:
+    """Document as Anthropic multimodal parts: local Markdown plus scanned-page PNGs.
+
+    Pass ``parsed`` when the caller already read the file, so a long extraction does not
+    parse it a second time.
+    """
+    if parsed is None:
+        parsed = parser.parse_document(storage.get(doc.storage_uri), doc.media_type)
     text = parsed.markdown[:MAX_TEXT_CHARS]
     if not text.strip() and parsed.scanned_images:
         text = "[Document contains scanned pages; see attached images.]"
@@ -118,14 +132,19 @@ def _content(doc: SourceDocument) -> list[dict]:
     return parts
 
 
-async def extract[M: BaseModel](schema: type[M], instructions: str, doc: SourceDocument) -> M:
+async def extract[M: BaseModel](
+    schema: type[M],
+    instructions: str,
+    doc: SourceDocument,
+    parsed: parser.ParsedDocument | None = None,
+) -> M:
     """Ask the model to fill ``schema`` from ``doc``."""
 
     def _call() -> M:
         return client.create(
             modelId=settings.bedrock_model,
             system=[{"text": instructions}],
-            messages=[{"role": "user", "content": _content(doc)}],
+            messages=[{"role": "user", "content": _content(doc, parsed)}],
             response_model=schema,
             max_tokens=16000,  # Opus 5.5 always thinks, and thinking counts toward this
         )

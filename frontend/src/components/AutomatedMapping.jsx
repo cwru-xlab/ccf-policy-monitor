@@ -18,6 +18,7 @@ import {
   listProposals,
 } from '../api'
 import { saveApprovedGuideline } from '../data/discoveredGuidelines'
+import JobProgress from './JobProgress'
 import './AutomatedMapping.css'
 
 function AutomatedMapping({ policies, onMapped }) {
@@ -29,6 +30,7 @@ function AutomatedMapping({ policies, onMapped }) {
   const [selected, setSelected] = useState([])
   const [openDetails, setOpenDetails] = useState(null)
   const [busy, setBusy] = useState('')
+  const [progress, setProgress] = useState(null)
   const [error, setError] = useState('')
   const [summary, setSummary] = useState('')
 
@@ -62,10 +64,16 @@ function AutomatedMapping({ policies, onMapped }) {
   }
 
   async function startSearch() {
-    setBusy('Searching authoritative sources for guidelines. This usually takes 2–5 minutes…')
+    setBusy('Searching')
+    setProgress({
+      phase: 'proposing',
+      label: 'Preparing proposals',
+      percent: 0,
+      ceiling: 8,
+    })
     setError('')
     try {
-      const detail = await discoverGuidelines(policy.documentId)
+      const detail = await discoverGuidelines(policy.documentId, setProgress)
       await loadResults(policy.documentId)
       const dropped = detail.dropped_unverified?.length || 0
       setSummary(
@@ -77,6 +85,7 @@ function AutomatedMapping({ policies, onMapped }) {
       setError(`Guideline search failed: ${e.message}`)
     } finally {
       setBusy('')
+      setProgress(null)
     }
   }
 
@@ -214,7 +223,11 @@ function AutomatedMapping({ policies, onMapped }) {
               {' '}{proposals.length === 1 ? 'is' : 'are'} waiting for review.
             </p>
           )}
-          {busy && <p className="auto-status" role="status">{busy}</p>}
+          {progress ? (
+            <JobProgress progress={progress} />
+          ) : (
+            busy && <p className="auto-status" role="status">{busy}</p>
+          )}
           {error && <p className="auto-error" role="alert">{error}</p>}
           <div className="auto-actions">
             <button type="button" className="auto-button-secondary" disabled={!!busy}

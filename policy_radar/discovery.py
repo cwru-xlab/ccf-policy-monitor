@@ -12,10 +12,12 @@ policy are never proposed again.
 import asyncio
 import json
 import logging
+import math
 import re
 from dataclasses import dataclass, field
+from urllib.parse import urlparse
 
-from policy_radar import db, firecrawl, llm, pipelines
+from policy_radar import db, firecrawl, jobs, llm, pipelines
 from policy_radar.config import settings
 from policy_radar.enums import MappingOrigin
 from policy_radar.models import Policy
@@ -149,20 +151,58 @@ async def _result(run: _Run, use: dict) -> dict:
     return {"toolResult": {"toolUseId": use["toolUseId"], "content": content, "status": status}}
 
 
+def _curve(n: int, lo: float, hi: float = 92) -> float:
+    """Floor after ``n`` real events. Climbs toward ``hi`` and never reaches it."""
+    if n <= 0:
+        return lo
+    return lo + (hi - lo) * (1 - math.exp(-0.45 * n))
+
+
+def _tool_progress(use: dict) -> tuple[str, str]:
+    """Phase and label for one agent tool call."""
+    name = use["name"]
+    args = use.get("input") or {}
+    if name == "search_web":
+        query = " ".join(str(args.get("query") or "").split())
+        if len(query) > 80:
+            query = query[:79].rstrip() + "…"
+        return "searching", f"Searching: {query}" if query else "Searching"
+    if name == "read_page":
+        host = urlparse(str(args.get("url") or "")).hostname or "the page"
+        return "reading_page", f"Reading {host}"
+    return "proposing", "Preparing proposals"
+
+
 async def run_agent(
-    brief: str, domains: list[str] | None, converse=None
+    brief: str, domains: list[str] | None, converse=None, *, progress_from: float = 0
 ) -> tuple[dict, set[str]]:
-    """Run the tool loop to ``submit_proposals``. Returns (proposals, URLs seen)."""
+    """Run the tool loop to ``submit_proposals``. Returns (proposals, URLs seen).
+
+    ``progress_from`` is the job percent where the search starts (30 when this job
+    had to parse the policy first, otherwise 0). Each model turn and tool call
+    raises the floor along a curve that stops at 92 until proposals are submitted.
+    """
     converse = converse or _converse
     run = _Run(domains)
     messages: list[dict] = [{"role": "user", "content": [{"text": brief}]}]
     nudged = False
+    events = 0
+
+    async def advance(phase: str, label: str) -> None:
+        nonlocal events
+        events += 1
+        percent = _curve(events, progress_from)
+        ceiling = min(92, _curve(events + 1, progress_from))
+        await jobs.report(phase, label, percent, ceiling)
+
     for _ in range(MAX_TURNS):
+        await advance("proposing", "Preparing proposals")
         message = (await asyncio.to_thread(converse, messages))["output"]["message"]
         messages.append(message)  # unchanged: reasoning blocks must be replayed as returned
         uses = [c["toolUse"] for c in message["content"] if "toolUse" in c]
         submit = next((u for u in uses if u["name"] == "submit_proposals"), None)
         if submit:
+            await jobs.report("proposing", "Preparing proposals", 100, 100)
             return submit["input"], run.seen
         if not uses:
             if nudged:
@@ -170,7 +210,11 @@ async def run_agent(
             nudged = True
             messages.append({"role": "user", "content": [{"text": "Call submit_proposals now."}]})
             continue
-        messages.append({"role": "user", "content": [await _result(run, u) for u in uses]})
+        results = []
+        for use in uses:
+            await advance(*_tool_progress(use))
+            results.append(await _result(run, use))
+        messages.append({"role": "user", "content": results})
     raise DiscoveryError(f"the agent did not submit proposals within {MAX_TURNS} turns")
 
 
@@ -223,7 +267,15 @@ async def store_proposals(
 
 async def discover(policy_document_id: str, scheduled: bool = False) -> dict:
     """Run discovery for one policy (parsing it first if needed) and store proposals."""
-    policy = await pipelines.policy_for_document(policy_document_id)
+    existing = await db.policy_by_document(policy_document_id)
+    if existing is None:
+        # Parsing is the first 30% of this job; the search uses the rest.
+        async with jobs.span(0, 30):
+            policy = await pipelines.policy_for_document(policy_document_id)
+        progress_from = 30
+    else:
+        policy = existing
+        progress_from = 0
     if policy is None:
         raise ValueError(f"{policy_document_id!r} is not an uploaded policy document")
     domains = None
@@ -232,7 +284,9 @@ async def discover(policy_document_id: str, scheduled: bool = False) -> dict:
         if not domains:
             return {"policy_document_id": policy_document_id, "skipped": "no approved authorities"}
     known = await db.known_urls(policy_document_id)
-    proposals, seen = await run_agent(brief(policy, known, domains), domains)
+    proposals, seen = await run_agent(
+        brief(policy, known, domains), domains, progress_from=progress_from
+    )
     log.info("discovery for %s: %s", policy_document_id, json.dumps(proposals)[:2000])
     origin = MappingOrigin.SCHEDULED if scheduled else MappingOrigin.DISCOVERY
     result = await store_proposals(policy_document_id, proposals, seen, origin)

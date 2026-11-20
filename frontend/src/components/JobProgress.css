@@ -1,0 +1,23 @@
+.job-progress {
+  margin-top: 16px;
+}
+
+.job-progress-track {
+  height: 8px;
+  overflow: hidden;
+  background: #e3eae5;
+  border-radius: 999px;
+}
+
+.job-progress-fill {
+  height: 100%;
+  background: #24764b;
+  border-radius: 999px;
+}
+
+.job-progress-label {
+  margin: 8px 0 0;
+  color: #234c35;
+  font-size: 13px;
+  font-weight: 600;
+}

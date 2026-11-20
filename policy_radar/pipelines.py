@@ -11,8 +11,14 @@ from datetime import UTC, date, datetime, timedelta
 
 import httpx
 
-from policy_radar import db, llm, parser, storage
-from policy_radar.enums import STRENGTH_VALUES, CodeSystem, StrengthSystem
+from policy_radar import db, jobs, llm, parser, storage
+from policy_radar.enums import (
+    STRENGTH_VALUES,
+    CodeSystem,
+    CoverageEffect,
+    PolicyDocumentType,
+    StrengthSystem,
+)
 from policy_radar.models import (
     Code,
     Guideline,
@@ -99,6 +105,52 @@ def _sanitize_strength(
     return strength, system_enum
 
 
+def _token(value: object) -> str:
+    return str(value or "").strip().lower().replace("-", " ").replace("_", " ")
+
+
+# Words a model uses for a guideline recommendation, mapped onto a payer determination.
+_COVERAGE_ALIASES = {
+    "recommended": CoverageEffect.COVERED,
+    "recommendation": CoverageEffect.COVERED,
+    "medically necessary": CoverageEffect.COVERED,
+    "not recommended": CoverageEffect.NOT_COVERED,
+    "not medically necessary": CoverageEffect.NOT_COVERED,
+    "denied": CoverageEffect.NOT_COVERED,
+    "excluded": CoverageEffect.NOT_COVERED,
+    "prior authorization": CoverageEffect.COVERED_WITH_PRIOR_AUTH,
+    "prior auth": CoverageEffect.COVERED_WITH_PRIOR_AUTH,
+    "precertification": CoverageEffect.COVERED_WITH_PRIOR_AUTH,
+    "investigational": CoverageEffect.EXPERIMENTAL_INVESTIGATIONAL,
+    "experimental": CoverageEffect.EXPERIMENTAL_INVESTIGATIONAL,
+}
+
+
+def _sanitize_doc_type(value: object) -> PolicyDocumentType:
+    """A payer document type, or a medical CPB when the model names something else."""
+    token = _token(value).replace(" ", "_")
+    try:
+        return PolicyDocumentType(token)
+    except ValueError:
+        fallback = PolicyDocumentType.MEDICAL_CLINICAL_POLICY_BULLETIN
+        log.warning("replacing invalid doc_type %r with %s", value, fallback.value)
+        return fallback
+
+
+def _sanitize_coverage_effect(value: object) -> CoverageEffect:
+    """A coverage determination, mapping recommendation language onto the payer vocabulary."""
+    token = _token(value)
+    try:
+        return CoverageEffect(token.replace(" ", "_"))
+    except ValueError:
+        mapped = _COVERAGE_ALIASES.get(token)
+        if mapped is not None:
+            log.warning("mapping coverage_effect %r to %s", value, mapped.value)
+            return mapped
+        log.warning("replacing invalid coverage_effect %r with covered", value)
+        return CoverageEffect.COVERED
+
+
 def _merge_codes(llm_codes: list[llm.ExtractedCode], regex_codes: list[Code]) -> tuple[Code, ...]:
     """LLM codes first, then regex fills; duplicate (system, value) pairs are skipped."""
     merged: list[Code] = []
@@ -130,21 +182,37 @@ async def _atomize(doc: SourceDocument) -> None:
     await db.save_guideline(g, await llm.embed([c.text for c in g.criteria]))
 
 
-async def _parse_cpb(doc: SourceDocument) -> None:
-    x = await llm.extract(llm.ExtractedPolicy, llm.POLICY_PROMPT, doc)
-    markdown = parser.extract_markdown(storage.get(doc.storage_uri), doc.media_type)
+def _parse_label(text: str, index: int, total: int) -> str:
+    """Prefix ``text`` when this job is parsing more than one document."""
+    if total > 1:
+        return f"Document {index} of {total} — {text}"
+    return text
+
+
+async def _parse_cpb(doc: SourceDocument, *, index: int = 1, total: int = 1) -> None:
+    """Parse one CPB. Progress percents are 0–100 for this document; the caller scales them."""
+    await jobs.report("reading", _parse_label("Reading the document", index, total), 0, 10)
+    parsed = parser.parse_document(storage.get(doc.storage_uri), doc.media_type)
+    await jobs.report(
+        "extracting", _parse_label("Extracting coverage criteria", index, total), 10, 78
+    )
+    x = await llm.extract(llm.ExtractedPolicy, llm.POLICY_PROMPT, doc, parsed=parsed)
+    await jobs.report("codes", _parse_label("Finding billing codes", index, total), 78, 86)
     p = Policy(
         policy_number=x.policy_number,
-        doc_type=x.doc_type,
+        doc_type=_sanitize_doc_type(x.doc_type),
         title=x.title,
         criteria=_criteria(PolicyCriterion, x.policy_number, x.criteria),
-        codes=_merge_codes(x.codes, parser.extract_codes_regex(markdown)),
-        coverage_effect=x.coverage_effect,
+        codes=_merge_codes(x.codes, parser.extract_codes_regex(parsed.markdown)),
+        coverage_effect=_sanitize_coverage_effect(x.coverage_effect),
         effective_date=x.effective_date or doc.retrieved_at.date(),
         last_reviewed=x.last_reviewed,
         document_id=doc.document_id,
     )
-    await db.save_policy(p, await llm.embed([c.text for c in p.criteria]))
+    await jobs.report("embedding", _parse_label("Embedding criteria", index, total), 86, 96)
+    embeddings = await llm.embed([c.text for c in p.criteria])
+    await jobs.report("saving", _parse_label("Saving the policy", index, total), 96, 100)
+    await db.save_policy(p, embeddings)
 
 
 async def _each(docs: list[SourceDocument], step) -> dict:
@@ -164,8 +232,21 @@ async def atomize_pending() -> dict:
 
 
 async def parse_pending_cpbs() -> dict:
-    """Parse every uploaded CPB document that has no Policy yet."""
-    return await _each(await db.unparsed_cpbs(), _parse_cpb)
+    """Parse every uploaded CPB document that has no Policy yet.
+
+    Each document gets an equal slice of the job, so a retry of older uploads still
+    moves the bar instead of sitting on the file the user just added.
+    """
+    docs = await db.unparsed_cpbs()
+    failed = []
+    total = len(docs)
+    for index, doc in enumerate(docs, start=1):
+        try:
+            async with jobs.span((index - 1) * 100 / total, index * 100 / total):
+                await _parse_cpb(doc, index=index, total=total)
+        except Exception as e:  # noqa: BLE001 — one bad document must not stop the batch
+            failed.append({"document_id": doc.document_id, "error": f"{type(e).__name__}: {e}"})
+    return {"processed": total - len(failed), "failed": failed}
 
 
 async def guideline_for_document(document_id: str) -> Guideline | None:

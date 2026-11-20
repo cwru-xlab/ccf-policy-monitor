@@ -181,7 +181,7 @@ def test_extract_markdown_docx_headings_lists_tables():
 async def test_parse_cpb_effective_date_fallback_and_regex_code_merge(monkeypatch):
     captured: dict = {}
 
-    async def fake_extract(schema, instructions, doc):
+    async def fake_extract(schema, instructions, doc, parsed=None):
         return llm.ExtractedPolicy(
             policy_number="0584",
             doc_type=PolicyDocumentType.MEDICAL_CLINICAL_POLICY_BULLETIN,
@@ -215,6 +215,40 @@ async def test_parse_cpb_effective_date_fallback_and_regex_code_merge(monkeypatc
     assert pairs[0] == (CodeSystem.CPT, "99213")
     assert (CodeSystem.HCPCS, "G0101") in pairs
     assert (CodeSystem.ICD10CM, "E11.9") in pairs
+
+
+@pytest.mark.asyncio
+async def test_parse_cpb_coerces_out_of_vocabulary_type_and_effect(monkeypatch):
+    captured: dict = {}
+
+    async def fake_extract(schema, instructions, doc, parsed=None):
+        return llm.ExtractedPolicy(
+            policy_number="0584",
+            doc_type="uspstf_final_recommendation_statement",
+            title="Screening",
+            coverage_effect="recommended",
+            effective_date="2026-01-01",
+            last_reviewed=None,
+            codes=[],
+            criteria=[llm.ExtractedCriterion(text="Screen adults", concept_words=["screen"])],
+        )
+
+    async def fake_embed(texts):
+        return [[0.0] * 4 for _ in texts]
+
+    async def fake_save(p, embeddings):
+        captured["policy"] = p
+
+    monkeypatch.setattr(pipelines.llm, "extract", fake_extract)
+    monkeypatch.setattr(pipelines.llm, "embed", fake_embed)
+    monkeypatch.setattr(pipelines.db, "save_policy", fake_save)
+    monkeypatch.setattr(pipelines.storage, "get", lambda uri: b"Screen adults.\n")
+
+    await pipelines._parse_cpb(_doc())
+    policy = captured["policy"]
+    assert policy.doc_type == PolicyDocumentType.MEDICAL_CLINICAL_POLICY_BULLETIN
+    assert policy.coverage_effect == CoverageEffect.COVERED
+    assert policy.title == "Screening"
 
 
 @pytest.mark.asyncio

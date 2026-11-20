@@ -24,13 +24,23 @@ async function call(path, options) {
 // Background jobs report through GET /jobs/{id}. A job "succeeds" even when single
 // documents fail, so the failed list is checked too — but only for ``documentId``,
 // since a parse job also retries earlier uploads that failed.
-async function waitForJob(jobId, documentId) {
+// ``onProgress`` receives detail.progress while the job runs:
+// { phase, label, percent, ceiling }.
+async function waitForJob(jobId, documentId, onProgress) {
   for (;;) {
     const job = await call(`/jobs/${jobId}`)
+    const progress = job.detail?.progress
+    if (progress) onProgress?.(progress)
     if (job.status === 'failed') throw new Error(job.error)
     if (job.status === 'succeeded') {
       const failure = documentId && job.detail.failed?.find((f) => f.document_id === documentId)
       if (failure) throw new Error(failure.error)
+      onProgress?.({
+        phase: 'done',
+        label: progress?.label || 'Done',
+        percent: 100,
+        ceiling: 100,
+      })
       return job
     }
     await new Promise((r) => setTimeout(r, 2000))
@@ -44,7 +54,7 @@ async function findPolicy(documentId) {
 
 // Upload one CPB file, parse it, and return the full parsed Policy. Re-uploading a
 // file returns its existing Policy, or retries the parse if it failed before.
-export async function uploadPolicy(file, onStored = () => {}) {
+export async function uploadPolicy(file, onStored = () => {}, onProgress) {
   const form = new FormData()
   form.append('files', file)
   const { stored, duplicates } = await call('/policies/documents', { method: 'POST', body: form })
@@ -55,7 +65,7 @@ export async function uploadPolicy(file, onStored = () => {}) {
     if (existing) return existing
   }
   const { job_id } = await call('/policies/parse', { method: 'POST' })
-  await waitForJob(job_id, documentId)
+  await waitForJob(job_id, documentId, onProgress)
   const policy = await findPolicy(documentId)
   if (!policy) throw new Error(`no policy found for ${file.name} after parsing`)
   return policy
@@ -100,9 +110,9 @@ const json = (method, body) => ({
 
 // Run the discovery agent for one uploaded policy and wait for it (a few minutes).
 // Resolves to the job detail: { guidelines_proposed, authorities_proposed, ... }.
-export async function discoverGuidelines(policyDocumentId) {
+export async function discoverGuidelines(policyDocumentId, onProgress) {
   const { job_id } = await call('/mapping/discover', json('POST', { policy_document_id: policyDocumentId }))
-  return (await waitForJob(job_id)).detail
+  return (await waitForJob(job_id, undefined, onProgress)).detail
 }
 
 export function listProposals({ status, policyDocumentId } = {}) {

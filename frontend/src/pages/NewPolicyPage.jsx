@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { uploadPolicy } from '../api'
+import JobProgress from '../components/JobProgress'
 import PolicyDocumentViewer from '../components/PolicyDocumentViewer'
 import './DashboardPage.css'
 import './NewPolicyPage.css'
@@ -31,6 +32,7 @@ function NewPolicyPage() {
   const [selectedFile, setSelectedFile] = useState(null)
 
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(null)
   const [uploadError, setUploadError] = useState('')
   const [parsedPolicy, setParsedPolicy] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
@@ -89,6 +91,12 @@ function NewPolicyPage() {
     setParsedPolicy(null)
     setUploadSuccess(false)
     setDocumentId(null)
+    setProgress({
+      phase: 'uploading',
+      label: 'Uploading the document',
+      percent: 0,
+      ceiling: 4,
+    })
 
     // A failed parse is still saved below so it shows in the Policies
     // view and can be deleted or re-uploaded.
@@ -100,7 +108,7 @@ function NewPolicyPage() {
       policy = await uploadPolicy(selectedFile.file, (id) => {
         storedDocumentId = id
         setDocumentId(id)
-      })
+      }, setProgress)
       setParsedPolicy(policy)
     } catch (error) {
       setUploadError(
@@ -150,6 +158,7 @@ function NewPolicyPage() {
       )
     } finally {
       setUploading(false)
+      setProgress(null)
     }
   }
 
@@ -369,6 +378,8 @@ function NewPolicyPage() {
               </button>
             </div>
           )}
+
+          {uploading && progress && <JobProgress progress={progress} />}
 
           {/* ACTION BUTTONS */}
           <div className="ccf-new-policy-actions">
