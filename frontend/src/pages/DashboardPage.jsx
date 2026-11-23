@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import './DashboardPage.css'
 
 const originalReviews = [
@@ -55,11 +55,11 @@ const originalReviews = [
 ]
 
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
@@ -121,8 +121,11 @@ function getSavedReviews() {
 }
 
 function DashboardPage() {
+  const navigate = useNavigate()
+
   const [helpOpen, setHelpOpen] = useState(false)
   const [savedReviews, setSavedReviews] = useState(getSavedReviews)
+  const [showNextStep, setShowNextStep] = useState(true)
 
   useEffect(() => {
     const refreshReviews = () => {
@@ -231,11 +234,11 @@ function DashboardPage() {
           ))}
         </aside>
 
-        {/* DASHBOARD */}
+        {/* HOME CONTENT */}
         <main className="dashboard-content">
           <div className="ccf-dashboard-intro">
             <div>
-              <h1>Dashboard</h1>
+              <h1>Home</h1>
               <p>
                 Monitor review sessions, policy recommendations,
                 and items that require your attention.
@@ -390,6 +393,81 @@ function DashboardPage() {
               </div>
             </section>
           </div>
+
+          {/* NEXT WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Continue to the Next Step?
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Would you like to go to the Policy Database
+                  to upload or review an insurance policy?
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                }}
+              >
+                <button
+                  type="button"
+                  className="ccf-dashboard-primary-button"
+                  onClick={() => navigate('/policies')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNextStep(false)}
+                  style={{
+                    minHeight: '40px',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#344054',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 

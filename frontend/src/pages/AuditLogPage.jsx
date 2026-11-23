@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import './DashboardPage.css'
 import './AuditLogPage.css'
 
@@ -32,19 +32,22 @@ function formatDate(value) {
 }
 
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
 function AuditLogPage() {
+  const navigate = useNavigate()
+
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Newest first')
   const [helpOpen, setHelpOpen] = useState(false)
+  const [showNextStep, setShowNextStep] = useState(true)
 
   // Load existing browser data
   const policyVersions = getSavedArray('policyVersions')
@@ -518,6 +521,77 @@ function AuditLogPage() {
             not have exact timestamps. Deleted items appear
             when their pages save deletion events.
           </p>
+
+          {/* FINAL WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Workflow Complete
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  You have reached the final page of the
+                  workflow. Would you like to return to
+                  Home to start another workflow?
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="ccf-audit-primary-button"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNextStep(false)}
+                  style={{
+                    minHeight: '40px',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#344054',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
