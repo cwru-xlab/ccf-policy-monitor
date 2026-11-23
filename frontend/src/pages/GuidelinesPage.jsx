@@ -1,6 +1,6 @@
 
-import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { deleteGuideline, originalGuidelines } from '../data/guidelines'
 import { getPoliciesForGuideline } from '../data/guidelineMappings'
 import './DashboardPage.css'
@@ -24,23 +24,43 @@ const originalPolicies = [
 ]
 
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
 function GuidelinesPage() {
+  const navigate = useNavigate()
+
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
   const [helpOpen, setHelpOpen] = useState(false)
+  const [showNextStep, setShowNextStep] = useState(true)
+
   const [deletedGuidelineIds, setDeletedGuidelineIds] = useState(() =>
     getSavedArray('deletedGuidelineIds')
   )
+
   const [deleteError, setDeleteError] = useState('')
+
+  useEffect(() => {
+    if (!helpOpen) return
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setHelpOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [helpOpen])
 
   function handleDelete(guideline) {
     if (
@@ -101,21 +121,18 @@ function GuidelinesPage() {
         .join(' ')
         .toLowerCase()
 
-      const matchesSearch = searchText.includes(
-        search.trim().toLowerCase()
-      )
-
-      const matchesFilter =
-        filter === 'All' || guideline.status === filter
-
-      return matchesSearch && matchesFilter
+      return searchText.includes(search.trim().toLowerCase())
     })
     .sort((a, b) => {
       const firstDate =
-        new Date(a.createdAt || a.created || a.date || 0).getTime() || 0
+        new Date(
+          a.createdAt || a.created || a.date || 0
+        ).getTime() || 0
 
       const secondDate =
-        new Date(b.createdAt || b.created || b.date || 0).getTime() || 0
+        new Date(
+          b.createdAt || b.created || b.date || 0
+        ).getTime() || 0
 
       return sort === 'Oldest'
         ? firstDate - secondDate
@@ -124,6 +141,7 @@ function GuidelinesPage() {
 
   return (
     <div className="app-page ccf-dashboard ccf-guidelines-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
           <span className="brand-name">CCF</span>
@@ -151,6 +169,7 @@ function GuidelinesPage() {
       </header>
 
       <div className="app-body">
+        {/* SIDEBAR */}
         <aside className="sidebar" aria-label="Main navigation">
           {navigation.map((item) => (
             <NavLink
@@ -165,6 +184,7 @@ function GuidelinesPage() {
           ))}
         </aside>
 
+        {/* MAIN CONTENT */}
         <main className="ccf-guidelines-content">
           <div className="ccf-guidelines-heading">
             <h1>Guideline Database</h1>
@@ -179,7 +199,8 @@ function GuidelinesPage() {
               <div>
                 <h2>All Guidelines</h2>
                 <p>
-                  Search reference guidelines and view their mapped policies.
+                  Search reference guidelines and view their
+                  mapped policies.
                 </p>
               </div>
 
@@ -191,6 +212,7 @@ function GuidelinesPage() {
               </span>
             </div>
 
+            {/* SEARCH AND SORT */}
             <div className="ccf-guidelines-controls">
               <input
                 type="search"
@@ -200,19 +222,6 @@ function GuidelinesPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
-
-              <div className="ccf-guidelines-filters">
-                {['All', 'In Review', 'Completed'].map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={filter === option ? 'selected' : ''}
-                    onClick={() => setFilter(option)}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
 
               <label className="ccf-guidelines-sort">
                 <span>Sort by</span>
@@ -226,12 +235,14 @@ function GuidelinesPage() {
               </label>
             </div>
 
+            {/* DELETE ERROR */}
             {deleteError && (
               <div className="ccf-guidelines-error" role="alert">
                 {deleteError}
               </div>
             )}
 
+            {/* GUIDELINE TABLE */}
             <div className="ccf-guidelines-table-scroll">
               <table className="ccf-guidelines-table">
                 <thead>
@@ -246,10 +257,11 @@ function GuidelinesPage() {
 
                 <tbody>
                   {visibleGuidelines.map((guideline) => {
-                    const associatedPolicies = getPoliciesForGuideline(
-                      guideline,
-                      allPolicies
-                    )
+                    const associatedPolicies =
+                      getPoliciesForGuideline(
+                        guideline,
+                        allPolicies
+                      )
 
                     return (
                       <tr key={guideline.id}>
@@ -260,9 +272,12 @@ function GuidelinesPage() {
                           >
                             {guideline.name || 'Untitled Guideline'}
                           </Link>
+
                           <p className="ccf-guideline-description">
-                            {guideline.description || 'Reference guideline'}
+                            {guideline.description ||
+                              'Reference guideline'}
                           </p>
+
                           <button
                             type="button"
                             className="ccf-guideline-delete"
@@ -294,7 +309,7 @@ function GuidelinesPage() {
                                 : 'in-review'
                             }`}
                           >
-                            {guideline.status || 'In Review'}
+                            {guideline.status || 'Not assigned'}
                           </span>
                         </td>
 
@@ -326,7 +341,7 @@ function GuidelinesPage() {
                         colSpan={5}
                         className="ccf-guidelines-empty"
                       >
-                        No guidelines match your search or filter.
+                        No guidelines match your search.
                       </td>
                     </tr>
                   )}
@@ -334,6 +349,7 @@ function GuidelinesPage() {
               </table>
             </div>
 
+            {/* UPLOAD GUIDELINE */}
             <div className="ccf-guidelines-bottom">
               <span>
                 Showing {visibleGuidelines.length} of{' '}
@@ -348,9 +364,80 @@ function GuidelinesPage() {
               </Link>
             </div>
           </section>
+
+          {/* NEXT WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Continue to the Next Step?
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Would you like to go to Review Sessions
+                  to create or continue an insurance policy review?
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="ccf-guidelines-primary-button"
+                  onClick={() => navigate('/reviews')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNextStep(false)}
+                  style={{
+                    minHeight: '40px',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#344054',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
+      {/* HELP WINDOW */}
       {helpOpen && (
         <div
           className="ccf-guidelines-help-overlay"
@@ -370,6 +457,7 @@ function GuidelinesPage() {
               <h2 id="guidelines-help-title">
                 How to Use Guideline Database
               </h2>
+
               <button
                 type="button"
                 aria-label="Close help"
@@ -385,13 +473,30 @@ function GuidelinesPage() {
             </p>
 
             <ol>
-              <li>Search for a guideline by name or associated policy.</li>
-              <li>Filter guidelines by review status.</li>
-              <li>Click a blue policy name to open its details.</li>
-              <li>Click a guideline name to open its details.</li>
-              <li>Upload a new guideline using the button below the table.</li>
-              <li>Delete hides a guideline in this browser and records it in the Audit Log.</li>
-              <li>Use Document Mappings to manage guideline associations.</li>
+              <li>
+                Search for a guideline by name or associated policy.
+              </li>
+              <li>
+                Use the sort menu to change the guideline order.
+              </li>
+              <li>
+                Click a blue policy name to open its details.
+              </li>
+              <li>
+                Click a guideline name to open its details.
+              </li>
+              <li>
+                Upload a new guideline using the button below
+                the table.
+              </li>
+              <li>
+                Delete hides a guideline in this browser and
+                records it in the Audit Log.
+              </li>
+              <li>
+                Use Document Mappings to manage guideline
+                associations.
+              </li>
             </ol>
 
             <p>

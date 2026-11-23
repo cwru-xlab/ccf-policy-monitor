@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { listGuidelineChanges } from '../api'
 import AutomatedMapping from '../components/AutomatedMapping'
 import {
@@ -28,11 +28,11 @@ const originalGuidelines = [
 ]
 
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
@@ -67,6 +67,9 @@ function recordMappingAudit(action, policy, guideline) {
 }
 
 function DocumentMappingsPage() {
+  const navigate = useNavigate()
+
+  const [showNextStep, setShowNextStep] = useState(true)
   const [mappingMode, setMappingMode] = useState('manual')
   const [helpOpen, setHelpOpen] = useState(false)
 
@@ -89,6 +92,22 @@ function DocumentMappingsPage() {
       .then((changes) => setUnreadChanges(changes.length))
       .catch(() => setUnreadChanges(0))
   }, [])
+
+  useEffect(() => {
+    if (!helpOpen) return
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setHelpOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [helpOpen])
 
   // Load policies and guidelines
   const deletedPolicyIds = getSavedArray('deletedPolicyIds')
@@ -463,6 +482,7 @@ function DocumentMappingsPage() {
                         >
                           <strong>{policy.name}</strong>
                           <small>Policy ID: {policy.id}</small>
+
                           <span
                             className={`ccf-mappings-tag ${
                               count > 0 ? 'mapped' : 'unmapped'
@@ -687,6 +707,66 @@ function DocumentMappingsPage() {
               }
             />
           )}
+
+          {/* NEXT WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Continue to the Next Step?
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Would you like to go to Guideline Database
+                  to view or manage clinical guidelines?
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="ccf-mappings-primary-button"
+                  onClick={() => navigate('/guidelines')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  className="ccf-mappings-secondary-button"
+                  onClick={() => setShowNextStep(false)}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
@@ -727,9 +807,10 @@ function DocumentMappingsPage() {
             </p>
 
             <p>
-              <strong>Dynamic Mapping:</strong> Select an uploaded
-              policy. The mapping engine searches authoritative
-              sources and proposes guidelines for you to approve.
+              <strong>Dynamic Mapping:</strong> Select a policy and use
+              the available mapping tool to review proposed guideline
+              associations. Available capabilities depend on the
+              connected mapping service.
             </p>
 
             <p>

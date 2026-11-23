@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import './DashboardPage.css'
 import './PolicyReviewPage.css'
@@ -134,11 +134,11 @@ const originalReviews = [
 ]
 
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
@@ -160,6 +160,23 @@ function PolicyReviewPage() {
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
   const [helpOpen, setHelpOpen] = useState(false)
+  const [showNextStep, setShowNextStep] = useState(true)
+
+  useEffect(() => {
+    if (!helpOpen) return
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setHelpOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [helpOpen])
 
   const savedReviews = getSavedReviews()
 
@@ -262,6 +279,7 @@ function PolicyReviewPage() {
 
   return (
     <div className="app-page ccf-dashboard ccf-review-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
           <span className="brand-name">CCF</span>
@@ -275,7 +293,7 @@ function PolicyReviewPage() {
           <button
             type="button"
             className="ccf-help-button"
-            aria-label="Help"
+            aria-label="Help with Review Sessions"
             onClick={() => setHelpOpen(true)}
           >
             ?
@@ -289,6 +307,7 @@ function PolicyReviewPage() {
       </header>
 
       <div className="app-body">
+        {/* SIDEBAR */}
         <aside className="sidebar" aria-label="Main navigation">
           {navigation.map((item) => (
             <NavLink
@@ -303,15 +322,17 @@ function PolicyReviewPage() {
           ))}
         </aside>
 
+        {/* MAIN CONTENT */}
         <main className="ccf-review-content">
           <div className="ccf-review-heading">
             <h1>Review Sessions</h1>
             <p>
-              Create, continue, and monitor insurance policy review
-              sessions.
+              Create, continue, and monitor insurance policy
+              review sessions.
             </p>
           </div>
 
+          {/* STATISTICS */}
           <div className="ccf-review-stats">
             <div className="ccf-review-stat">
               <span>ACTIVE SESSIONS</span>
@@ -332,6 +353,7 @@ function PolicyReviewPage() {
             </div>
           </div>
 
+          {/* REVIEW SESSIONS TABLE */}
           <section className="ccf-review-panel">
             <div className="ccf-review-panel-heading">
               <div>
@@ -340,41 +362,55 @@ function PolicyReviewPage() {
                   Select a review session to view its findings.
                 </p>
               </div>
+
               <span className="ccf-review-total">
                 {visibleReviews.length} sessions
               </span>
             </div>
 
+            {/* SEARCH, FILTER, SORT */}
             <div className="ccf-review-controls">
               <input
                 type="search"
                 aria-label="Search review sessions"
                 placeholder="Search review sessions..."
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
               />
 
               <div className="ccf-review-filters">
-                {['All', 'In Review', 'Completed'].map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={filter === option ? 'selected' : ''}
-                    onClick={() => setFilter(option)}
-                  >
-                    {option}
-                  </button>
-                ))}
+                {['All', 'In Review', 'Completed'].map(
+                  (option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={
+                        filter === option ? 'selected' : ''
+                      }
+                      onClick={() => setFilter(option)}
+                    >
+                      {option}
+                    </button>
+                  )
+                )}
               </div>
 
               <label className="ccf-review-sort">
                 <span>Sort by</span>
                 <select
                   value={sort}
-                  onChange={(event) => setSort(event.target.value)}
+                  onChange={(event) =>
+                    setSort(event.target.value)
+                  }
                 >
-                  <option value="Most recent">Most recent</option>
-                  <option value="Oldest">Oldest</option>
+                  <option value="Most recent">
+                    Most recent
+                  </option>
+                  <option value="Oldest">
+                    Oldest
+                  </option>
                 </select>
               </label>
             </div>
@@ -399,17 +435,24 @@ function PolicyReviewPage() {
                         <button
                           type="button"
                           className="ccf-review-name-link"
-                          onClick={() => openReviewSession(review)}
+                          onClick={() =>
+                            openReviewSession(review)
+                          }
                         >
-                          {review.name || 'Untitled Review Session'}
+                          {review.name ||
+                            'Untitled Review Session'}
                         </button>
+
                         <p className="ccf-review-description">
-                          {review.description || 'Policy review session.'}
+                          {review.description ||
+                            'Policy review session.'}
                         </p>
                       </td>
 
                       <td>
-                        <strong>{review.policies || 1}</strong>
+                        <strong>
+                          {review.policies || 1}
+                        </strong>
                         <small>
                           {(review.policies || 1) === 1
                             ? 'Policy'
@@ -419,13 +462,18 @@ function PolicyReviewPage() {
 
                       <td>
                         <span className="ccf-review-guideline">
-                          {review.guideline || 'No mapped guidelines'}
+                          {review.guideline ||
+                            'No mapped guidelines'}
                         </span>
                       </td>
 
                       <td>
-                        <span>{review.date || 'Recently'}</span>
-                        <small>{review.age || ''}</small>
+                        <span>
+                          {review.date || 'Recently'}
+                        </span>
+                        <small>
+                          {review.age || ''}
+                        </small>
                       </td>
 
                       <td>
@@ -441,7 +489,9 @@ function PolicyReviewPage() {
                       </td>
 
                       <td>
-                        <strong>{review.findings || 0}</strong>
+                        <strong>
+                          {review.findings || 0}
+                        </strong>
                         <small>identified</small>
                       </td>
                     </tr>
@@ -449,7 +499,10 @@ function PolicyReviewPage() {
 
                   {visibleReviews.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="ccf-review-empty">
+                      <td
+                        colSpan={6}
+                        className="ccf-review-empty"
+                      >
                         No review sessions match your search.
                       </td>
                     </tr>
@@ -458,10 +511,11 @@ function PolicyReviewPage() {
               </table>
             </div>
 
+            {/* NEW REVIEW BUTTON */}
             <div className="ccf-review-bottom">
               <span>
-                Showing {visibleReviews.length} of {allReviews.length}{' '}
-                review sessions
+                Showing {visibleReviews.length} of{' '}
+                {allReviews.length} review sessions
               </span>
 
               <button
@@ -474,9 +528,81 @@ function PolicyReviewPage() {
               </button>
             </div>
           </section>
+
+          {/* NEXT WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Continue to the Next Step?
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Would you like to go to Audit Log
+                  to review recorded policy changes
+                  and review decisions?
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="ccf-review-new-button"
+                  onClick={() => navigate('/audit-log')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNextStep(false)}
+                  style={{
+                    minHeight: '40px',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#344054',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
+      {/* HELP WINDOW */}
       {helpOpen && (
         <div
           className="ccf-review-help-overlay"
@@ -496,6 +622,7 @@ function PolicyReviewPage() {
               <h2 id="review-help-title">
                 How Review Sessions Work
               </h2>
+
               <button
                 type="button"
                 aria-label="Close help"
@@ -506,13 +633,14 @@ function PolicyReviewPage() {
             </div>
 
             <p>
-              Review Sessions helps you organize policy evaluations
-              and inspect findings.
+              Review Sessions helps you organize policy
+              evaluations and inspect findings.
             </p>
 
             <ol>
               <li>
-                Click <strong>New Review</strong> to create a session.
+                Click <strong>New Review</strong> to
+                create a session.
               </li>
               <li>
                 Enter a name and description for the review.
@@ -521,7 +649,8 @@ function PolicyReviewPage() {
                 Choose a policy from the Policy Database.
               </li>
               <li>
-                Review the guidelines already mapped to that policy.
+                Review the guidelines already mapped to
+                that policy.
               </li>
               <li>
                 Open the review session to inspect its findings.
@@ -529,7 +658,8 @@ function PolicyReviewPage() {
             </ol>
 
             <p>
-              To manage policy-to-guideline relationships, visit{' '}
+              To manage policy-to-guideline relationships,
+              visit{' '}
               <Link
                 to="/mappings"
                 onClick={() => setHelpOpen(false)}

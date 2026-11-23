@@ -1,7 +1,6 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { getGuidelinesForPolicy } from '../data/guidelineMappings'
 import './DashboardPage.css'
 import './PoliciesPage.css'
 
@@ -72,20 +71,12 @@ const originalPolicies = [
   },
 ]
 
-const originalGuidelines = [
-  { id: 1, name: 'Cardiac Coverage Guideline' },
-  { id: 2, name: 'Diabetes Treatment Guideline' },
-  { id: 3, name: 'Oncology Coverage Guideline' },
-  { id: 4, name: 'Orthopedic Surgery Guideline' },
-  { id: 5, name: 'Mental Health Guideline' },
-]
-
 const navigation = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Review Sessions', path: '/reviews' },
+  { label: 'Home', path: '/dashboard' },
   { label: 'Policy Database', path: '/policies' },
-  { label: 'Guideline Database', path: '/guidelines' },
   { label: 'Document Mappings', path: '/mappings' },
+  { label: 'Guideline Database', path: '/guidelines' },
+  { label: 'Review Sessions', path: '/reviews' },
   { label: 'Audit Log', path: '/audit-log' },
 ]
 
@@ -95,12 +86,28 @@ function PoliciesPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [sort, setSort] = useState('Most recent')
-  const [hoveredPolicyId, setHoveredPolicyId] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [showNextStep, setShowNextStep] = useState(true)
 
   const [deletedPolicyIds, setDeletedPolicyIds] = useState(
     () => getSavedArray('deletedPolicyIds')
   )
+
+  useEffect(() => {
+    if (!helpOpen) return
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setHelpOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [helpOpen])
 
   const savedPolicies = getSavedArray('addedPolicies')
 
@@ -118,17 +125,19 @@ function PoliciesPage() {
   const basePolicies = [
     ...addedPolicies,
     ...originalPolicies,
-  ].filter(
-    (policy) =>
-      !deletedPolicyIds.some(
-        (id) => String(id) === String(policy.id)
-      )
-  ).filter(
-    (policy, index, array) =>
-      array.findIndex(
-        (item) => String(item.id) === String(policy.id)
-      ) === index
-  )
+  ]
+    .filter(
+      (policy) =>
+        !deletedPolicyIds.some(
+          (id) => String(id) === String(policy.id)
+        )
+    )
+    .filter(
+      (policy, index, array) =>
+        array.findIndex(
+          (item) => String(item.id) === String(policy.id)
+        ) === index
+    )
 
   const allPolicies = basePolicies.map((policy) => {
     const matchingVersions = policyVersions.filter(
@@ -162,18 +171,6 @@ function PoliciesPage() {
       latestVersion: newestVersion,
     }
   })
-
-  const deletedGuidelineIds = getSavedArray('deletedGuidelineIds')
-
-  const allGuidelines = [
-    ...getSavedArray('addedGuidelines'),
-    ...originalGuidelines,
-  ].filter(
-    (guideline) =>
-      !deletedGuidelineIds.some(
-        (id) => String(id) === String(guideline.id)
-      )
-  )
 
   function deletePolicy(id, name) {
     const confirmed = window.confirm(
@@ -220,8 +217,6 @@ function PoliciesPage() {
       'auditEvents',
       JSON.stringify(auditEvents)
     )
-
-    setHoveredPolicyId(null)
   }
 
   const visiblePolicies = allPolicies
@@ -249,6 +244,7 @@ function PoliciesPage() {
 
   return (
     <div className="app-page ccf-dashboard ccf-policies-page">
+      {/* HEADER */}
       <header className="top-bar">
         <div className="brand-area">
           <span className="brand-name">CCF</span>
@@ -277,7 +273,11 @@ function PoliciesPage() {
       </header>
 
       <div className="app-body">
-        <aside className="sidebar" aria-label="Main navigation">
+        {/* SIDEBAR */}
+        <aside
+          className="sidebar"
+          aria-label="Main navigation"
+        >
           {navigation.map((item) => (
             <NavLink
               key={item.path}
@@ -291,12 +291,14 @@ function PoliciesPage() {
           ))}
         </aside>
 
+        {/* POLICY DATABASE CONTENT */}
         <main className="ccf-policies-content">
           <div className="ccf-policies-heading">
             <h1>Policy Database</h1>
             <p>
-              View and manage insurance policies. Hover over a
-              policy name to see its associated guidelines.
+              View and manage insurance policies. Click a blue
+              policy name to view its information, associated
+              guidelines, and saved versions.
             </p>
           </div>
 
@@ -305,8 +307,8 @@ function PoliciesPage() {
               <div>
                 <h2>All Policies</h2>
                 <p>
-                  Select a policy name to view its details,
-                  associated guidelines, and saved versions.
+                  Search for a policy, open its details, or
+                  upload a new insurance policy.
                 </p>
               </div>
 
@@ -318,6 +320,7 @@ function PoliciesPage() {
               </span>
             </div>
 
+            {/* SEARCH, FILTER, SORT */}
             <div className="ccf-policies-controls">
               <input
                 type="search"
@@ -358,11 +361,14 @@ function PoliciesPage() {
                   <option value="Most recent">
                     Most recent
                   </option>
-                  <option value="Oldest">Oldest</option>
+                  <option value="Oldest">
+                    Oldest
+                  </option>
                 </select>
               </label>
             </div>
 
+            {/* POLICY TABLE */}
             <div className="ccf-policies-table-scroll">
               <table className="ccf-policies-table">
                 <thead>
@@ -377,123 +383,74 @@ function PoliciesPage() {
                 </thead>
 
                 <tbody>
-                  {visiblePolicies.map((policy) => {
-                    const associatedGuidelines =
-                      getGuidelinesForPolicy(
-                        policy,
-                        allGuidelines
-                      )
-
-                    return (
-                      <tr key={policy.id}>
-                        <td className="ccf-policy-name-cell">
-                          <div
-                            className="ccf-policy-name-wrapper"
-                            onMouseEnter={() =>
-                              setHoveredPolicyId(policy.id)
-                            }
-                            onMouseLeave={() =>
-                              setHoveredPolicyId(null)
-                            }
+                  {visiblePolicies.map((policy) => (
+                    <tr key={policy.id}>
+                      <td className="ccf-policy-name-cell">
+                        <div className="ccf-policy-name-wrapper">
+                          <Link
+                            to={`/policies/${policy.id}`}
+                            className="ccf-policy-name-link"
                           >
-                            <Link
-                              to={`/policies/${policy.id}`}
-                              className="ccf-policy-name-link"
-                              aria-describedby={
-                                hoveredPolicyId === policy.id
-                                  ? `policy-guidelines-${policy.id}`
-                                  : undefined
-                              }
-                            >
-                              {policy.name || 'Untitled Policy'}
-                            </Link>
+                            {policy.name || 'Untitled Policy'}
+                          </Link>
+                        </div>
 
-                            {hoveredPolicyId === policy.id && (
-                              <div
-                                className="ccf-policy-tooltip"
-                                role="tooltip"
-                                id={`policy-guidelines-${policy.id}`}
-                              >
-                                <strong>
-                                  Associated Guidelines
-                                </strong>
+                        <p className="ccf-policy-description">
+                          {policy.description || ''}
+                        </p>
+                      </td>
 
-                                {associatedGuidelines.length > 0 ? (
-                                  <ul>
-                                    {associatedGuidelines.map(
-                                      (guideline) => (
-                                        <li key={guideline.id}>
-                                          {guideline.name}
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
-                                ) : (
-                                  <p>
-                                    No associated guidelines
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                      <td>
+                        <span className="ccf-policy-date">
+                          {policy.created || 'Not available'}
+                        </span>
+                      </td>
 
-                          <p className="ccf-policy-description">
-                            {policy.description || ''}
-                          </p>
-                        </td>
+                      <td>
+                        <span className="ccf-policy-date">
+                          {policy.updated || 'Not available'}
+                        </span>
+                      </td>
 
-                        <td>
-                          <span className="ccf-policy-date">
-                            {policy.created || 'Not available'}
-                          </span>
-                        </td>
+                      <td>
+                        <span
+                          className={`ccf-policy-status ${
+                            policy.status === 'Completed'
+                              ? 'completed'
+                              : 'in-review'
+                          }`}
+                        >
+                          {policy.status || 'Not assigned'}
+                        </span>
+                      </td>
 
-                        <td>
-                          <span className="ccf-policy-date">
-                            {policy.updated || 'Not available'}
-                          </span>
-                        </td>
+                      <td>
+                        <span className="ccf-policy-version-count">
+                          {policy.versionCount}
+                        </span>
+                        <span className="ccf-policy-version-label">
+                          {policy.versionCount === 1
+                            ? 'saved version'
+                            : 'saved versions'}
+                        </span>
+                      </td>
 
-                        <td>
-                          <span
-                            className={`ccf-policy-status ${
-                              policy.status === 'Completed'
-                                ? 'completed'
-                                : 'in-review'
-                            }`}
-                          >
-                            {policy.status || 'In Review'}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span className="ccf-policy-version-count">
-                            {policy.versionCount}
-                          </span>
-                          <span className="ccf-policy-version-label">
-                            {policy.versionCount === 1
-                              ? 'saved version'
-                              : 'saved versions'}
-                          </span>
-                        </td>
-
-                        <td>
-                          <button
-                            type="button"
-                            className="ccf-policy-delete"
-                            onClick={() =>
-                              deletePolicy(
-                                policy.id,
-                                policy.name || 'Untitled Policy'
-                              )
-                            }
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                      <td>
+                        <button
+                          type="button"
+                          className="ccf-policy-delete"
+                          onClick={() =>
+                            deletePolicy(
+                              policy.id,
+                              policy.name || 'Untitled Policy'
+                            )
+                          }
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
 
                   {visiblePolicies.length === 0 && (
                     <tr>
@@ -509,6 +466,7 @@ function PoliciesPage() {
               </table>
             </div>
 
+            {/* UPLOAD BUTTON */}
             <div className="ccf-policies-bottom">
               <span>
                 Showing {visiblePolicies.length} of{' '}
@@ -524,9 +482,87 @@ function PoliciesPage() {
               </button>
             </div>
           </section>
+
+          {/* NEXT WORKFLOW STEP */}
+          {showNextStep && (
+            <section
+              style={{
+                marginTop: '26px',
+                padding: '22px',
+                background: '#ffffff',
+                border: '1px solid #dfe5eb',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '16px',
+                    color: '#172033',
+                  }}
+                >
+                  Continue to the Next Step?
+                </h2>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: '#667085',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Would you like to go to Document Mappings
+                  to associate clinical guidelines with your
+                  insurance policies?
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <button
+                  type="button"
+                  className="ccf-dashboard-primary-button"
+                  onClick={() => navigate('/mappings')}
+                >
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNextStep(false)}
+                  style={{
+                    minHeight: '40px',
+                    padding: '10px 18px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    color: '#344054',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  No
+                </button>
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
+      {/* HELP WINDOW */}
       {helpOpen && (
         <div
           className="ccf-policies-help-overlay"
@@ -563,27 +599,28 @@ function PoliciesPage() {
 
             <ol>
               <li>
-                Use the search bar to find a policy by
-                name, description, or file name.
+                Use the search bar to find a policy by name,
+                description, or file name.
               </li>
+
               <li>
-                Use the status filters to view policies
-                that are In Review or Completed.
+                Use the status filters to narrow the displayed
+                policies.
               </li>
+
               <li>
-                Click a blue policy name to view its
-                details and saved versions.
+                Click a blue policy name to view its details,
+                associated guidelines, and saved versions.
               </li>
+
               <li>
-                Hover over a policy name to see its
-                associated guidelines.
+                Click Upload Policy to add a new insurance
+                policy.
               </li>
+
               <li>
-                Click Upload Policy to add a new policy.
-              </li>
-              <li>
-                Use Document Mappings to manage the
-                relationships between policies and guidelines.
+                Use Document Mappings to associate clinical
+                guidelines with policies.
               </li>
             </ol>
 
